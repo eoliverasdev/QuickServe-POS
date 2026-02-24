@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Worker extends Model
 {
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'pin'];
 
     // Per si algun dia vols saber totes les comandes d'un treballador
     public function orders(): HasMany

@@ -3,40 +3,67 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\Worker;
 
-// Pàgina principal (TPV)
+// --- PÀGINA PRINCIPAL (TPV) ---
 Route::get('/', function () {
-    // Aquí pots carregar la vista del teu TPV directament
-    return view('index'); 
-});
+    $categories = Category::all();
+    $products = Product::with('categories')->get();
+    $workers = Worker::all();
+
+    return view('tpv.index', compact('categories', 'products', 'workers'));
+})->middleware(['auth']);
 
 
-// Canviem la funció per una crida al mètode 'index' del controlador
+// Redirecció del dashboard de Breeze cap al nostre Admin
 Route::get('/dashboard', [AdminController::class, 'index'])
     ->middleware(['auth', 'verified'])
-    ->name('admin');
+    ->name('dashboard');
 
-// --- RUTES PROTEGIDES (Només usuaris loguejats amb Breeze) ---
+// --- RUTES PROTEGIDES (Auth) ---
 Route::middleware('auth')->group(function () {
     
-    // Panell d'Administració Principal
-    Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
+    // --- LC-3: PROTECCIÓ D'ACCÉS ADMIN PER ROL ---
+    // Fem servir Route::group per evitar l'error "Closure could not be converted to string"
+    Route::group(['middleware' => function ($request, $next) {
+        $user = Auth::user();
 
-    // --- GESTIÓ DE TREBALLADORS ---
-    // Crear treballador
-    Route::post('/admin/workers', [AdminController::class, 'storeWorker'])->name('workers.store');
-    // Esborrar treballador
-    Route::delete('/admin/workers/{id}', [AdminController::class, 'deleteWorker'])->name('workers.destroy');
-    // Actualitzar PIN (opcionalment pots fer una ruta específica)
-    Route::patch('/admin/workers/{id}/pin', [AdminController::class, 'updatePin'])->name('workers.updatePin');
+        // Verificació per ROL en lloc d'email (Molt més optim)
+        if (!$user || $user->role !== 'admin') {
+            return redirect('/')->with('error', 'Accés denegat: es requereixen permisos d\'administrador.');
+        }
+        
+        return $next($request);
+    }], function () {
 
-    // --- GESTIÓ DE PRODUCTES I CATEGORIES ---
-    // Editar producte (Preu/Nom)
-    Route::put('/admin/products/{id}', [AdminController::class, 'updateProduct'])->name('products.update');
-    // Esborrar producte
-    Route::delete('/admin/products/{id}', [AdminController::class, 'deleteProduct'])->name('products.destroy');
+        // Panell d'Administració Principal
+        Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
 
-    // Rutes del perfil de Breeze
+        // --- LC-4: VERIFICACIÓ DE PIN ---
+        Route::post('/admin/verify-pin', [AdminController::class, 'verifyPin'])->name('admin.verify-pin');
+
+        // --- LC-1: GESTIÓ DE CATEGORIES ---
+        Route::post('/admin/categories', [AdminController::class, 'storeCategory'])->name('categories.store');
+        Route::delete('/admin/categories/{id}', [AdminController::class, 'destroyCategory'])->name('categories.destroy');
+
+        // --- LC-2: GESTIÓ DE PRODUCTES ---
+        Route::post('/admin/products', [AdminController::class, 'storeProduct'])->name('products.store');
+        Route::put('/admin/products/{id}', [AdminController::class, 'updateProduct'])->name('products.update');
+        Route::delete('/admin/products/{id}', [AdminController::class, 'deleteProduct'])->name('products.destroy');
+
+        // --- GESTIÓ DE TREBALLADORS ---
+        Route::post('/admin/workers', [AdminController::class, 'storeWorker'])->name('workers.store');
+        Route::delete('/admin/workers/{id}', [AdminController::class, 'deleteWorker'])->name('workers.destroy');
+        Route::patch('/admin/workers/{id}/pin', [AdminController::class, 'updatePin'])->name('workers.updatePin');
+
+        // --- HISTORIAL I COMANDES ---
+        Route::delete('/admin/orders/{id}', [AdminController::class, 'deleteOrder'])->name('orders.destroy');
+    });
+
+    // --- PERFIL D'USUARI (Breeze) ---
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

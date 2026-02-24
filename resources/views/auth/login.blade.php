@@ -1,47 +1,57 @@
 <x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <style>
+        /* Contenidor del logo */
+        .logo-container {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+        }
+        .logo-container img {
+            max-width: 200px; /* Ajusta la mida segons vulguis */
+            height: auto;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); /* Li dóna profunditat al logo */
+        }
+
+        .form-group { text-align: left; margin-bottom: 20px; }
+        .form-group label { display: block; color: #aaa; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; margin-left: 5px; }
+        .form-group input { 
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 12px; padding: 12px 15px; color: #fff; font-size: 0.9rem; box-sizing: border-box; outline: none; transition: 0.3s;
+        }
+        .form-group input:focus { border-color: #ffed05; background: rgba(255,102,0,0.05); }
+        .btn-login { 
+            width: 100%; background: linear-gradient(to right, #b6aa02, #ffed05); border: none; 
+            border-radius: 12px; padding: 15px; color: #000; font-weight: 900; cursor: pointer; 
+            text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; transition: 0.3s;
+        }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,237,5,0.4); }
+        .extra-links { display: flex; justify-content: space-between; font-size: 0.7rem; color: #666; margin-top: 15px; }
+        .extra-links a { color: #ffed05; text-decoration: none; }
+    </style>
+
+    <div class="logo-container">
+        <img src="{{ asset('images/logo-la-cresta-sense-fons.png') }}" alt="Logo La Cresta">
+    </div>
 
     <form method="POST" action="{{ route('login') }}">
         @csrf
-
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        <div class="form-group">
+            <label>Usuari Administrador</label>
+            <input type="email" name="email" value="{{ old('email') }}" required autofocus placeholder="correu@lacresta.com">
         </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+        <div class="form-group">
+            <label>Contrasenya</label>
+            <input type="password" name="password" required placeholder="••••••••">
         </div>
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+        <div class="extra-links">
+            <label style="cursor: pointer; display: flex; align-items: center;">
+                <input type="checkbox" name="remember" style="margin-right: 5px;"> Recorda'm
             </label>
+            <a href="{{ route('password.request') }}">¿Has oblidat la clau?</a>
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
-                </a>
-            @endif
-
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-            </x-primary-button>
-        </div>
+        <button type="submit" class="btn-login">Entrar al Sistema</button>
     </form>
 </x-guest-layout>

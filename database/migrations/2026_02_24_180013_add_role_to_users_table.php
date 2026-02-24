@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('workers', function (Blueprint $table) {
-    $table->id();
-    $table->string('name'); // Meri, Roc, Sergi...
-    $table->string('pin')->nullable(); // PIN de 4 dígits, pot ser null
-    $table->timestamps();
-});
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('role')->default('worker');
+        });
     }
 
     /**
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('workers');
+        Schema::table('users', function (Blueprint $table) {
+            //
+        });
     }
 };
