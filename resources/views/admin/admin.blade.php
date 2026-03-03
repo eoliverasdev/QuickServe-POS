@@ -3,77 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <title>Admin - La Cresta</title>
     <style>
-        :root { --primary: #3b82f6; --danger: #ef4444; --success: #22c55e; --dark: #1e293b; --bg: #f4f4f9; }
-        body { font-family: sans-serif; background-color: var(--bg); margin: 0; display: flex; }
+        /* Unificació de colors i fonts amb el TPV */
+        :root { 
+            --primary: #ffed05; 
+            --primary-dark: #d4c200;
+            --danger: #ef4444; 
+            --success: #28a745; 
+            --dark: #333; 
+            --bg: #f8f9fa; 
+            --sidebar-bg: #ffffff;
+        }
+
         
-        /* Sidebar */
-        .sidebar { width: 260px; background: var(--dark); color: white; min-height: 100vh; position: fixed; padding: 20px; box-sizing: border-box; z-index: 100; }
-        .sidebar h2 { font-size: 1.2rem; margin-bottom: 30px; border-bottom: 1px solid #334155; padding-bottom: 10px; color: #fb923c; }
-        .nav-link { display: block; color: #cbd5e1; text-decoration: none; padding: 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; border: none; background: none; width: 100%; text-align: left; font-size: 1rem; }
-        .nav-link:hover, .nav-link.active { background: #334155; color: white; }
+        
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background-color: var(--bg); 
+            margin: 0; 
+            display: flex; 
+            color: var(--dark);
+        }
+        
+        /* Sidebar Estil La Cresta */
+        .sidebar { 
+            width: 280px; 
+            background: var(--sidebar-bg); 
+            min-height: 100vh; 
+            position: fixed; 
+            padding: 25px 20px; 
+            box-sizing: border-box; 
+            z-index: 100; 
+            border-right: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 35px;
+        }
+
+        .sidebar-logo img {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+
+        .sidebar-logo div {
+            height: 2px;
+            width: 40px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .nav-link { 
+            display: flex; 
+            align-items: center;
+            gap: 12px;
+            color: #666; 
+            text-decoration: none; 
+            padding: 14px 18px; 
+            border-radius: 12px; 
+            margin-bottom: 8px; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            border: none; 
+            background: none; 
+            width: 100%; 
+            text-align: left; 
+            font-size: 0.95rem; 
+            font-weight: 600;
+            font-family: inherit;
+        }
+
+        .nav-link:hover { background: #fafafa; color: #000; }
+        .nav-link.active { 
+            background: rgba(255, 237, 5, 0.15); 
+            color: #000; 
+            font-weight: 700;
+        }
         
         /* Main Content */
-        .main-content { margin-left: 260px; flex: 1; padding: 30px; width: calc(100% - 260px); }
+        .main-content { margin-left: 280px; flex: 1; padding: 40px; width: calc(100% - 280px); }
+        h1 { font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; margin-bottom: 30px; }
+        
         .section { display: none; animation: fadeIn 0.3s ease; }
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Alertas */
-        .alert { padding: 15px; margin-bottom: 20px; border-radius: 8px; font-weight: bold; }
-        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .alert { padding: 15px; margin-bottom: 25px; border-radius: 12px; font-weight: bold; border-left: 5px solid; }
+        .alert-success { background: #dcfce7; color: #166534; border-color: #22c55e; }
 
         /* Stats & Cards */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid #e2e8f0; }
-        .stat-card h3 { margin: 0; color: #666; font-size: 0.8rem; text-transform: uppercase; }
-        .stat-card p { margin: 10px 0 0; font-size: 1.8rem; font-weight: bold; }
-        .border-orange { border-color: #f97316; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { 
+            background: white; padding: 25px; border-radius: 20px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); text-align: left; 
+            border: 1px solid #eee; transition: 0.3s;
+        }
+        .stat-card h3 { margin: 0; color: #999; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-card p { margin: 10px 0 0; font-size: 2rem; font-weight: 900; color: #333; }
+        .border-orange { border-top: 4px solid var(--primary); }
 
         /* Forms & Tables */
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .search-bar { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; font-size: 1rem; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 30px; border: 1px solid #eee; }
+        .search-bar { width: 100%; padding: 15px; border: 1px solid #eee; border-radius: 12px; margin-bottom: 25px; font-size: 1rem; background: #fafafa; }
         
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #eee; color: #475569; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        th { text-align: left; padding: 15px; color: #aaa; text-transform: uppercase; font-size: 0.75rem; }
+        td { padding: 15px; background: white; border-top: 1px solid #f8f8f8; border-bottom: 1px solid #f8f8f8; }
+        td:first-child { border-left: 1px solid #f8f8f8; border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+        td:last-child { border-right: 1px solid #f8f8f8; border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
 
-        .btn { padding: 8px 15px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
-        .btn-add { background: var(--primary); color: white; }
-        .btn-edit { background: #e0f2fe; color: #0369a1; margin-right: 5px; }
-        .btn-delete { background: #fee2e2; color: var(--danger); }
-        .btn-logout { background: var(--danger); color: white; width: 100%; margin-top: 10px; }
+        .btn { padding: 10px 20px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; font-size: 0.8rem; transition: 0.2s; text-transform: uppercase; }
+        .btn-add { background: var(--primary); color: #000; }
+        .btn-edit { background: #f0f0f0; color: #666; margin-right: 5px; }
+        .btn-delete { background: #fff0f0; color: var(--danger); }
+        .btn-logout { background: #fdf2f2; color: #e04a4a; border: 1px solid #fee2e2; width: 100%; margin-top: 20px; }
         
-        /* Admin Form Grid */
-        .admin-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; align-items: end; }
-        .admin-form div { display: flex; flex-direction: column; gap: 5px; }
-        .admin-form label { font-size: 0.8rem; font-weight: bold; color: #64748b; }
-        .admin-form input, .admin-form select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
+        .admin-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; align-items: end; }
+        .admin-form label { font-size: 0.75rem; font-weight: 800; color: #999; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        .admin-form input, .admin-form select { padding: 12px; border: 1px solid #eee; border-radius: 10px; font-size: 0.95rem; background: #fafafa; font-family: inherit; }
 
-        /* Edit Overlay Form */
-        .edit-row { background: #f0f9ff !important; display: none; }
+        .edit-row { background: #fffbeb !important; display: none; }
         .edit-row.active { display: table-row; }
-
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; background: #e2e8f0; color: #475569; }
+        .badge { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; background: #f0f0f0; color: #666; font-weight: 700; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2>La Cresta Admin</h2>
+    <div class="sidebar-logo">
+        <img src="{{ asset('images/logo-la-cresta-sense-fons.png') }}" alt="Logo La Cresta">
+        <div></div>
+    </div>
+    
     <button class="nav-link active" onclick="showSection('resum', this)">📊 Resum</button>
     <button class="nav-link" onclick="showSection('categories', this)">📂 Categories</button>
     <button class="nav-link" onclick="showSection('productes', this)">🍔 Productes</button>
     <button class="nav-link" onclick="showSection('treballadors', this)">👥 Treballadors</button>
     <button class="nav-link" onclick="showSection('comandes', this)">🧾 Historial</button>
-    <hr style="border-color: #334155; margin: 20px 0;">
-    <a href="{{ url('/') }}" class="nav-link">⬅ Anar al TPV</a>
-    <form method="POST" action="{{ route('logout') }}">
+    
+    
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+    
+    <a href="{{ url('/') }}" class="nav-link" style="color: var(--primary-dark)">⬅ Anar al TPV</a>
+    
+    <form method="POST" action="{{ route('logout') }}" style="margin-top: auto;">
         @csrf
         <button type="submit" class="btn btn-logout">TANCAR SESSIÓ</button>
     </form>
 </div>
+
+
 
 <div class="main-content">
 
@@ -86,18 +174,17 @@
         <div class="stats-grid">
             <div class="stat-card border-orange"><h3>Total Avui</h3><p>{{ number_format($totalAvui, 2) }}€</p></div>
             <div class="stat-card"><h3>Comandes</h3><p>{{ $comandesComptador }}</p></div>
-            <div class="stat-card"><h3>Millor Treballador</h3><p style="color: var(--primary)">{{ $millorWorker->name ?? 'Sense vendes' }}</p></div>
+            <div class="stat-card"><h3>Millor Treballador</h3><p style="color: var(--success)">{{ $millorWorker->name ?? 'Sense vendes' }}</p></div>
         </div>
     </div>
 
     <div id="categories" class="section">
         <h1>Gestió de Categories</h1>
         <div class="card">
-            <h3>Afegir Nova Categoria</h3>
+            <label style="font-weight: 900; margin-bottom: 10px; display: block;">AFEGIR CATEGORIA</label>
             <form action="{{ route('categories.store') }}" method="POST" class="admin-form" style="grid-template-columns: 1fr 120px;">
                 @csrf
                 <div>
-                    <label>Nom de la categoria</label>
                     <input type="text" name="name" placeholder="Ex: Begudes, Hamburgueses..." required>
                 </div>
                 <button type="submit" class="btn btn-add">CREAR</button>
@@ -110,7 +197,7 @@
                     <tr>
                         <td><strong>{{ $cat->name }}</strong></td>
                         <td style="text-align: right;">
-                            <form action="{{ route('categories.destroy', $cat->id) }}" method="POST" onsubmit="return confirm('Si elimines la categoria, els productes es quedaran sense categoria. Continuar?')">
+                            <form action="{{ route('categories.destroy', $cat->id) }}" method="POST" onsubmit="return confirm('Eliminar?')">
                                 @csrf @method('DELETE')
                                 <button class="btn btn-delete">Eliminar</button>
                             </form>
@@ -125,16 +212,16 @@
     <div id="productes" class="section">
         <h1>Gestió de Productes</h1>
         <div class="card">
-            <h3>Afegir Nou Producte</h3>
+            <label style="font-weight: 900; margin-bottom: 10px; display: block;">AFEGIR PRODUCTE</label>
             <form action="{{ route('products.store') }}" method="POST" class="admin-form">
                 @csrf
                 <div>
                     <label>Nom</label>
-                    <input type="text" name="name" placeholder="Nom del producte" required>
+                    <input type="text" name="name" required>
                 </div>
                 <div>
                     <label>Preu (€)</label>
-                    <input type="number" name="price" step="0.01" placeholder="8.50" required>
+                    <input type="number" name="price" step="0.01" required>
                 </div>
                 <div>
                     <label>Categoria</label>
@@ -145,17 +232,12 @@
                         @endforeach
                     </select>
                 </div>
-                <div>
-                    <label>URL Imatge (Opcional)</label>
-                    <input type="text" name="image" placeholder="https://...">
-                </div>
                 <button type="submit" class="btn btn-add">AFEGIR</button>
             </form>
         </div>
 
         <div class="card">
             <input type="text" id="productSearch" class="search-bar" placeholder="🔍 Cerca per nom de producte..." onkeyup="filterProducts()">
-            
             <table id="productsTable">
                 <thead>
                     <tr>
@@ -176,10 +258,10 @@
                                 <small style="color: gray;">Sense cat.</small>
                             @endif
                         </td>
-                        <td>{{ number_format($product->price, 2) }}€</td>
-                        <td style="text-align: right; display: flex; justify-content: flex-end; gap: 5px;">
+                        <td><strong style="color: var(--success)">{{ number_format($product->price, 2) }}€</strong></td>
+                        <td style="text-align: right;">
                             <button class="btn btn-edit" onclick="toggleEdit('{{ $product->id }}')">Editar</button>
-                            <form action="{{ route('products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Eliminar?')">
+                            <form action="{{ route('products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Eliminar?')" style="display:inline;">
                                 @csrf @method('DELETE')
                                 <button class="btn btn-delete">Eliminar</button>
                             </form>
@@ -189,15 +271,15 @@
                         <td colspan="4">
                             <form action="{{ route('products.update', $product->id) }}" method="POST" style="display: flex; gap: 10px; padding: 10px;">
                                 @csrf @method('PUT')
-                                <input type="text" name="name" value="{{ $product->name }}" required style="flex: 2;">
-                                <input type="number" name="price" value="{{ $product->price }}" step="0.01" required style="width: 80px;">
-                                <select name="category_id" required>
+                                <input type="text" name="name" value="{{ $product->name }}" required style="flex: 2; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                                <input type="number" name="price" value="{{ $product->price }}" step="0.01" required style="width: 80px; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                                <select name="category_id" required style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
                                     @foreach($categories as $cat)
                                         <option value="{{ $cat->id }}" {{ $product->categories->contains($cat->id) ? 'selected' : '' }}>{{ $cat->name }}</option>
                                     @endforeach
                                 </select>
-                                <button type="submit" class="btn btn-add">Desar</button>
-                                <button type="button" class="btn btn-delete" onclick="toggleEdit('{{ $product->id }}')">X</button>
+                                <button type="submit" class="btn btn-add" style="padding: 5px 15px;">OK</button>
+                                <button type="button" class="btn btn-delete" onclick="toggleEdit('{{ $product->id }}')" style="padding: 5px 15px;">X</button>
                             </form>
                         </td>
                     </tr>
@@ -210,16 +292,16 @@
     <div id="treballadors" class="section">
         <h1>Gestió de Treballadors</h1>
         <div class="card">
-            <h3>Afegir Nou Treballador</h3>
+            <label style="font-weight: 900; margin-bottom: 10px; display: block;">NOU TREBALLADOR</label>
             <form action="{{ route('workers.store') }}" method="POST" class="admin-form" style="grid-template-columns: 1fr 1fr 120px;">
                 @csrf
                 <div>
                     <label>Nom complet</label>
-                    <input type="text" name="name" placeholder="Nom complet" required>
+                    <input type="text" name="name" required>
                 </div>
                 <div>
                     <label>PIN (4 xifres)</label>
-                    <input type="text" name="pin" placeholder="PIN opcional" pattern="\d{4}" title="4 números o buit">
+                    <input type="text" name="pin" pattern="\d{4}">
                 </div>
                 <button type="submit" class="btn btn-add">AFEGIR</button>
             </form>
@@ -230,11 +312,11 @@
                     @foreach($treballadors as $worker)
                     <tr>
                         <td><strong>{{ $worker->name }}</strong></td>
-                       <td>
+                        <td>
                             @if(!is_null($worker->pin) && $worker->pin !== '')
-                                <small>✅ Actiu (<code>****</code>)</small>
+                                <span class="badge" style="background:#e6fffa; color:#2c7a7b;">✅ ACTIU</span>
                             @else
-                                <small style="color: var(--danger)">❌ No en té</small>
+                                <span class="badge" style="background:#fff5f5; color:#c53030;">❌ NO PIN</span>
                             @endif
                         </td>
                         <td style="text-align: right;">
@@ -259,8 +341,8 @@
                     @forelse($darreresVendes as $venda)
                     <tr>
                         <td>{{ $venda->created_at->format('H:i') }}h</td>
-                        <td>{{ $venda->worker->name ?? 'Sistema' }}</td>
-                        <td><strong>{{ number_format($venda->total_price, 2) }}€</strong></td>
+                        <td><strong>{{ $venda->worker->name ?? 'Sistema' }}</strong></td>
+                        <td><strong style="color:var(--success)">{{ number_format($venda->total_price, 2) }}€</strong></td>
                         <td style="text-align: right;">
                             <form action="{{ url('/admin/orders/'.$venda->id) }}" method="POST">
                                 @csrf @method('DELETE')
@@ -269,7 +351,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="4" style="text-align: center;">Cap venda avui.</td></tr>
+                    <tr><td colspan="4" style="text-align: center; padding: 20px;">Cap venda avui.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -284,6 +366,7 @@
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         element.classList.add('active');
+        window.location.hash = id;
     }
 
     function filterProducts() {
@@ -300,24 +383,13 @@
         editRow.classList.toggle('active');
     }
 
-    // Afegeix això dins del teu script actual
-window.addEventListener('DOMContentLoaded', (event) => {
-    // Mirem si la URL té una àncora (ex: #productes)
-    const hash = window.location.hash;
-    
-    if (hash) {
-        // Netegem el '#' del nom per quedar-nos amb 'productes'
-        const sectionId = hash.substring(1); 
-        
-        // Busquem el botó que té el onclick amb aquest ID
-        const targetButton = document.querySelector(`button[onclick*="${sectionId}"]`);
-        
-        if (targetButton) {
-            // Cridem a la teva funció showSection pasant-li l'ID i el botó
-            showSection(sectionId, targetButton);
+    window.addEventListener('DOMContentLoaded', (event) => {
+        const hash = window.location.hash.substring(1); 
+        if (hash) {
+            const targetButton = document.querySelector(`button[onclick*="${hash}"]`);
+            if (targetButton) showSection(hash, targetButton);
         }
-    }
-});
+    });
 </script>
 
 </body>

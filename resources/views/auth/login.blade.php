@@ -1,15 +1,14 @@
 <x-guest-layout>
     <style>
-        /* Contenidor del logo */
         .logo-container {
             margin-bottom: 30px;
             display: flex;
             justify-content: center;
         }
         .logo-container img {
-            max-width: 200px; /* Ajusta la mida segons vulguis */
+            max-width: 200px;
             height: auto;
-            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); /* Li dóna profunditat al logo */
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
         }
 
         .form-group { text-align: left; margin-bottom: 20px; }
@@ -19,12 +18,33 @@
             border-radius: 12px; padding: 12px 15px; color: #fff; font-size: 0.9rem; box-sizing: border-box; outline: none; transition: 0.3s;
         }
         .form-group input:focus { border-color: #ffed05; background: rgba(255,102,0,0.05); }
+        
         .btn-login { 
             width: 100%; background: linear-gradient(to right, #b6aa02, #ffed05); border: none; 
             border-radius: 12px; padding: 15px; color: #000; font-weight: 900; cursor: pointer; 
             text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; transition: 0.3s;
         }
         .btn-login:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,237,5,0.4); }
+
+        /* Estil per al botó de registre */
+        .btn-register {
+            display: block; width: 100%; background: transparent; border: 1px solid rgba(255, 237, 5, 0.4); 
+            border-radius: 12px; padding: 12px; color: #ffed05; font-weight: 700; cursor: pointer; 
+            text-transform: uppercase; letter-spacing: 1px; margin-top: 15px; transition: 0.3s;
+            text-decoration: none; font-size: 0.75rem; text-align: center; box-sizing: border-box;
+        }
+        .btn-register:hover { background: rgba(255, 237, 5, 0.1); border-color: #ffed05; }
+
+        .divider {
+            display: flex; align-items: center; text-align: center; margin: 25px 0 10px;
+            color: #555; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 2px;
+        }
+        .divider::before, .divider::after {
+            content: ''; flex: 1; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .divider:not(:empty)::before { margin-right: .5em; }
+        .divider:not(:empty)::after { margin-left: .5em; }
+
         .extra-links { display: flex; justify-content: space-between; font-size: 0.7rem; color: #666; margin-top: 15px; }
         .extra-links a { color: #ffed05; text-decoration: none; }
     </style>
@@ -54,4 +74,8 @@
 
         <button type="submit" class="btn-login">Entrar al Sistema</button>
     </form>
+
+    <div class="divider">O també</div>
+
+    <a href="{{ route('register') }}" class="btn-register">Registrar nou usuari</a>
 </x-guest-layout>

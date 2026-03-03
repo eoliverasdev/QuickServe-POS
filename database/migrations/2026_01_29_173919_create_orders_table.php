@@ -19,8 +19,6 @@ return new class extends Migration
             $table->string('payment_method')->default('Tarjeta');
             // 'Pagat' o 'Pendent' (per si algú s'oblida la cartera i torna més tard)
             $table->string('status')->default('Pendent');
-            // Relació opcional amb l'usuari (treballador) que fa la venda
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
         });
     }
