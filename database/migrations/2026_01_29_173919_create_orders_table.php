@@ -13,12 +13,14 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
+            // Relació amb el treballador (IMPORTANT!)
+            $table->foreignId('worker_id')->constrained('workers')->onDelete('cascade');
             // El preu total de la comanda amb IVA
             $table->decimal('total_price', 10, 2);
-            // 'Efectiu' o 'Targeta' per poder quadrar la caixa al final del dia
-            $table->string('payment_method')->default('Tarjeta');
-            // 'Pagat' o 'Pendent' (per si algú s'oblida la cartera i torna més tard)
-            $table->string('status')->default('Pendent');
+            // 'Efectiu' o 'Targeta'
+            $table->string('payment_method')->default('Targeta');
+            // 'Pagat' o 'Pendent'
+            $table->string('status')->default('Pagat'); 
             $table->timestamps();
         });
     }
