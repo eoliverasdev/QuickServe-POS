@@ -51,14 +51,14 @@ class AdminController extends Controller
         
         Category::create($request->all());
         // Redirigim a l'àncora #categories
-        return redirect(url()->previous() . '#categories')->with('success', 'Categoria creada correctament!');
+        return back()->with('success', 'Categoria creada correctament!')->withFragment('categories-list');
     }
 
     public function destroyCategory($id) {
         $category = Category::findOrFail($id);
         $category->delete();
         // Redirigim a l'àncora #categories
-        return redirect(url()->previous() . '#categories')->with('success', 'Categoria eliminada');
+        return back()->with('success', 'Categoria eliminada')->withFragment('categories-list');
     }
 
     // --- LC-2: GESTIÓ DE PRODUCTES ---
@@ -75,7 +75,7 @@ class AdminController extends Controller
         $product->categories()->attach($request->category_id);
 
         // Redirigim a l'àncora #productes
-        return redirect(url()->previous() . '#productes')->with('success', 'Producte creat amb la seva categoria!');
+        return back()->with('success', 'Producte creat amb la seva categoria!')->withFragment('productes-list');
     }
 
     public function updateProduct(Request $request, $id) {
@@ -91,17 +91,14 @@ class AdminController extends Controller
         $product->categories()->sync([$request->category_id]);
 
         // Redirigim a l'àncora #productes
-        return redirect(url()->previous() . '#productes')->with('success', 'Producte actualitzat');
+        return back()->with('success', 'Producte actualitzat')->withFragment('productes-list');
     }
 
     public function deleteProduct($id) {
-       $product = Product::findOrFail($id);
+        $product = Product::findOrFail($id);
+        $product->delete();
 
-    $product->active = false;
-    $product->save();
-
-    return redirect(url()->previous() . '#productes')
-        ->with('success', 'Producte desactivat');
+        return back()->with('success', 'Producte eliminat')->withFragment('productes-list');
     }
 
     // --- GESTIÓ DE TREBALLADORS ---
@@ -113,13 +110,13 @@ class AdminController extends Controller
 
         Worker::create($request->all());
         // Redirigim a l'àncora #treballadors
-        return redirect(url()->previous() . '#treballadors')->with('success', 'Treballador creat correctament');
+        return back()->with('success', 'Treballador creat correctament')->withFragment('treballadors-list');
     }
 
     public function deleteWorker($id) {
         Worker::findOrFail($id)->delete();
         // Redirigim a l'àncora #treballadors
-        return redirect(url()->previous() . '#treballadors')->with('success', 'Treballador eliminat');
+        return back()->with('success', 'Treballador eliminat')->withFragment('treballadors-list');
     }
 
     // --- GESTIÓ DE COMANDES ---
@@ -127,6 +124,6 @@ class AdminController extends Controller
         $order = Order::findOrFail($id);
         $order->delete();
         // Redirigim a l'àncora #comandes
-        return redirect(url()->previous() . '#comandes')->with('success', 'Venda anul·lada correctament');
+        return back()->with('success', 'Venda anul·lada correctament')->withFragment('comandes');
     }
 }

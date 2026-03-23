@@ -200,17 +200,37 @@
             display: flex;
             flex-direction: column;
             border-left: 1px solid #e9edf7;
+            box-sizing: border-box;
+            max-height: 100vh;
         }
 
         .invoice-title {
             font-size: 1.5rem;
             font-weight: 800;
             margin-bottom: 25px;
+            flex-shrink: 0;
         }
 
         .cart-items-list {
             flex-grow: 1;
             overflow-y: auto;
+            min-height: 0;
+            padding-right: 8px;
+        }
+
+        /* Scrollbar (Slider estètic) per a la comanda */
+        .cart-items-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .cart-items-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .cart-items-list::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+        .cart-items-list::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
         }
 
         .cart-item {
@@ -279,6 +299,7 @@
             padding: 20px;
             border-radius: 20px;
             margin-top: 20px;
+            flex-shrink: 0;
         }
 
         .summary-row {

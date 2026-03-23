@@ -12,8 +12,12 @@ use App\Models\Worker;
 // --- PÀGINA PRINCIPAL (TPV) ---
 Route::get('/', function () {
     $categories = Category::all();
-    $products = Product::with('categories')->get();
-    $workers = Worker::all();
+
+    // Filtrem productes actius
+    $products = Product::with('categories')->where('active', true)->get();
+
+    // Filtrem també treballadors actius
+    $workers = Worker::where('active', true)->get();
 
     return view('tpv.index', compact('categories', 'products', 'workers'));
 })->middleware(['auth']);
@@ -29,22 +33,24 @@ Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 Route::middleware('auth')->group(function () {
 
     // Ruta per guardar vendes (Accessible per a tots els loguejats)
-  
-    
-    // --- LC-3: PROTECCIÓ D'ACCÉS ADMIN PER ROL ---
-    Route::group(['middleware' => function ($request, $next) {
-        $user = Auth::user();
 
-        if (!$user || $user->role !== 'admin') {
-            // Si és una petició AJAX (fetch), retornem JSON en lloc de redirecció
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'No autoritzat'], 403);
+
+    // --- LC-3: PROTECCIÓ D'ACCÉS ADMIN PER ROL ---
+    Route::group([
+        'middleware' => function ($request, $next) {
+            $user = Auth::user();
+
+            if (!$user) {
+                // Si és una petició AJAX (fetch), retornem JSON en lloc de redirecció
+                if ($request->expectsJson()) {
+                    return response()->json(['error' => 'No autoritzat'], 403);
+                }
+                return redirect('/')->with('error', 'Accés denegat: cal iniciar sessió.');
             }
-            return redirect('/')->with('error', 'Accés denegat: es requereixen permisos d\'administrador.');
+
+            return $next($request);
         }
-        
-        return $next($request);
-    }], function () {
+    ], function () {
 
         // Panell d'Administració Principal
         Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
@@ -68,4 +74,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

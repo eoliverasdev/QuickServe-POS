@@ -31,7 +31,7 @@
         .sidebar { 
             width: 280px; 
             background: var(--sidebar-bg); 
-            min-height: 100vh; 
+            height: 100vh; 
             position: fixed; 
             padding: 25px 20px; 
             box-sizing: border-box; 
@@ -40,6 +40,20 @@
             display: flex;
             flex-direction: column;
         }
+
+        .sidebar-links {
+            flex-grow: 1;
+            overflow-y: auto;
+            min-height: 0;
+            padding-right: 5px;
+            margin-bottom: 10px;
+        }
+
+        /* Scrollbar per al menú lateral */
+        .sidebar-links::-webkit-scrollbar { width: 4px; }
+        .sidebar-links::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-links::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .sidebar-links::-webkit-scrollbar-thumb:hover { background: #cbd5e0; }
 
         .sidebar-logo {
             display: flex;
@@ -144,14 +158,26 @@
         <div></div>
     </div>
     
-    <button class="nav-link active" onclick="showSection('resum', this)">📊 Resum</button>
-    <button class="nav-link" onclick="showSection('categories', this)">📂 Categories</button>
-    <button class="nav-link" onclick="showSection('productes', this)">🍔 Productes</button>
-    <button class="nav-link" onclick="showSection('treballadors', this)">👥 Treballadors</button>
-    <button class="nav-link" onclick="showSection('comandes', this)">🧾 Historial</button>
+    <div class="sidebar-links">
+        <button class="nav-link active" onclick="showSection('resum', this)">📊 Resum</button>
+
+        <div style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">Categories</div>
+        <button class="nav-link" onclick="showSection('categories-list', this)">📂 Llista Categories</button>
+        <button class="nav-link" onclick="showSection('categories-create', this)">➕ Crear Categoria</button>
+        
+        <div style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">Productes</div>
+        <button class="nav-link" onclick="showSection('productes-list', this)">🍔 Llista Productes</button>
+        <button class="nav-link" onclick="showSection('productes-create', this)">➕ Crear Producte</button>
+        
+        <div style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">Treballadors</div>
+        <button class="nav-link" onclick="showSection('treballadors-list', this)">👥 Llista Treballadors</button>
+        <button class="nav-link" onclick="showSection('treballadors-create', this)">➕ Crear Treballador</button>
+
+        <div style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">Vendes</div>
+        <button class="nav-link" onclick="showSection('comandes', this)">🧾 Historial de Vendes</button>
+    </div>
     
-    
-    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 0 0 20px 0;">
     
     <a href="{{ url('/') }}" class="nav-link" style="color: var(--primary-dark)">⬅ Anar al TPV</a>
     
@@ -178,8 +204,8 @@
         </div>
     </div>
 
-    <div id="categories" class="section">
-        <h1>Gestió de Categories</h1>
+    <div id="categories-create" class="section">
+        <h1>Crear Categoria</h1>
         <div class="card">
             <label style="font-weight: 900; margin-bottom: 10px; display: block;">AFEGIR CATEGORIA</label>
             <form action="{{ route('categories.store') }}" method="POST" class="admin-form" style="grid-template-columns: 1fr 120px;">
@@ -189,6 +215,12 @@
                 </div>
                 <button type="submit" class="btn btn-add">CREAR</button>
             </form>
+        </div>
+    </div>
+
+    <div id="categories-list" class="section">
+        <h1>Gestió de Categories</h1>
+        <div class="card">
 
             <table style="margin-top: 20px;">
                 <thead><tr><th>Nom</th><th style="text-align: right;">Accions</th></tr></thead>
@@ -209,8 +241,8 @@
         </div>
     </div>
 
-    <div id="productes" class="section">
-        <h1>Gestió de Productes</h1>
+    <div id="productes-create" class="section">
+        <h1>Crear Producte</h1>
         <div class="card">
             <label style="font-weight: 900; margin-bottom: 10px; display: block;">AFEGIR PRODUCTE</label>
             <form action="{{ route('products.store') }}" method="POST" class="admin-form">
@@ -235,7 +267,10 @@
                 <button type="submit" class="btn btn-add">AFEGIR</button>
             </form>
         </div>
+    </div>
 
+    <div id="productes-list" class="section">
+        <h1>Gestió de Productes</h1>
         <div class="card">
             <input type="text" id="productSearch" class="search-bar" placeholder="🔍 Cerca per nom de producte..." onkeyup="filterProducts()">
             <table id="productsTable">
@@ -289,8 +324,8 @@
         </div>
     </div>
 
-    <div id="treballadors" class="section">
-        <h1>Gestió de Treballadors</h1>
+    <div id="treballadors-create" class="section">
+        <h1>Crear Treballador</h1>
         <div class="card">
             <label style="font-weight: 900; margin-bottom: 10px; display: block;">NOU TREBALLADOR</label>
             <form action="{{ route('workers.store') }}" method="POST" class="admin-form" style="grid-template-columns: 1fr 1fr 120px;">
@@ -305,7 +340,12 @@
                 </div>
                 <button type="submit" class="btn btn-add">AFEGIR</button>
             </form>
+        </div>
+    </div>
 
+    <div id="treballadors-list" class="section">
+        <h1>Gestió de Treballadors</h1>
+        <div class="card">
             <table>
                 <thead><tr><th>Nom</th><th>PIN</th><th style="text-align: right;">Accions</th></tr></thead>
                 <tbody>

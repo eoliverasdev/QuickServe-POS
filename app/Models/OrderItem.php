@@ -18,6 +18,6 @@ class OrderItem extends Model
     // Relació: Aquest detall fa referència a un producte
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 }

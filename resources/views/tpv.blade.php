@@ -18,22 +18,26 @@
 
             <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
                 <button onclick="filterCategory(event, 'Tots')" class="cat-btn px-4 py-2 bg-orange-500 text-white rounded-full shadow-sm font-semibold whitespace-nowrap">Tots</button>
-                @foreach($products->pluck('category')->unique() as $cat)
-                    <button onclick="filterCategory(event, '{{ $cat }}')" class="cat-btn px-4 py-2 bg-white text-gray-600 rounded-full shadow-sm font-semibold whitespace-nowrap hover:bg-orange-100">{{ $cat }}</button>
+                @foreach($categories as $category)
+                    <button onclick="filterCategory(event, '{{ $category->name }}')" class="cat-btn px-4 py-2 bg-white text-gray-600 rounded-full shadow-sm font-semibold whitespace-nowrap hover:bg-orange-100">{{ $category->name }}</button>
                 @endforeach
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto pr-2 flex-1" id="products-grid">
                 @foreach($products as $product)
                     <button onclick="addToCart('{{ $product->id }}', '{{ $product->name }}', '{{ $product->price }}')"
-                            data-category="{{ $product->category }}"
+                            @if($product->categories->first()) 
+                                data-category="{{ $product->categories->first()->name }}" 
+                            @else 
+                                data-category="Sense Categoria" 
+                            @endif
                             class="product-card bg-white rounded-2xl shadow-sm overflow-hidden border-b-4 border-orange-500 active:scale-95 transition-all text-left group">
                         
                         <div class="h-32 w-full bg-gray-200 overflow-hidden relative">
                             @if($product->image_path)
                                 <img src="{{ asset('images/' . $product->image_path) }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
                             @else
-                                <div class="flex items-center justify-center h-full text-gray-400 italic">Sense foto</div>
+                                <div class="flex items-center justify-center h-full text-gray-400 italic text-sm">Sense foto</div>
                             @endif
                             
                             @if($product->is_gluten_free)
@@ -44,7 +48,7 @@
                         <div class="p-4">
                             <span class="block font-bold text-gray-800 text-lg leading-tight h-12 overflow-hidden">{{ $product->name }}</span>
                             <div class="flex justify-between items-center mt-2">
-                                <span class="text-orange-600 font-black text-xl">{{ number_format($product->price, 2) }} €</span>
+                                <span class="text-orange-600 font-black text-xl">{{ number_format($product->price, 2, ',', '.') }} €</span>
                                 <div class="bg-gray-100 p-1 rounded-full">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -63,11 +67,21 @@
                 <button onclick="clearCart()" class="text-xs text-gray-400 hover:text-red-400 underline">Buidar</button>
             </div>
 
-            <div id="cart-items" class="flex-1 p-4 overflow-y-auto space-y-3">
+            <div class="p-4 bg-gray-700 border-b border-gray-600">
+                <label class="block text-xs uppercase font-bold text-gray-400 mb-1">Atès per:</label>
+                <select id="worker-select" class="w-full bg-gray-800 text-white border border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-orange-500 shadow-inner">
+                    <option value="">-- Selecciona cambrer --</option>
+                    @foreach($workers as $worker)
+                        <option value="{{ $worker->id }}">{{ $worker->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div id="cart-items" class="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50">
                 <p class="text-gray-400 text-center mt-10 italic">Selecciona algun producte...</p>
             </div>
 
-            <div class="p-6 bg-gray-50 border-t border-gray-200">
+            <div class="p-6 bg-white border-t border-gray-200">
                 <div class="flex justify-between text-gray-600 mb-2">
                     <span>Base Imposable:</span>
                     <span id="base-total">0.00 €</span>
@@ -76,7 +90,7 @@
                     <span>IVA (10%):</span>
                     <span id="iva-total">0.00 €</span>
                 </div>
-                <div class="flex justify-between text-3xl font-black mb-6 text-gray-800">
+                <div class="flex justify-between text-3xl font-black mb-6 text-gray-800 border-t pt-4">
                     <span>TOTAL:</span>
                     <span id="final-total">0.00 €</span>
                 </div>
@@ -131,9 +145,9 @@
                 <div class="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm border border-gray-100 animate-fade-in-right">
                     <div>
                         <p class="font-bold text-gray-800">${item.name}</p>
-                        <p class="text-xs text-orange-600">${item.price.toFixed(2)} €</p>
+                        <p class="text-xs text-orange-600">${item.price.toFixed(2).replace('.', ',')} €</p>
                     </div>
-                    <button onclick="removeFromCart(${index})" class="text-gray-300 hover:text-red-500 p-1">
+                    <button onclick="removeFromCart(${index})" class="text-gray-300 hover:text-red-500 p-1 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -141,9 +155,9 @@
                 </div>
             `).join('');
 
-            baseEl.innerText = base.toFixed(2) + ' €';
-            ivaEl.innerText = iva.toFixed(2) + ' €';
-            finalEl.innerText = total.toFixed(2) + ' €';
+            baseEl.innerText = base.toFixed(2).replace('.', ',') + ' €';
+            ivaEl.innerText = iva.toFixed(2).replace('.', ',') + ' €';
+            finalEl.innerText = total.toFixed(2).replace('.', ',') + ' €';
         }
 
         function filterCategory(e, category) {
@@ -151,7 +165,6 @@
                 btn.classList.remove('bg-orange-500', 'text-white');
                 btn.classList.add('bg-white', 'text-gray-600');
             });
-            // Fem servir currentTarget per seguretat
             e.currentTarget.classList.add('bg-orange-500', 'text-white');
 
             document.querySelectorAll('.product-card').forEach(card => {
@@ -163,8 +176,14 @@
             });
         }
 
-        // NOVA FUNCIÓ PER ENVIAR LES DADES AL BACKEND I REBRE EL PDF
         async function generarFactura() {
+            const workerId = document.getElementById('worker-select').value;
+            
+            if (!workerId) {
+                alert("Si us plau, selecciona un cambrer abans de tancar la comanda.");
+                return;
+            }
+
             if (cart.length === 0) {
                 alert("El carretó està buit!");
                 return;
@@ -181,16 +200,17 @@
                     },
                     body: JSON.stringify({
                         items: cart,
-                        total: total
+                        total: total,
+                        worker_id: workerId // Enviem el treballador seleccionat
                     })
                 });
 
                 if (response.ok) {
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
-                    // Obre el PDF en una pestanya nova
                     window.open(url, '_blank');
                     clearCart();
+                    document.getElementById('worker-select').value = ""; // Reset del treballador
                 } else {
                     alert("Error en generar la factura al servidor.");
                 }
@@ -207,6 +227,11 @@
             to { opacity: 1; transform: translateX(0); }
         }
         .animate-fade-in-right { animation: fade-in-right 0.2s ease-out; }
+        /* Scrollbar personalitzat */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
     </style>
 </body>
 </html>

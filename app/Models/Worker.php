@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Worker extends Model
 {
+    use SoftDeletes;
     protected $fillable = ['name', 'pin'];
 
     // Per si algun dia vols saber totes les comandes d'un treballador
