@@ -11,7 +11,7 @@ class ProductController extends Controller
     public function index()
     {
         return view('tpv.index', [
-            'products' => Product::with('categories')->get(),
+            'products' => Product::with('category')->where('active', true)->get(),
             'categories' => Category::all(),
             'workers' => Worker::all() // Enviem els 6 treballadors (Meri, Roc, etc.)
         ]);

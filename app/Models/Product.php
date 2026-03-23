@@ -15,7 +15,8 @@ class Product extends Model
         'price',
         'is_gluten_free',
         'description',
-        'image_path'
+        'image_path',
+        'active'
     ];
 
     public function categories()
