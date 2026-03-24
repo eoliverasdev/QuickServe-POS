@@ -10,7 +10,16 @@ class Order extends Model
 {
     // Camps que permetem omplir de cop
     // El worker_id ja el tenies ben posat!
-    protected $fillable = ['total_price', 'payment_method', 'status', 'worker_id'];
+    protected $fillable = [
+        'total_price',
+        'payment_method',
+        'status',
+        'worker_id',
+        'is_preorder',
+        'pickup_number',
+        'pickup_time',
+        'customer_name'
+    ];
 
     /**
      * Relació: Una comanda té molts detalls (items)

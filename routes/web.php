@@ -65,7 +65,15 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/workers', [AdminController::class, 'storeWorker'])->name('workers.store');
         Route::delete('/admin/workers/{id}', [AdminController::class, 'deleteWorker'])->name('workers.destroy');
         Route::patch('/admin/workers/{id}/pin', [AdminController::class, 'updatePin'])->name('workers.updatePin');
-        Route::delete('/admin/orders/{id}', [AdminController::class, 'deleteOrder'])->name('orders.destroy');
+        Route::delete('/admin/orders/{id}', [AdminController::class, 'destroyOrder'])->name('orders.destroy');
+    });
+
+    Route::middleware(['auth'])->group(function () {
+        // Rutes d'encàrrecs
+        Route::get('/orders/pending', [OrderController::class, 'getPendingPreorders'])->name('orders.pending');
+        Route::post('/orders/{id}/charge', [OrderController::class, 'chargePreorder'])->name('orders.charge');
+        Route::get('/orders/{id}/details', [OrderController::class, 'getOrderDetails'])->name('orders.details');
+        Route::post('/orders/{id}/cancel', [OrderController::class, 'cancelPreorder'])->name('orders.cancel');
     });
 
     // --- PERFIL D'USUARI (Breeze) ---

@@ -173,7 +173,8 @@
         <button class="nav-link" onclick="showSection('treballadors-list', this)">👥 Llista Treballadors</button>
         <button class="nav-link" onclick="showSection('treballadors-create', this)">➕ Crear Treballador</button>
 
-        <div style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">Vendes</div>
+        <div style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">Caixa i Vendes</div>
+        <button class="nav-link" onclick="showSection('caixa', this)">💵 Tancament de Caixa</button>
         <button class="nav-link" onclick="showSection('comandes', this)">🧾 Historial de Vendes</button>
     </div>
     
@@ -201,6 +202,56 @@
             <div class="stat-card border-orange"><h3>Total Avui</h3><p>{{ number_format($totalAvui, 2) }}€</p></div>
             <div class="stat-card"><h3>Comandes</h3><p>{{ $comandesComptador }}</p></div>
             <div class="stat-card"><h3>Millor Treballador</h3><p style="color: var(--success)">{{ $millorWorker->name ?? 'Sense vendes' }}</p></div>
+        </div>
+    </div>
+
+    <!-- TANCAMENT DE CAIXA -->
+    <div id="caixa" class="section">
+        <h1>💵 Tancament de Caixa (X/Z Report)</h1>
+        
+        <p style="color: #666; font-size: 1rem; margin-bottom: 30px; font-weight: 600;">Control total sobre els ingressos de la jornada actual.</p>
+
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+            <div class="stat-card border-orange" style="background: rgba(255, 237, 5, 0.1);">
+                <h3>💰 Total Acumulat Avui</h3>
+                <p>{{ number_format($totalAvui, 2) }}€</p>
+            </div>
+            <div class="stat-card" style="border-top: 4px solid var(--success)">
+                <h3>💵 Efectiu en Calaix</h3>
+                <p style="color: var(--success)">{{ number_format($efectiuAvui, 2) }}€</p>
+                <small style="color: #666;">Diners que han de coincidir manualment a la caixa forta.</small>
+            </div>
+            <div class="stat-card" style="border-top: 4px solid #3b82f6;">
+                <h3>💳 Pagaments via Targeta</h3>
+                <p style="color: #3b82f6;">{{ number_format($targetaAvui, 2) }}€</p>
+                <small style="color: #666;">Diners enviats al Datàfon/TPV virtual.</small>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-top: 0; margin-bottom: 20px;">Desglossament d'IVA ({{ $ivaPercentatge }}%)</h2>
+            <table style="width: 100%;">
+                <thead style="background: #fafafa;">
+                    <tr>
+                        <th style="padding: 15px;">Concepte</th>
+                        <th style="padding: 15px; text-align: right;">Import</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 15px; font-weight: 600;">Base Imposable</td>
+                        <td style="padding: 15px; text-align: right;">{{ number_format($baseImposable, 2) }}€</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px; font-weight: 600;">Quota IVA ({{ $ivaPercentatge }}%)</td>
+                        <td style="padding: 15px; text-align: right; color: var(--danger);">{{ number_format($quotaIva, 2) }}€</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px; font-weight: 800; font-size: 1.2rem; border-top: 2px solid #eee;">Total Brut</td>
+                        <td style="padding: 15px; text-align: right; font-weight: 800; font-size: 1.2rem; border-top: 2px solid #eee;">{{ number_format($totalAvui, 2) }}€</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -256,6 +307,10 @@
                     <input type="number" name="price" step="0.01" required>
                 </div>
                 <div>
+                    <label>Stock (Opcional)</label>
+                    <input type="number" name="stock" min="0" step="0.5" placeholder="∞ (Lliure)">
+                </div>
+                <div>
                     <label>Categoria</label>
                     <select name="category_id" required>
                         <option value="">Tria una...</option>
@@ -279,6 +334,7 @@
                         <th>Producte</th>
                         <th>Categoria</th>
                         <th>Preu</th>
+                        <th>Stock</th>
                         <th style="text-align: right;">Accions</th>
                     </tr>
                 </thead>
@@ -294,6 +350,13 @@
                             @endif
                         </td>
                         <td><strong style="color: var(--success)">{{ number_format($product->price, 2) }}€</strong></td>
+                        <td>
+                            @if(!is_null($product->stock))
+                                <span class="badge" style="background:#e6fffa; color:#2c7a7b;">{{ $product->stock }} <small>un.</small></span>
+                            @else
+                                <small style="color: gray;">--</small>
+                            @endif
+                        </td>
                         <td style="text-align: right;">
                             <button class="btn btn-edit" onclick="toggleEdit('{{ $product->id }}')">Editar</button>
                             <form action="{{ route('products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Eliminar?')" style="display:inline;">
@@ -303,11 +366,12 @@
                         </td>
                     </tr>
                     <tr id="edit-{{ $product->id }}" class="edit-row">
-                        <td colspan="4">
+                        <td colspan="5">
                             <form action="{{ route('products.update', $product->id) }}" method="POST" style="display: flex; gap: 10px; padding: 10px;">
                                 @csrf @method('PUT')
                                 <input type="text" name="name" value="{{ $product->name }}" required style="flex: 2; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
                                 <input type="number" name="price" value="{{ $product->price }}" step="0.01" required style="width: 80px; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                                <input type="number" name="stock" value="{{ $product->stock }}" min="0" step="0.5" placeholder="Lliure" style="width: 80px; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
                                 <select name="category_id" required style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
                                     @foreach($categories as $cat)
                                         <option value="{{ $cat->id }}" {{ $product->categories->contains($cat->id) ? 'selected' : '' }}>{{ $cat->name }}</option>

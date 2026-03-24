@@ -13,10 +13,18 @@ class AdminController extends Controller
 {
     public function index() {
         // 1. Estadístiques d'avui
-        $totalAvui = Order::whereDate('created_at', Carbon::today())->sum('total_price');
-        $comandesComptador = Order::whereDate('created_at', Carbon::today())->count();
+        $totalAvui = Order::whereDate('created_at', Carbon::today())->where('status', 'Pagat')->sum('total_price');
+        $comandesComptador = Order::whereDate('created_at', Carbon::today())->where('status', 'Pagat')->count();
         
-        // 2. Historial de vendes (amb relacions per evitar el problema N+1)
+        // 1.1 Tancament de Caixa i Desglossament
+        $efectiuAvui = Order::whereDate('created_at', Carbon::today())->where('payment_method', 'Efectiu')->sum('total_price');
+        $targetaAvui = Order::whereDate('created_at', Carbon::today())->where('payment_method', 'Targeta')->sum('total_price');
+        
+        $ivaPercentatge = 21; // Segons frontend
+        $baseImposable = $totalAvui / (1 + ($ivaPercentatge / 100));
+        $quotaIva = $totalAvui - $baseImposable;
+
+        // 2. Historial de vendes
         $darreresVendes = Order::with(['worker', 'items.product'])
                             ->latest()
                             ->take(15)
@@ -27,7 +35,7 @@ class AdminController extends Controller
         $categories = Category::all();
         $treballadors = Worker::withCount('orders')->get();
 
-        // 4. Millor treballador d'avui (amb verificació)
+        // 4. Millor treballador d'avui
         $millorWorker = Worker::withCount(['orders' => function($q) {
             $q->whereDate('created_at', Carbon::today());
         }])->orderBy('orders_count', 'desc')->first();
@@ -35,6 +43,11 @@ class AdminController extends Controller
         return view('admin.admin', compact(
             'totalAvui', 
             'comandesComptador', 
+            'efectiuAvui',
+            'targetaAvui',
+            'baseImposable',
+            'quotaIva',
+            'ivaPercentatge',
             'darreresVendes', 
             'productes', 
             'categories', 
@@ -66,15 +79,15 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
+            'stock' => 'nullable|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
             'image' => 'nullable|string',
             'active' => 'true'
         ]);
 
-        $product = Product::create($request->only(['name', 'price', 'image']));
+        $product = Product::create($request->only(['name', 'price', 'stock', 'image']));
         $product->categories()->attach($request->category_id);
 
-        // Redirigim a l'àncora #productes
         return back()->with('success', 'Producte creat amb la seva categoria!')->withFragment('productes-list');
     }
 
@@ -84,10 +97,11 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
+            'stock' => 'nullable|numeric|min:0',
             'category_id' => 'required|exists:categories,id'
         ]);
 
-        $product->update($request->only(['name', 'price']));
+        $product->update($request->only(['name', 'price', 'stock']));
         $product->categories()->sync([$request->category_id]);
 
         // Redirigim a l'àncora #productes

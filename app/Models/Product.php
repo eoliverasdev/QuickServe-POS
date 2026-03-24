@@ -14,6 +14,7 @@ class Product extends Model
         'name',
         'category_id', // Guardem l'ID de la taula categories
         'price',
+        'stock',
         'is_gluten_free',
         'description',
         'image_path',

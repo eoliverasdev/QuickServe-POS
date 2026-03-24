@@ -52,7 +52,8 @@ class ProductSeeder extends Seeder
 
             // --- CARNS ---
             ['name' => 'Pollastre', 'cats' => ['Carn'], 'price' => 12.80, 'is_gluten_free' => true, 'image_path' => 'images/carns/pollastre.jpg'],
-            ['name' => '1/2 Pollastre', 'cats' => ['Carn'], 'price' => 6.50, 'is_gluten_free' => true, 'image_path' => 'images/carns/migpollastre.jpg'],
+            ['name' => '1/2 Pollastre (Pit i cuixa)', 'cats' => ['Carn'], 'price' => 6.50, 'is_gluten_free' => true, 'image_path' => 'images/carns/migpollastre.jpg'],
+            ['name' => '1/2 Pollastre (Cuixes)', 'cats' => ['Carn'], 'price' => 6.50, 'is_gluten_free' => true, 'image_path' => 'images/carns/migpollastre.jpg'],
             ['name' => 'Conill', 'cats' => ['Carn'], 'price' => 18.00, 'is_gluten_free' => true, 'image_path' => 'images/carns/conill.jpg'],
             ['name' => 'Paletilla de Cordero', 'cats' => ['Carn'], 'price' => 20.00, 'is_gluten_free' => true, 'image_path' => 'images/carns/xai.jpg'],
             ['name' => 'Cap de Llom', 'cats' => ['Carn'], 'price' => 25.00, 'is_gluten_free' => true, 'image_path' => 'images/carns/capdellom.jpg'],
