@@ -1027,7 +1027,8 @@
                     price: parseFloat(item.price_at_sale),
                     quantity: item.quantity,
                     img: '/' + item.product.image_path,
-                    notes: item.notes || ''
+                    notes: item.notes || '',
+                    cartKey: item.product_id + '|' + (item.notes || '')
                 }));
                 
                 // Emmagatzemar les metadades de l'encàrrec a la UI
