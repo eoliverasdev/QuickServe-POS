@@ -10,14 +10,14 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $noms = ['Meri', 'Roc', 'Sergi', 'Xènia', 'Robert', 'Edu'];
+        // Usuari administrador de prova
+        User::updateOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'Admin',
+                'password' => Hash::make('password'),
+            ]
+        );
 
-        foreach ($noms as $nom) {
-            User::create([
-                'name' => $nom,
-                'email' => strtolower($nom) . '@lacresta.com', // Laravel demana un email per defecte
-                'password' => Hash::make('password'), // Una contrasenya genèrica
-            ]);
-        }
     }
 }

@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
     {
         // L'ordre és CRÍTIC: Primer les categories (pares) i després els productes (fills)
         $this->call([
+            UserSeeder::class,
+            WorkerSeeder::class,
             CategorySeeder::class,
             ProductSeeder::class,
         ]);

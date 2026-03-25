@@ -13,13 +13,15 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            'Carn',
+            'Carns',
+            'Entrants Freds',
+            'Entrants Calents',
+            'Peix',
             'Complements',
-            'Sense Gluten',
             'Postres',
-            'Guisats',
-            'Amanides',
-            'Entrants'
+            'Begudes',
+            'Sense Gluten',
+            'Nadal'
         ];
 
         foreach ($categories as $cat) {

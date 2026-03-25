@@ -212,6 +212,29 @@
             box-shadow: 0 4px 10px rgba(78, 115, 223, 0.2);
         }
 
+        .worker-pill-btn:hover {
+            background: #f0f3ff;
+            color: #4e73df;
+            border-color: #4e73df;
+        }
+
+        .time-quick-btn {
+            background: #fff;
+            border: 1px solid #e9edf7;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #4e73df;
+        }
+
+        .time-quick-btn:hover {
+            background: #4e73df;
+            color: #fff;
+        }
+
         /* --- Tiquet --- */
         .invoice-sidebar {
             background: #fff;
@@ -423,7 +446,7 @@
         <div class="nav-icon active">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
         </div>
-        <button class="nav-icon" onclick="openPendingPreordersModal()" style="border:none; cursor:pointer; position:relative; background:none;">
+        <button class="nav-icon" onclick="openPendingPreordersModal()" style="position:relative;">
             <!-- Icona capsa encàrrecs -->
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
             <span id="preorder-badge" style="display:none; position:absolute; top:-5px; right:-5px; background:var(--danger); color:white; border-radius:50%; padding:2px 5px; font-weight:bold; font-size:10px;">0</span>
@@ -582,8 +605,17 @@
         </div>
         
         <div id="preorder-fields" style="display:none; margin-top: 20px; text-align:left;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Hora de recollida:</label>
-            <input type="time" id="preorder-time" style="width:100%; padding: 10px; border-radius:10px; border:1px solid #ccc; margin-bottom:15px;" required>
+            <label style="font-weight:bold; margin-bottom:8px; display:block;">Hora de recollida:</label>
+            <div style="display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap;">
+                <button type="button" class="time-quick-btn" onclick="adjustTime(-60)">-60m</button>
+                <button type="button" class="time-quick-btn" onclick="adjustTime(-30)">-30m</button>
+                <button type="button" class="time-quick-btn" onclick="adjustTime(-15)">-15m</button>
+                <button type="button" class="time-quick-btn" onclick="adjustTime(0)">Ara</button>
+                <button type="button" class="time-quick-btn" onclick="adjustTime(15)">+15m</button>
+                <button type="button" class="time-quick-btn" onclick="adjustTime(30)">+30m</button>
+                <button type="button" class="time-quick-btn" onclick="adjustTime(60)">+60m</button>
+            </div>
+            <input type="time" id="preorder-time" style="width:100%; padding: 15px; font-size: 1.2rem; font-weight: 800; border-radius:12px; border:2px solid #e9edf7; margin-bottom:15px; color: #4e73df;" required step="900">
             
             <label style="font-weight:bold; display:block; margin-bottom:5px;">Nom del Client (Opcional):</label>
             <input type="text" id="preorder-name" style="width:100%; padding: 10px; border-radius:10px; border:1px solid #ccc;">
@@ -599,7 +631,13 @@
 <div id="payment-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center;">
     <div class="modal-content">
         <h2 style="margin-top: 0; margin-bottom: 10px;">Com paguen?</h2>
-        <p style="color:#666; margin-bottom: 25px;">Selecciona el mètode de pagament</p>
+        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 25px;">
+            <p style="color:#666; margin: 0; font-size:1.2rem;">Total: <strong id="payment-total-price">0.00€</strong></p>
+            <button id="btn-add-bag-payment" style="border:1px solid var(--primary); background:#fff; color:var(--primary); padding:5px 10px; border-radius:8px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="toggleBagPayment()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                + Bossa (0,10€)
+            </button>
+        </div>
 
         <div style="display: flex; gap: 15px; margin-bottom: 20px;">
             <button class="method-btn" onclick="processCheckout('Efectiu')">
@@ -629,6 +667,14 @@
         <h2 style="margin-top:0;">Cobrar Encàrrec</h2>
         <input type="hidden" id="charging-preorder-id">
         <input type="hidden" id="charging-worker-id">
+
+        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 25px;">
+            <p style="color:#666; margin: 0; font-size:1.2rem;">Total: <strong id="charge-total-price">0.00€</strong></p>
+            <button id="btn-add-bag-charge" style="border:1px solid var(--primary); background:#fff; color:var(--primary); padding:5px 10px; border-radius:8px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="toggleBagCharge()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                + Bossa (0,10€)
+            </button>
+        </div>
 
         <p style="text-align: left; font-weight: 800; font-size: 0.8rem; color: #aaa; text-transform: uppercase;">1. Qui cobra l'encàrrec?</p>
         <div id="charge-worker-list" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 25px; justify-content: flex-start;">
@@ -878,11 +924,44 @@
 
     function closeUserModal() { document.getElementById('user-modal').style.display = 'none'; }
 
+    let isBagAddedPayment = false;
+    let currentPaymentTotal = 0;
+
+    function toggleBagPayment() {
+        isBagAddedPayment = !isBagAddedPayment;
+        let btn = document.getElementById('btn-add-bag-payment');
+        if (isBagAddedPayment) {
+            btn.style.background = 'var(--primary)';
+            btn.style.color = '#fff';
+        } else {
+            btn.style.background = '#fff';
+            btn.style.color = 'var(--primary)';
+        }
+        updatePaymentTotalUI();
+    }
+
+    function updatePaymentTotalUI() {
+        let finalTotal = currentPaymentTotal + (isBagAddedPayment ? 0.10 : 0);
+        document.getElementById('payment-total-price').innerText = finalTotal.toFixed(2) + '€';
+    }
+
     function openPaymentMethodModal() {
         if(isCreatingPreorder) {
             processCheckout('Pendent'); // Skipeja el pagament si és enviat com encàrrec
             return;
         }
+        
+        currentPaymentTotal = 0;
+        cart.forEach(item => currentPaymentTotal += item.price * item.quantity);
+        isBagAddedPayment = false;
+        
+        let btn = document.getElementById('btn-add-bag-payment');
+        if (btn) {
+            btn.style.background = '#fff';
+            btn.style.color = 'var(--primary)';
+        }
+        updatePaymentTotalUI();
+
         document.getElementById('user-modal').style.display = 'none';
         document.getElementById('payment-modal').style.display = 'flex';
     }
@@ -894,8 +973,10 @@
     function processCheckout(paymentMethod) {
         if (!selectedWorkerId) return;
         
-        let total = 0;
-        cart.forEach(item => total += item.price * item.quantity);
+        let total = currentPaymentTotal;
+        if (isBagAddedPayment && paymentMethod !== 'Pendent') {
+            total += 0.10;
+        }
 
         const data = {
             worker_id: selectedWorkerId,
@@ -1012,7 +1093,7 @@
                             <div style="display:flex; gap:5px; justify-content:flex-end;">
                                 <button class="btn-place-order" style="padding:10px; font-size:0.85rem; width:auto; border:2px solid var(--danger); background:none; color:var(--danger);" onclick="deletePreorder(${order.id})">Anul·lar</button>
                                 <button class="btn-place-order" style="padding:10px; font-size:0.85rem; width:auto; border:2px solid var(--primary); background:none; color:var(--dark);" onclick="editPreorder(${order.id})">Modificar</button>
-                                <button class="btn-place-order" style="padding:10px 15px; font-size:0.85rem; width:auto;" onclick="openChargePreorderModal(${order.id})">Cobrar</button>
+                                <button class="btn-place-order" style="padding:10px 15px; font-size:0.85rem; width:auto;" onclick="openChargePreorderModal(${order.id}, ${order.total_price})">Cobrar</button>
                             </div>
                         </div>
                     </div>
@@ -1034,11 +1115,42 @@
         document.getElementById('pending-preorders-modal').style.display = 'flex';
     }
 
-    function openChargePreorderModal(id) {
+    let isBagAddedCharge = false;
+    let currentChargeTotal = 0;
+
+    function toggleBagCharge() {
+        isBagAddedCharge = !isBagAddedCharge;
+        let btn = document.getElementById('btn-add-bag-charge');
+        if (isBagAddedCharge) {
+            btn.style.background = 'var(--primary)';
+            btn.style.color = '#fff';
+        } else {
+            btn.style.background = '#fff';
+            btn.style.color = 'var(--primary)';
+        }
+        updateChargeTotalUI();
+    }
+
+    function updateChargeTotalUI() {
+        let finalTotal = parseFloat(currentChargeTotal) + (isBagAddedCharge ? 0.10 : 0);
+        document.getElementById('charge-total-price').innerText = finalTotal.toFixed(2) + '€';
+    }
+
+    function openChargePreorderModal(id, total) {
         document.getElementById('pending-preorders-modal').style.display = 'none';
         document.getElementById('charging-preorder-id').value = id;
         document.getElementById('charging-worker-id').value = ''; // Reset
         document.querySelectorAll('#charge-worker-list .worker-pill-btn').forEach(b => b.classList.remove('active'));
+        
+        currentChargeTotal = total;
+        isBagAddedCharge = false;
+        let btn = document.getElementById('btn-add-bag-charge');
+        if (btn) {
+            btn.style.background = '#fff';
+            btn.style.color = 'var(--primary)';
+        }
+        updateChargeTotalUI();
+
         document.getElementById('charge-preorder-modal').style.display = 'flex';
     }
 
@@ -1065,7 +1177,8 @@
             },
             body: JSON.stringify({ 
                 payment_method: paymentMethod,
-                worker_id: workerId
+                worker_id: workerId,
+                add_bag: isBagAddedCharge
             })
         }).then(r => r.json()).then(res => {
             if (res.success) {
@@ -1093,8 +1206,6 @@
     }
 
     function editPreorder(id) {
-        if(!confirm('Això carregarà els aliments de l\'encàrrec al tiquet actual, esborrant el guardat original per permetre\'t fer canvis. Vols continuar?')) return;
-        
         fetch(`/orders/${id}/details`)
             .then(r => r.json())
             .then(data => {
@@ -1121,12 +1232,54 @@
                 }).then(() => {
                     document.getElementById('pending-preorders-modal').style.display = 'none';
                     renderCart();
-                    alert("L'encàrrec està llest per modificar-se al TPV. \nCobre'l ara amb el botó normal o fes clic a 'Memoritza Encàrrec' de nou quan hagis acabat!");
                 });
             });
+    }
+
+    function adjustTime(amount) {
+        const input = document.getElementById('preorder-time');
+        let d = new Date();
+        
+        if (amount === 0) {
+            let totalMins = d.getHours() * 60 + d.getMinutes();
+            totalMins = Math.round(totalMins / 15) * 15;
+            d.setHours(Math.floor(totalMins / 60));
+            d.setMinutes(totalMins % 60);
+            input.value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+            return;
+        }
+
+        let isEmpty = !input.value;
+        
+        if (!isEmpty) {
+            let parts = input.value.split(':');
+            d.setHours(parseInt(parts[0], 10));
+            d.setMinutes(parseInt(parts[1], 10));
+            d.setSeconds(0);
+            d.setMilliseconds(0);
+        }
+        
+        if (isEmpty) {
+            let totalMins = d.getHours() * 60 + d.getMinutes();
+            if (amount > 0) {
+                totalMins = Math.ceil((totalMins + 1) / amount) * amount;
+            } else {
+                let absAmt = Math.abs(amount);
+                totalMins = Math.floor((totalMins - 1) / absAmt) * absAmt;
+            }
+            d.setHours(Math.floor(totalMins / 60));
+            d.setMinutes(totalMins % 60);
+        } else {
+            d.setMinutes(d.getMinutes() + amount);
+            let totalMins = d.getHours() * 60 + d.getMinutes();
+            totalMins = Math.round(totalMins / 15) * 15;
+            d.setHours(Math.floor(totalMins / 60));
+            d.setMinutes(totalMins % 60);
+        }
+
+        input.value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     }
 
 </script>
 </body>
 </html>
-```
