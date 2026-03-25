@@ -81,6 +81,14 @@ Route::middleware('auth')->group(function () {
                 return redirect('/')->with('error', 'Accés denegat: cal iniciar sessió.');
             }
 
+            // Validació extra: Només podem entrar si el PIN ha estat verificat
+            if (!session('admin_pin_verified') && $request->path() !== 'admin/verify-pin') {
+                if ($request->expectsJson()) {
+                    return response()->json(['error' => 'Falta PIN'], 403);
+                }
+                return redirect('/')->with('error', 'Introdueix el teu PIN d\'encarregat al TPV per accedir.');
+            }
+
             return $next($request);
         }
     ], function () {

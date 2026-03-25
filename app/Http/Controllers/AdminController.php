@@ -165,6 +165,22 @@ class AdminController extends Controller
         ));
     }
 
+    public function verifyPin(Request $request)
+    {
+        $request->validate([
+            'pin' => 'required|numeric|digits:4'
+        ]);
+
+        $worker = Worker::where('pin', $request->pin)->where('active', true)->first();
+
+        if ($worker) {
+            session(['admin_pin_verified' => true]);
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false, 'error' => 'PIN incorrecte.']);
+    }
+
     // --- LC-1: GESTIÓ DE CATEGORIES ---
     public function storeCategory(Request $request)
     {

@@ -451,9 +451,9 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
             <span id="preorder-badge" style="display:none; position:absolute; top:-5px; right:-5px; background:var(--danger); color:white; border-radius:50%; padding:2px 5px; font-weight:bold; font-size:10px;">0</span>
         </button>
-        <a href="{{ route('admin.index') }}" class="nav-icon" title="Admin">
+        <button class="nav-icon" onclick="openAdminPinModal()" title="Admin" style="border:none; cursor:pointer; background:none;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M9 20v-10M15 20v-4M3 20h18"></path></svg>
-        </a>
+        </button>
         <div style="margin-top: auto;">
              <form method="POST" action="{{ route('logout') }}">
                 @csrf
@@ -625,6 +625,18 @@
             <button class="btn-place-order" id="btn-final-confirm" onclick="openPaymentMethodModal()" style="display:none; text-transform:uppercase;">Continuar</button>
             <br><button onclick="closeUserModal()" style="border:none; background:none; color:#999; margin-top:10px; cursor:pointer;">Cancel·lar</button>
         </div>
+    </div>
+</div>
+
+<div id="admin-pin-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4000; justify-content: center; align-items: center;">
+    <div class="modal-content" style="background:#fff; width:350px; padding:30px; border-radius:15px; text-align:center;">
+        <h2 style="margin-top:0; color:var(--text-main);">Accés Administració</h2>
+        <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">Introdueix el PIN d'encarregat.</p>
+        
+        <input type="password" id="admin-pin-input" inputmode="numeric" pattern="\d*" maxlength="4" placeholder="****" style="text-align:center; font-size:2rem; letter-spacing:10px; width:150px; padding:10px; border-radius:10px; border:2px solid var(--primary); margin-bottom:20px; outline:none;">
+        
+        <button class="btn-place-order" onclick="verifyAdminPin()" style="width:100%; display:block; padding:15px; font-size:1.1rem; margin-bottom:10px;">Accedir</button>
+        <button style="border:none; background:none; color:#999; cursor:pointer; font-weight:bold;" onclick="document.getElementById('admin-pin-modal').style.display='none'">Cancel·lar</button>
     </div>
 </div>
 
@@ -1279,6 +1291,56 @@
 
         input.value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     }
+
+    // --- PIN ADMIN ---
+    function openAdminPinModal() {
+        let input = document.getElementById('admin-pin-input');
+        input.value = '';
+        document.getElementById('admin-pin-modal').style.display = 'flex';
+        setTimeout(() => input.focus(), 100);
+    }
+
+    function verifyAdminPin() {
+        const pin = document.getElementById('admin-pin-input').value;
+        if (!pin || pin.length !== 4) {
+            alert('El PIN ha de tenir 4 dígits.');
+            return;
+        }
+
+        fetch('/admin/verify-pin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ pin: pin })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                window.location.href = '/admin';
+            } else {
+                alert(data.error || 'PIN incorrecte.');
+                document.getElementById('admin-pin-input').value = '';
+                document.getElementById('admin-pin-input').focus();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error validant el PIN");
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        let pinInput = document.getElementById('admin-pin-input');
+        if (pinInput) {
+            pinInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    verifyAdminPin();
+                }
+            });
+        }
+    });
 
 </script>
 </body>

@@ -461,7 +461,7 @@
             border: 2px solid #4e73df;
         }
 
-        /* Hores punta heatmap */
+        /*  heatmap */
         .hour-grid {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
@@ -599,7 +599,8 @@
                 <div class="stat-card border-blue">
                     <h3>💵 Efectiu / Targeta</h3>
                     <p style="font-size:1.4rem;">{{ number_format($efectiuAvui, 2) }}€ /
-                        {{ number_format($targetaAvui, 2) }}€</p>
+                        {{ number_format($targetaAvui, 2) }}€
+                    </p>
                 </div>
                 <div class="stat-card border-purple">
                     <h3>🏆 Millor Treballador</h3>
@@ -666,7 +667,8 @@
                                         <div
                                             style="background:#f8f9fe; border-radius:12px; padding:12px 16px; min-width:130px; flex:1;">
                                             <div style="font-size:1.3rem; margin-bottom:4px;">
-                                                {{ $j === 0 ? '🥇' : ($j === 1 ? '🥈' : ($j === 2 ? '🥉' : '🍽')) }}</div>
+                                                {{ $j === 0 ? '🥇' : ($j === 1 ? '🥈' : ($j === 2 ? '🥉' : '🍽')) }}
+                                            </div>
                                             <strong style="font-size:0.9rem; display:block;">{{ $item->product->name }}</strong>
                                             <span
                                                 style="color:#4e73df; font-weight:800; font-size:0.8rem;">{{ number_format($item->total_venuts, 1) }}
@@ -687,7 +689,7 @@
                     <p class="card-title">⏰ Hores Punta (últims 30 dies)</p>
                     @php
                         $maxHora = $vestesPerhora->max() ?? 1;
-                        $hoursToShow = range(8, 22);
+                        $hoursToShow = range(8, 15);
                     @endphp
                     <div class="hour-grid" style="grid-template-columns: repeat(auto-fit, minmax(25px, 1fr));">
                         @foreach($hoursToShow as $h)
@@ -723,12 +725,14 @@
                         <div style="min-width: 150px; flex: 1;">
                             <div class="payment-pill" style="margin-bottom:12px; padding: 12px;">
                                 <div class="amount" style="color:#22c55e; font-size: 1.3rem;">
-                                    {{ number_format($efectiuMes, 2) }}€</div>
+                                    {{ number_format($efectiuMes, 2) }}€
+                                </div>
                                 <div class="label" style="font-size: 0.65rem;">💵 Efectiu</div>
                             </div>
                             <div class="payment-pill" style="padding: 12px;">
                                 <div class="amount" style="color:#3b82f6; font-size: 1.3rem;">
-                                    {{ number_format($targetaMes, 2) }}€</div>
+                                    {{ number_format($targetaMes, 2) }}€
+                                </div>
                                 <div class="label" style="font-size: 0.65rem;">💳 Targeta</div>
                             </div>
                         </div>
@@ -779,14 +783,16 @@
                         <tr>
                             <td style="padding: 15px; font-weight: 600;">Quota IVA ({{ $ivaPercentatge }}%)</td>
                             <td style="padding: 15px; text-align: right; color: var(--danger);">
-                                {{ number_format($quotaIva, 2) }}€</td>
+                                {{ number_format($quotaIva, 2) }}€
+                            </td>
                         </tr>
                         <tr>
                             <td style="padding: 15px; font-weight: 800; font-size: 1.2rem; border-top: 2px solid #eee;">
                                 Total Brut</td>
                             <td
                                 style="padding: 15px; text-align: right; font-weight: 800; font-size: 1.2rem; border-top: 2px solid #eee;">
-                                {{ number_format($totalAvui, 2) }}€</td>
+                                {{ number_format($totalAvui, 2) }}€
+                            </td>
                         </tr>
                     </tbody>
                 </table>
