@@ -193,6 +193,25 @@
             box-shadow: 0 4px 12px rgba(78, 115, 223, 0.15);
         }
 
+        .worker-pill-btn {
+            background: #f8f9fe;
+            border: 1px solid #e9edf7;
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #666;
+            transition: 0.2s;
+        }
+
+        .worker-pill-btn.active {
+            background: #4e73df;
+            color: #fff;
+            border-color: #4e73df;
+            box-shadow: 0 4px 10px rgba(78, 115, 223, 0.2);
+        }
+
         /* --- Tiquet --- */
         .invoice-sidebar {
             background: #fff;
@@ -377,6 +396,24 @@
         .stock-out {
             background: rgba(255, 77, 77, 0.9);
         }
+        .trending-badge {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: linear-gradient(135deg, #ff6b35, #ff9a00);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            z-index: 10;
+            box-shadow: 0 3px 8px rgba(255,107,53,0.4);
+            animation: pulseGlow 2s infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 3px 8px rgba(255,107,53,0.4); }
+            50% { box-shadow: 0 3px 16px rgba(255,107,53,0.7); }
+        }
     </style>
 </head>
 <body>
@@ -427,6 +464,7 @@
              data-price="{{ $product->price }}"
              data-img="{{ asset($product->image_path) }}"
              data-stock="{{ $product->stock ?? 'null' }}"
+             data-fame="{{ $product->sales_count ?? 0 }}"
              data-categories="{{ $product->categories->pluck('name')->join(' ') }}">
 
             @if(!is_null($product->stock))
@@ -437,6 +475,11 @@
                         {{ $product->stock }} restants
                     @endif
                 </div>
+            @endif
+
+            {{-- Badge de Trending (top del dia) --}}
+            @if(isset($topAvui) && $topAvui->has($product->id))
+                <div class="trending-badge" title="Top {{ $topAvui->keys()->search($product->id) + 1 }} avui!">🔥 Trending</div>
             @endif
             
             <img src="{{ asset($product->image_path) }}" 
@@ -582,10 +625,22 @@
 </div>
 
 <div id="charge-preorder-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3000; justify-content:center; align-items:center;">
-    <div class="modal-content" style="background:#fff; width:350px; padding:30px; border-radius:15px; text-align:center;">
-        <h2 style="margin-top:0;">Com paguen l'encàrrec?</h2>
+    <div class="modal-content" style="background:#fff; width:450px; padding:30px; border-radius:15px; text-align:center;">
+        <h2 style="margin-top:0;">Cobrar Encàrrec</h2>
         <input type="hidden" id="charging-preorder-id">
-        <div style="display: flex; gap: 15px; margin-top: 20px;">
+        <input type="hidden" id="charging-worker-id">
+
+        <p style="text-align: left; font-weight: 800; font-size: 0.8rem; color: #aaa; text-transform: uppercase;">1. Qui cobra l'encàrrec?</p>
+        <div id="charge-worker-list" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 25px; justify-content: flex-start;">
+            @foreach($workers as $worker)
+                <button class="worker-pill-btn" onclick="selectChargeWorker({{ $worker->id }}, this)">
+                    {{ $worker->name }}
+                </button>
+            @endforeach
+        </div>
+
+        <p style="text-align: left; font-weight: 800; font-size: 0.8rem; color: #aaa; text-transform: uppercase;">2. Mètode de pagament</p>
+        <div style="display: flex; gap: 15px; margin-top: 10px;">
             <button class="method-btn" onclick="executeChargePreorder('Efectiu')">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
                 <div style="margin-top:5px;">Efectiu</div>
@@ -595,7 +650,8 @@
                 <div style="margin-top:5px;">Targeta</div>
             </button>
         </div>
-        <button style="border:none; background:none; color:#999; margin-top:20px; cursor:pointer; font-weight:800;" onclick="document.getElementById('charge-preorder-modal').style.display='none'">Cancel·lar</button>
+        
+        <button style="border:none; background:none; color:#999; margin-top:25px; cursor:pointer; font-weight:800; text-transform: uppercase; font-size: 0.75rem;" onclick="document.getElementById('charge-preorder-modal').style.display='none'">⬅ Cancel·lar</button>
     </div>
 </div>
 
@@ -981,22 +1037,44 @@
     function openChargePreorderModal(id) {
         document.getElementById('pending-preorders-modal').style.display = 'none';
         document.getElementById('charging-preorder-id').value = id;
+        document.getElementById('charging-worker-id').value = ''; // Reset
+        document.querySelectorAll('#charge-worker-list .worker-pill-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('charge-preorder-modal').style.display = 'flex';
+    }
+
+    function selectChargeWorker(workerId, btn) {
+        document.getElementById('charging-worker-id').value = workerId;
+        document.querySelectorAll('#charge-worker-list .worker-pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
     }
 
     function executeChargePreorder(paymentMethod) {
         const id = document.getElementById('charging-preorder-id').value;
+        const workerId = document.getElementById('charging-worker-id').value;
+
+        if (!workerId) {
+            alert('Per favor, selecciona primer qui està cobrant l\'encàrrec.');
+            return;
+        }
+
         fetch(`/orders/${id}/charge`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            body: JSON.stringify({ payment_method: paymentMethod })
+            body: JSON.stringify({ 
+                payment_method: paymentMethod,
+                worker_id: workerId
+            })
         }).then(r => r.json()).then(res => {
-            alert('Encàrrec cobrat amb èxit!');
-            document.getElementById('charge-preorder-modal').style.display = 'none';
-            fetchPendingPreorders();
+            if (res.success) {
+                alert('Encàrrec cobrat amb èxit!');
+                document.getElementById('charge-preorder-modal').style.display = 'none';
+                fetchPendingPreorders();
+            } else {
+                alert('Error al cobrar l\'encàrrec.');
+            }
         });
     }
 

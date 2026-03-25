@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <title>Admin - La Cresta</title>
     <style>
         /* Unificació de colors i fonts amb el TPV */
@@ -123,7 +124,11 @@
         }
         .stat-card h3 { margin: 0; color: #999; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
         .stat-card p { margin: 10px 0 0; font-size: 2rem; font-weight: 900; color: #333; }
+        .stat-card small { color: #aaa; font-size: 0.8rem; font-weight: 500; }
         .border-orange { border-top: 4px solid var(--primary); }
+        .border-green { border-top: 4px solid #22c55e; }
+        .border-blue { border-top: 4px solid #3b82f6; }
+        .border-purple { border-top: 4px solid #8b5cf6; }
 
         /* Forms & Tables */
         .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 30px; border: 1px solid #eee; }
@@ -148,6 +153,71 @@
         .edit-row { background: #fffbeb !important; display: none; }
         .edit-row.active { display: table-row; }
         .badge { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; background: #f0f0f0; color: #666; font-weight: 700; text-transform: uppercase; }
+
+        /* ─── ESTADÍSTIQUES ─── */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .analytics-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .card-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #aaa;
+            letter-spacing: 1px;
+            margin: 0 0 20px 0;
+        }
+
+        /* Barra de progrés de fama */
+        .fame-bar-wrap { margin-bottom: 12px; }
+        .fame-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.85rem; font-weight: 700; }
+        .fame-bar-track { background: #f4f4f8; border-radius: 10px; height: 8px; overflow: hidden; }
+        .fame-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #4e73df, #7b9ff5); transition: width 1s ease; }
+        .fame-rank { font-size: 0.75rem; color: #aaa; font-weight: 700; margin-right: 5px; }
+        .fame-rank-1 { color: #f59e0b; }
+        .fame-rank-2 { color: #94a3b8; }
+        .fame-rank-3 { color: #b87333; }
+
+        /* Dia selector */
+        .day-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .day-tab { 
+            padding: 8px 14px; border-radius: 10px; border: none; cursor: pointer; 
+            font-weight: 700; font-size: 0.8rem; background: #f4f4f8; color: #666;
+            transition: 0.2s; font-family: inherit;
+        }
+        .day-tab.active { background: #4e73df; color: #fff; }
+        .day-tab.today { border: 2px solid #4e73df; }
+
+        /* Hores punta heatmap */
+        .hour-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; }
+        .hour-cell { 
+            aspect-ratio: 1; border-radius: 8px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 800;
+            cursor: default; transition: 0.2s;
+        }
+        .hour-cell:hover { transform: scale(1.1); }
+        .hour-cell span { font-size: 0.55rem; color: inherit; opacity: 0.8; }
+
+        /* Pagament Split */
+        .payment-split { display: flex; gap: 15px; }
+        .payment-pill {
+            flex: 1; background: #f8f9fe; border-radius: 15px; padding: 20px; text-align: center;
+        }
+        .payment-pill .amount { font-size: 1.6rem; font-weight: 900; }
+        .payment-pill .label { font-size: 0.75rem; color: #aaa; font-weight: 700; text-transform: uppercase; margin-top: 4px; }
+
+        @media (max-width: 1400px) {
+            .analytics-grid { grid-template-columns: 1fr; }
+            .analytics-grid-3 { grid-template-columns: 1fr 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -197,13 +267,148 @@
     @endif
     
     <div id="resum" class="section active">
-        <h1>Panell de Control</h1>
-        <div class="stats-grid">
-            <div class="stat-card border-orange"><h3>Total Avui</h3><p>{{ number_format($totalAvui, 2) }}€</p></div>
-            <div class="stat-card"><h3>Comandes</h3><p>{{ $comandesComptador }}</p></div>
-            <div class="stat-card"><h3>Millor Treballador</h3><p style="color: var(--success)">{{ $millorWorker->name ?? 'Sense vendes' }}</p></div>
+        <h1>📊 Panell de Control</h1>
+
+        {{-- ── KPI Cards ── --}}
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+            <div class="stat-card border-orange">
+                <h3>💰 Total Avui</h3>
+                <p>{{ number_format($totalAvui, 2) }}€</p>
+                <small>últims 30 dies: {{ number_format($totalMes, 2) }}€</small>
+            </div>
+            <div class="stat-card border-green">
+                <h3>🧾 Comandes Avui</h3>
+                <p>{{ $comandesComptador }}</p>
+                <small>Tiquet mig: {{ number_format($tiquetMig, 2) }}€</small>
+            </div>
+            <div class="stat-card border-blue">
+                <h3>💵 Efectiu / Targeta</h3>
+                <p style="font-size:1.4rem;">{{ number_format($efectiuAvui, 2) }}€ / {{ number_format($targetaAvui, 2) }}€</p>
+            </div>
+            <div class="stat-card border-purple">
+                <h3>🏆 Millor Treballador</h3>
+                <p style="color: var(--success); font-size: 1.4rem;">{{ $millorWorker->name ?? '—' }}</p>
+                <small>per comandes avui</small>
+            </div>
+        </div>
+
+        {{-- ── Gràfic d'ingressos (7 dies) + Fama de productes ── --}}
+        <div class="analytics-grid">
+            <div class="card" style="margin-bottom:0;">
+                <p class="card-title">📈 Ingressos Últims 7 Dies</p>
+                <canvas id="chartIngressos" height="160"></canvas>
+            </div>
+            <div class="card" style="margin-bottom:0;">
+                <p class="card-title">🔥 Productes Més Venuts (Global)</p>
+                @php $maxFama = $topProductes->first()->total_venuts ?? 1; @endphp
+                @forelse($topProductes as $i => $item)
+                    @if($item->product)
+                    <div class="fame-bar-wrap">
+                        <div class="fame-bar-header">
+                            <span>
+                                <span class="fame-rank {{ $i === 0 ? 'fame-rank-1' : ($i === 1 ? 'fame-rank-2' : ($i === 2 ? 'fame-rank-3' : '')) }}">
+                                    {{ $i === 0 ? '🥇' : ($i === 1 ? '🥈' : ($i === 2 ? '🥉' : '#'.($i+1))) }}
+                                </span>
+                                {{ $item->product->name }}
+                            </span>
+                            <span style="color:#4e73df;">{{ number_format($item->total_venuts, 1) }} un.</span>
+                        </div>
+                        <div class="fame-bar-track">
+                            <div class="fame-bar-fill" style="width: {{ round(($item->total_venuts / $maxFama) * 100) }}%"></div>
+                        </div>
+                    </div>
+                    @endif
+                @empty
+                    <p style="color:#aaa; text-align:center; padding:20px 0;">Encara no hi ha dades de vendes.</p>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- ── Top per dia de la setmana ── --}}
+        <div class="card">
+            <p class="card-title">📅 Top Productes per Dia de la Setmana</p>
+            <p style="color:#aaa; margin: -10px 0 20px 0; font-size:0.82rem;">Basat en l'historial complet. Dia actual: <strong>{{ $diesCatala[$diaActual] }}</strong>.</p>
+            <div class="day-tabs">
+                @foreach($diesCatala as $dow => $nomDia)
+                    <button class="day-tab {{ $dow === $diaActual ? 'active today' : '' }}"
+                            onclick="showDayTab({{ $dow }}, this)">
+                        {{ $diesCurtCatala[$dow] }}{{ $dow === $diaActual ? ' ★' : '' }}
+                    </button>
+                @endforeach
+            </div>
+            @foreach($diesCatala as $dow => $nomDia)
+                <div id="day-content-{{ $dow }}" style="{{ $dow === $diaActual ? '' : 'display:none;' }}">
+                    @if($topPerDia[$dow]->isEmpty())
+                        <p style="color:#aaa; padding:10px 0;">Sense dades per a {{ $nomDia }}.</p>
+                    @else
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            @foreach($topPerDia[$dow] as $j => $item)
+                                @if($item->product)
+                                <div style="background:#f8f9fe; border-radius:12px; padding:12px 16px; min-width:130px; flex:1;">
+                                    <div style="font-size:1.3rem; margin-bottom:4px;">{{ $j===0?'🥇':($j===1?'🥈':($j===2?'🥉':'🍽')) }}</div>
+                                    <strong style="font-size:0.9rem; display:block;">{{ $item->product->name }}</strong>
+                                    <span style="color:#4e73df; font-weight:800; font-size:0.8rem;">{{ number_format($item->total_venuts,1) }} venuts</span>
+                                </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+
+        {{-- ── Hores punta + Mètode pagament ── --}}
+        <div class="analytics-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+            {{-- Heatmap d'hores punta --}}
+            <div class="card" style="margin-bottom:0;">
+                <p class="card-title">⏰ Hores Punta (últims 30 dies)</p>
+                @php
+                    $maxHora = $vestesPerhora->max() ?? 1;
+                    $hoursToShow = range(8, 22);
+                @endphp
+                <div class="hour-grid" style="grid-template-columns: repeat(auto-fit, minmax(25px, 1fr));">
+                    @foreach($hoursToShow as $h)
+                        @php
+                            $count = $vestesPerhora->get($h, 0);
+                            $pct   = $maxHora > 0 ? $count / $maxHora : 0;
+                            $alpha = round(0.08 + ($pct * 0.92), 2);
+                            $textColor = $pct > 0.45 ? '#fff' : '#4e73df';
+                        @endphp
+                        <div class="hour-cell" style="background: rgba(78,115,223,{{ $alpha }}); color: {{ $textColor }}; cursor: help;" title="{{ $h }}h: {{ $count }} comandes">
+                            {{ sprintf('%02d', $h) }}
+                            <span>{{ $count }}</span>
+                        </div>
+                    @endforeach
+                </div>
+                <p style="color:#aaa; font-size:0.7rem; margin-top:15px; text-align:center;">Dades basades en els darrers 30 dies (vendes/hora)</p>
+            </div>
+
+            {{-- Donut split pagament --}}
+            <div class="card" style="margin-bottom:0;">
+                <p class="card-title">💳 Mètode de Pagament (30 dies)</p>
+                @php
+                    $efectiuMes = \App\Models\Order::where('status','Pagat')->whereDate('created_at','>=',\Carbon\Carbon::today()->subDays(30))->where('payment_method','Efectiu')->sum('total_price');
+                    $targetaMes = \App\Models\Order::where('status','Pagat')->whereDate('created_at','>=',\Carbon\Carbon::today()->subDays(30))->where('payment_method','Targeta')->sum('total_price');
+                @endphp
+                <div style="display:flex; align-items:center; gap:20px; justify-content: center; flex-wrap: wrap;">
+                    <div style="width: 140px; height: 140px; flex-shrink: 0; position: relative;">
+                        <canvas id="chartPagament"></canvas>
+                    </div>
+                    <div style="min-width: 150px; flex: 1;">
+                        <div class="payment-pill" style="margin-bottom:12px; padding: 12px;">
+                            <div class="amount" style="color:#22c55e; font-size: 1.3rem;">{{ number_format($efectiuMes, 2) }}€</div>
+                            <div class="label" style="font-size: 0.65rem;">💵 Efectiu</div>
+                        </div>
+                        <div class="payment-pill" style="padding: 12px;">
+                            <div class="amount" style="color:#3b82f6; font-size: 1.3rem;">{{ number_format($targetaMes, 2) }}€</div>
+                            <div class="label" style="font-size: 0.65rem;">💳 Targeta</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
 
     <!-- TANCAMENT DE CAIXA -->
     <div id="caixa" class="section">
@@ -487,11 +692,92 @@
         editRow.classList.toggle('active');
     }
 
-    window.addEventListener('DOMContentLoaded', (event) => {
-        const hash = window.location.hash.substring(1); 
+    // ── Selector de dia (Top productes per dia) ──
+    function showDayTab(dow, btn) {
+        document.querySelectorAll('[id^="day-content-"]').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.day-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById('day-content-' + dow).style.display = 'block';
+        btn.classList.add('active');
+    }
+
+    // ── Charts (Chart.js) ──
+    window.addEventListener('DOMContentLoaded', () => {
+        const hash = window.location.hash.substring(1);
         if (hash) {
             const targetButton = document.querySelector(`button[onclick*="${hash}"]`);
             if (targetButton) showSection(hash, targetButton);
+        }
+
+        // Gràfic d'ingressos setmanals
+        const ctxLine = document.getElementById('chartIngressos');
+        if (ctxLine) {
+            new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: {!! json_encode($labelsSetmana) !!},
+                    datasets: [{
+                        label: 'Ingressos (€)',
+                        data: {!! json_encode($ingressosSetmana) !!},
+                        borderColor: '#4e73df',
+                        backgroundColor: 'rgba(78,115,223,0.08)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#4e73df',
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        borderWidth: 3,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ' ' + ctx.parsed.y.toFixed(2) + ' €'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f4f4f8' },
+                            ticks: { callback: v => v + '€' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Gràfic de donut (pagament)
+        const ctxDonut = document.getElementById('chartPagament');
+        if (ctxDonut) {
+            const efectiu = {{ $efectiuMes ?? 0 }};
+            const targeta = {{ $targetaMes ?? 0 }};
+            new Chart(ctxDonut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Efectiu', 'Targeta'],
+                    datasets: [{
+                        data: [efectiu || 0.001, targeta || 0.001],
+                        backgroundColor: ['#22c55e', '#3b82f6'],
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ' ' + ctx.parsed.toFixed(2) + ' €'
+                            }
+                        }
+                    }
+                }
+            });
         }
     });
 </script>

@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\OrderController; // <--- AFEGEIX AIXÒ
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\Category;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Worker;
 
@@ -13,14 +15,45 @@ use App\Models\Worker;
 Route::get('/', function () {
     $categories = Category::all();
 
-    // Filtrem productes actius
-    $products = Product::with('categories')->where('active', true)->get();
+    // Comptem vendes per producte per ordenar per fama
+    $salesCount = OrderItem::select('product_id', DB::raw('SUM(quantity) as total'))
+        ->whereHas('order', fn($q) => $q->where('status', 'Pagat'))
+        ->groupBy('product_id')
+        ->pluck('total', 'product_id');
 
-    // Filtrem també treballadors actius
+    // Productes actius, ordenats per fama (per a la categoria "Tots")
+    $products = Product::with('categories')
+        ->where('active', true)
+        ->get()
+        ->sortByDesc(fn($p) => $salesCount->get($p->id, 0))
+        ->values();
+
+    // Fama numèrica per a data-attribute al HTML
+    $products = $products->map(function ($p) use ($salesCount) {
+        $p->sales_count = $salesCount->get($p->id, 0);
+        return $p;
+    });
+
+    // Top 5 productes del dia actual (per destacar-los al TPV)
+    // DAYOFWEEK() a MySQL: 1=Diumenge, 2=Dilluns, ..., 7=Dissabte
+    $diaActual = (int) now()->format('w'); // 0=Diumenge (PHP/Carbon)
+    $mysqlDow  = $diaActual + 1;           // convertim a MySQL format
+    $topAvui = OrderItem::select('product_id', DB::raw('SUM(quantity) as total_venuts'))
+        ->whereHas('order', function ($q) use ($mysqlDow) {
+            $q->where('status', 'Pagat')
+              ->whereRaw('DAYOFWEEK(created_at) = ?', [$mysqlDow]);
+        })
+        ->groupBy('product_id')
+        ->orderByDesc('total_venuts')
+        ->take(5)
+        ->pluck('total_venuts', 'product_id');
+
+    // Treballadors actius
     $workers = Worker::where('active', true)->get();
 
-    return view('tpv.index', compact('categories', 'products', 'workers'));
+    return view('tpv.index', compact('categories', 'products', 'workers', 'topAvui'));
 })->middleware(['auth']);
+
 
 // Redirecció del dashboard de Breeze cap al nostre Admin
 Route::get('/dashboard', [AdminController::class, 'index'])

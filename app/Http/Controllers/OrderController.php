@@ -103,10 +103,14 @@ class OrderController extends Controller
     }
 
     public function chargePreorder(Request $request, $id) {
-        $request->validate(['payment_method' => 'required|string']);
+        $request->validate([
+            'payment_method' => 'required|string',
+            'worker_id'      => 'required|exists:workers,id'
+        ]);
         
         $order = Order::findOrFail($id);
         $order->payment_method = $request->payment_method;
+        $order->worker_id = $request->worker_id; // Actulitzem al treballador que cobra
         $order->status = 'Pagat';
         $order->save();
 
