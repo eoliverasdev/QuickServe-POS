@@ -7,6 +7,13 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <title>Admin - La Cresta</title>
+    <script>
+        // Capturem el hash ABANS que el navegador faci scroll automàtic, i el netegem
+        window.__initialHash = window.location.hash.substring(1);
+        if (window.__initialHash) {
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+    </script>
     <style>
         /* Unificació de colors i fonts amb el TPV */
         :root {
@@ -1074,7 +1081,9 @@
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             element.classList.add('active');
-            window.location.hash = id;
+            // Usem replaceState per no fer scroll automàtic de l'ancla
+            history.replaceState(null, '', '#' + id);
+            window.scrollTo({ top: 0, behavior: 'instant' });
         }
 
         function filterProducts() {
@@ -1101,12 +1110,13 @@
 
         // ── Charts (Chart.js) ──
         window.addEventListener('DOMContentLoaded', () => {
-            const hash = window.location.hash.substring(1);
+            // Restaurem la secció des del hash inicial (ja sense scroll automàtic del navegador)
+            const hash = window.__initialHash || '';
             if (hash) {
                 const targetButton = document.querySelector(`button[onclick*="${hash}"]`);
                 if (targetButton) showSection(hash, targetButton);
             }
-
+            window.scrollTo({ top: 0, behavior: 'instant' });
             // Gràfic d'ingressos setmanals
             const ctxLine = document.getElementById('chartIngressos');
             if (ctxLine) {
