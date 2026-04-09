@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TPV Premium - La Cresta</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="quickserve-parked-sync" content="{{ $parkedStorageSyncToken }}">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
         rel="stylesheet">
 
@@ -1847,8 +1848,21 @@
             document.getElementById('aggregated-products-modal').style.display = 'none';
         }
 
-        // --- LÒGICA DE TICKETS APARCATS ---
-        let parkedTickets = JSON.parse(localStorage.getItem('quickserve_parked_tickets')) || [];
+        // --- LÒGICA DE TICKETS APARCATS (localStorage: sobreviu a migrate:fresh) ---
+        const PARKED_TICKETS_KEY = 'quickserve_parked_tickets';
+        const PARKED_SYNC_TOKEN_KEY = 'quickserve_parked_sync_token';
+
+        (function syncParkedTicketsWithBackend() {
+            const meta = document.querySelector('meta[name="quickserve-parked-sync"]');
+            const serverToken = meta ? (meta.getAttribute('content') || '') : '';
+            const prev = localStorage.getItem(PARKED_SYNC_TOKEN_KEY);
+            if (prev !== serverToken) {
+                localStorage.removeItem(PARKED_TICKETS_KEY);
+                localStorage.setItem(PARKED_SYNC_TOKEN_KEY, serverToken);
+            }
+        })();
+
+        let parkedTickets = JSON.parse(localStorage.getItem(PARKED_TICKETS_KEY)) || [];
 
         function updateParkedBadge() {
             const badge = document.getElementById('parked-badge');
@@ -1877,7 +1891,7 @@
             };
             
             parkedTickets.push(parkedOrder);
-            localStorage.setItem('quickserve_parked_tickets', JSON.stringify(parkedTickets));
+            localStorage.setItem(PARKED_TICKETS_KEY, JSON.stringify(parkedTickets));
             updateParkedBadge();
 
             // Netejar la comanda actual sense modificar l'estoc
@@ -1941,7 +1955,7 @@
 
         function deleteParkedTicket(index) {
             parkedTickets.splice(index, 1);
-            localStorage.setItem('quickserve_parked_tickets', JSON.stringify(parkedTickets));
+            localStorage.setItem(PARKED_TICKETS_KEY, JSON.stringify(parkedTickets));
             updateParkedBadge();
             openParkedTicketsModal(); // Refresca el modal si estava obert
         }

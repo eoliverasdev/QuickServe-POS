@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Worker;
+use App\Support\ParkedTicketsSync;
 
 // --- PÀGINA PRINCIPAL (TPV) ---
 Route::get('/', function () {
@@ -51,7 +52,9 @@ Route::get('/', function () {
     // Treballadors actius
     $workers = Worker::where('active', true)->get();
 
-    return view('tpv.index', compact('categories', 'products', 'workers', 'topAvui'));
+    $parkedStorageSyncToken = ParkedTicketsSync::token();
+
+    return view('tpv.index', compact('categories', 'products', 'workers', 'topAvui', 'parkedStorageSyncToken'));
 })->middleware(['auth']);
 
 
