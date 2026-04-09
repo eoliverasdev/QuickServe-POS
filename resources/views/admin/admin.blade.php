@@ -525,6 +525,120 @@
             margin-top: 4px;
         }
 
+        /* ─── HISTORIAL FILTRE & ACCORDION ─── */
+        .filter-pills {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-pill {
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 2px solid #eee;
+            background: #fff;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            color: #666;
+        }
+
+        .filter-pill.active {
+            border-color: #4e73df;
+            background: #4e73df;
+            color: #fff;
+        }
+
+        .filter-pill.pill-efectiu.active {
+            border-color: #16a34a;
+            background: #16a34a;
+        }
+
+        .filter-pill.pill-targeta.active {
+            border-color: #3b82f6;
+            background: #3b82f6;
+        }
+
+        .venda-row {
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .venda-row:hover td {
+            background: #f8f9fe !important;
+        }
+
+        .venda-row.expanded td {
+            background: #f0f4ff !important;
+        }
+
+        .venda-detail-row td {
+            padding: 0 !important;
+            background: #f8faff !important;
+            border: none !important;
+        }
+
+        .venda-detail-inner {
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.35s ease, padding 0.35s ease;
+            padding: 0 15px;
+        }
+
+        .venda-detail-inner.open {
+            max-height: 500px;
+            padding: 14px 20px;
+        }
+
+        .detail-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px 0;
+            border-bottom: 1px solid #eaeaf5;
+            font-size: 0.88rem;
+        }
+
+        .detail-item-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-qty {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #e8edff;
+            color: #4e73df;
+            font-weight: 900;
+            font-size: 0.75rem;
+            border-radius: 8px;
+            min-width: 28px;
+            height: 24px;
+            padding: 0 6px;
+            margin-right: 10px;
+        }
+
+        .detail-price {
+            font-weight: 700;
+            color: #16a34a;
+        }
+
+        .chevron-icon {
+            display: inline-block;
+            transition: transform 0.25s;
+            font-size: 0.7rem;
+            margin-left: 6px;
+            color: #bbb;
+        }
+
+        .venda-row.expanded .chevron-icon {
+            transform: rotate(180deg);
+        }
+
         @media (max-width: 1400px) {
             .analytics-grid {
                 grid-template-columns: 1fr;
@@ -585,7 +699,16 @@
     <div class="main-content">
 
         @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
+            <div class="alert alert-success" style="background:#d1fae5; color:#065f46; padding:15px; border-radius:10px; margin-bottom:20px; font-weight:bold;">{{ session('success') }}</div>
+        @endif
+        @if($errors->any())
+            <div class="alert alert-danger" style="background:#fee2e2; color:#991b1b; padding:15px; border-radius:10px; margin-bottom:20px; font-weight:bold;">
+                <ul style="margin:0; padding-left:20px;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
 
         <div id="resum" class="section active">
@@ -987,10 +1110,17 @@
                         <label>Nom complet</label>
                         <input type="text" name="name" required>
                     </div>
-                    <div>
-                        <label>PIN (4 xifres)</label>
-                        <input type="text" name="pin" pattern="\d{4}">
-                    </div>
+                    @if(empty($adminWorkerId))
+                        <div>
+                            <label>PIN (4 xifres)</label>
+                            <input type="text" name="pin" pattern="\d{4}">
+                        </div>
+                    @else
+                        <div>
+                            <label style="color: #ccc;">PIN (Bloquejat)</label>
+                            <input type="text" disabled placeholder="Ja hi ha administrador" title="Ja hi ha assignat un PIN a un altre treballador">
+                        </div>
+                    @endif
                     <button type="submit" class="btn btn-add">AFEGIR</button>
                 </form>
             </div>
@@ -1023,10 +1153,41 @@
                                     @endif
                                 </td>
                                 <td style="text-align: right;">
+                                    <button class="btn btn-edit" onclick="toggleWorkerEdit('{{ $worker->id }}')">Editar</button>
                                     <form action="{{ route('workers.destroy', $worker->id) }}" method="POST"
-                                        onsubmit="return confirm('Eliminar?')">
+                                        onsubmit="return confirm('Eliminar?')" style="display:inline;">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-delete">Eliminar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr id="edit-worker-{{ $worker->id }}" class="edit-row">
+                                <td colspan="3">
+                                    <form action="{{ route('workers.update', $worker->id) }}" method="POST"
+                                        style="display: flex; gap: 10px; padding: 10px; align-items: flex-end;">
+                                        @csrf @method('PUT')
+                                        <div style="flex: 1; text-align: left;">
+                                            <label style="font-size: 0.7rem; font-weight: bold; color: #888; display: block; margin-bottom: 5px;">Nom</label>
+                                            <input type="text" name="name" value="{{ $worker->name }}" required
+                                                style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd; background: #fff;">
+                                        </div>
+                                        @if(empty($adminWorkerId) || $adminWorkerId === $worker->id)
+                                            <div style="width: 120px; text-align: left;">
+                                                <label style="font-size: 0.7rem; font-weight: bold; color: #888; display: block; margin-bottom: 5px;">PIN (4 dígits)</label>
+                                                <input type="text" name="pin" value="{{ $worker->pin }}" pattern="\d{4}" maxlength="4"
+                                                    placeholder="Ex: 1234"
+                                                    style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd; background: #fff;">
+                                            </div>
+                                        @else
+                                            <div style="width: 120px; text-align: left;">
+                                                <label style="font-size: 0.7rem; font-weight: bold; color: #ccc; display: block; margin-bottom: 5px;">PIN</label>
+                                                <input type="text" disabled placeholder="Bloquejat"
+                                                    style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #eee; background: #f9f9f9; color: #999; cursor: not-allowed;" title="Aquest sistema ja té un administrador">
+                                            </div>
+                                        @endif
+                                        <button type="submit" class="btn btn-add" style="padding: 9px 15px; margin-bottom: 1px;">OK</button>
+                                        <button type="button" class="btn btn-delete"
+                                            onclick="toggleWorkerEdit('{{ $worker->id }}')" style="padding: 9px 15px; margin-bottom: 1px;">X</button>
                                     </form>
                                 </td>
                             </tr>
@@ -1039,37 +1200,112 @@
         <div id="comandes" class="section">
             <h1>Historial de Vendes</h1>
             <div class="card">
-                <table>
+
+                <div class="filter-pills" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <span style="font-size:0.75rem; font-weight:800; color:#aaa; text-transform:uppercase; margin-right:4px;">Filtrar per:</span>
+                        <a href="?payment=all{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill {{ empty($paymentFilter) || $paymentFilter === 'all' ? 'active' : '' }}" style="text-decoration:none;">🧾 Tots</a>
+                        <a href="?payment=Efectiu{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill pill-efectiu {{ $paymentFilter === 'Efectiu' ? 'active' : '' }}" style="text-decoration:none;">💵 Efectiu</a>
+                        <a href="?payment=Targeta{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill pill-targeta {{ $paymentFilter === 'Targeta' ? 'active' : '' }}" style="text-decoration:none;">💳 Targeta</a>
+                    </div>
+                    <form action="{{ url('/admin') }}" method="GET" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <input type="hidden" name="payment" value="{{ $paymentFilter ?? 'all' }}">
+                        <span style="font-size:0.75rem; font-weight:800; color:#aaa; text-transform:uppercase;">Data:</span>
+                        <input type="date" name="start_date" value="{{ $startDate }}" style="padding:6px; border-radius:5px; border:1px solid #ddd; font-size:0.8rem; background:#fff;" title="Des d'aquest dia">
+                        <span style="font-size:0.75rem; font-weight:800; color:#ccc;">fins a</span>
+                        <input type="date" name="end_date" value="{{ $endDate }}" style="padding:6px; border-radius:5px; border:1px solid #ddd; font-size:0.8rem; background:#fff;" title="Fins a aquest dia (inclòs)">
+                        <button type="submit" class="btn btn-add" style="padding:6px 12px; margin:0;" onclick="window.__initialHash='comandes'">Aplicar</button>
+                        @if($startDate || $endDate)
+                            <a href="?payment={{ $paymentFilter ?? 'all' }}#comandes" class="btn btn-delete" style="padding:6px 12px; margin:0; text-decoration:none; font-size:0.8rem;" title="Netejar dates">Netejar</a>
+                        @endif
+                    </form>
+                </div>
+
+                <table id="vendesTable">
                     <thead>
                         <tr>
+                            <th></th>
                             <th>Hora</th>
                             <th>Treballador</th>
                             <th>Total</th>
+                            <th>Mètode</th>
                             <th style="text-align: right;">Accions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($darreresVendes as $venda)
-                            <tr>
+                            {{-- Fila principal clicable --}}
+                            <tr class="venda-row" data-payment="{{ $venda->payment_method }}" onclick="toggleVenda({{ $venda->id }}, this)">
+                                <td style="width:24px; color:#bbb;"><span class="chevron-icon">▼</span></td>
                                 <td>{{ $venda->created_at->format('H:i') }}h</td>
                                 <td><strong>{{ $venda->worker->name ?? 'Sistema' }}</strong></td>
-                                <td><strong
-                                        style="color:var(--success)">{{ number_format($venda->total_price, 2) }}€</strong>
+                                <td><strong style="color:var(--success)">{{ number_format($venda->total_price, 2) }}€</strong></td>
+                                <td>
+                                    @if($venda->payment_method === 'Targeta')
+                                        <span class="badge" style="background:#eff6ff; color:#3b82f6;">💳 Targeta</span>
+                                    @else
+                                        <span class="badge" style="background:#f0fdf4; color:#16a34a;">💵 Efectiu</span>
+                                    @endif
                                 </td>
-                                <td style="text-align: right;">
+                                <td style="text-align: right;" onclick="event.stopPropagation()">
                                     <form action="{{ url('/admin/orders/' . $venda->id) }}" method="POST">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-delete">ANUL·LAR</button>
                                     </form>
                                 </td>
                             </tr>
+                            {{-- Fila desplegable amb desglose --}}
+                            <tr class="venda-detail-row" id="detail-{{ $venda->id }}" data-payment="{{ $venda->payment_method }}">
+                                <td colspan="6">
+                                    <div class="venda-detail-inner" id="inner-{{ $venda->id }}">
+                                        @if($venda->items->isEmpty())
+                                            <p style="color:#aaa; font-size:0.85rem; margin:0;">Sense productes registrats.</p>
+                                        @else
+                                            @foreach($venda->items as $item)
+                                                <div class="detail-item-row">
+                                                    <span>
+                                                        <span class="detail-qty">×{{ $item->quantity }}</span>
+                                                        {{ $item->product->name ?? '(Producte eliminat)' }}
+                                                        @if($item->notes)
+                                                            <small style="color:#aaa; margin-left:6px;">— {{ $item->notes }}</small>
+                                                        @endif
+                                                    </span>
+                                                    <span class="detail-price">{{ number_format($item->price_at_sale * $item->quantity, 2) }}€</span>
+                                                </div>
+                                            @endforeach
+                                            <div style="margin-top:10px; padding-top:10px; border-top:2px solid #e0e7ff; display:flex; justify-content:flex-end;">
+                                                <strong style="font-size:0.9rem;">Total: <span style="color:var(--success);">{{ number_format($venda->total_price, 2) }}€</span></strong>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
                             <tr>
-                                <td colspan="4" style="text-align: center; padding: 20px;">Cap venda avui.</td>
+                                <td colspan="6" style="text-align: center; padding: 20px;">Cap venda avui.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
+                @if($darreresVendes->hasPages())
+                    <div style="margin-top: 25px; display: flex; justify-content: center;">
+                        <nav style="display: inline-flex; border-radius: 8px; border: 1px solid #ddd; overflow: hidden;">
+                            {{-- Previous Page Link --}}
+                            @if ($darreresVendes->onFirstPage())
+                                <span style="padding: 8px 16px; background: #fafafa; color: #aaa; font-weight: bold;">« Ant.</span>
+                            @else
+                                <a href="{{ $darreresVendes->previousPageUrl() }}" style="padding: 8px 16px; background: #fff; color: #4e73df; font-weight: bold; text-decoration: none; border-right: 1px solid #ddd;">« Ant.</a>
+                            @endif
+
+                            {{-- Next Page Link --}}
+                            @if ($darreresVendes->hasMorePages())
+                                <a href="{{ $darreresVendes->nextPageUrl() }}" style="padding: 8px 16px; background: #fff; color: #4e73df; font-weight: bold; text-decoration: none; border-left: 1px solid #ddd;">Seg. »</a>
+                            @else
+                                <span style="padding: 8px 16px; background: #fafafa; color: #aaa; font-weight: bold;">Seg. »</span>
+                            @endif
+                        </nav>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -1098,6 +1334,37 @@
         function toggleEdit(id) {
             let editRow = document.getElementById('edit-' + id);
             editRow.classList.toggle('active');
+        }
+
+        function toggleWorkerEdit(id) {
+            let editRow = document.getElementById('edit-worker-' + id);
+            editRow.classList.toggle('active');
+        }
+
+        // El filtre ara navega per backend mitjançant enllaços de query string.
+
+        // ── Accordion de desglose de comanda ──
+        let openVendaId = null;
+        function toggleVenda(id, rowEl) {
+            const inner = document.getElementById('inner-' + id);
+            const isOpen = inner.classList.contains('open');
+            // Tancar l'anterior si n'hi ha un obert
+            if (openVendaId && openVendaId !== id) {
+                const prevInner = document.getElementById('inner-' + openVendaId);
+                const prevRow = document.querySelector('.venda-row[onclick*="toggleVenda(' + openVendaId + ',"]');
+                if (prevInner) prevInner.classList.remove('open');
+                if (prevRow) prevRow.classList.remove('expanded');
+            }
+            // Obrir/tancar el clicat
+            if (isOpen) {
+                inner.classList.remove('open');
+                rowEl.classList.remove('expanded');
+                openVendaId = null;
+            } else {
+                inner.classList.add('open');
+                rowEl.classList.add('expanded');
+                openVendaId = id;
+            }
         }
 
         // ── Selector de dia (Top productes per dia) ──

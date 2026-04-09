@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // 1. Estadístiques d'avui
         $totalAvui = Order::whereDate('created_at', Carbon::today())->where('status', 'Pagat')->sum('total_price');
@@ -30,11 +30,28 @@ class AdminController extends Controller
         // 1.2 Tiquet Mig d'avui
         $tiquetMig = $comandesComptador > 0 ? round($totalAvui / $comandesComptador, 2) : 0;
 
-        // 2. Historial de vendes
-        $darreresVendes = Order::with(['worker', 'items.product'])
-            ->latest()
-            ->take(15)
-            ->get();
+        // 2. Historial de vendes (paginat a 6, amb filtre de dates)
+        $paymentFilter = $request->query('payment', 'all');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        
+        $query = Order::with(['worker', 'items.product'])
+            ->where('status', 'Pagat')
+            ->latest();
+            
+        if ($paymentFilter !== 'all') {
+            $query->where('payment_method', $paymentFilter);
+        }
+        
+        if ($startDate) {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('created_at', '<=', $endDate);
+        }
+        
+        $darreresVendes = $query->paginate(6)->withQueryString();
+        $darreresVendes->withPath('/admin')->fragment('comandes');
 
         // 3. Dades per a la gestió
         $productes = Product::with('categories')->orderBy('name')->get();
@@ -138,6 +155,9 @@ class AdminController extends Controller
         // Dia de la setmana actual (per destacar-lo a la vista)
         $diaActual = (int) Carbon::now()->format('w'); // 0=Diumenge
 
+        $workerWithPin = Worker::whereNotNull('pin')->where('pin', '!=', '')->first();
+        $adminWorkerId = $workerWithPin ? $workerWithPin->id : null;
+
         return view('admin.admin', compact(
             'totalAvui',
             'comandesComptador',
@@ -161,7 +181,11 @@ class AdminController extends Controller
             'labelsSetmana',
             'vestesPerhora',
             'totalMes',
-            'famaProductes'
+            'famaProductes',
+            'adminWorkerId',
+            'paymentFilter',
+            'startDate',
+            'endDate'
         ));
     }
 
@@ -248,14 +272,49 @@ class AdminController extends Controller
     // --- GESTIÓ DE TREBALLADORS ---
     public function storeWorker(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'pin' => 'nullable|numeric|digits:4'
+        $hasPin = Worker::whereNotNull('pin')->where('pin', '!=', '')->exists();
+
+        $rules = ['name' => 'required|string|max:255'];
+        if (!$hasPin) {
+            $rules['pin'] = 'nullable|numeric|digits:4|unique:workers,pin';
+        }
+
+        $request->validate($rules, [
+            'pin.unique' => 'Ja existeix un altre administrador assignat.'
         ]);
 
-        Worker::create($request->all());
-        // Redirigim a l'àncora #treballadors
+        $data = $request->all();
+        if ($hasPin) {
+            unset($data['pin']);
+        }
+
+        Worker::create($data);
         return back()->with('success', 'Treballador creat correctament')->withFragment('treballadors-list');
+    }
+
+    public function updateWorker(Request $request, $id)
+    {
+        $worker = Worker::findOrFail($id);
+
+        $adminWorker = Worker::whereNotNull('pin')->where('pin', '!=', '')->first();
+        $canHavePin = !$adminWorker || $adminWorker->id === $worker->id;
+
+        $rules = ['name' => 'required|string|max:255'];
+        if ($canHavePin) {
+            $rules['pin'] = 'nullable|numeric|digits:4|unique:workers,pin,' . $worker->id;
+        }
+
+        $request->validate($rules, [
+            'pin.unique' => 'Ja existeix un altre administrador assignat.'
+        ]);
+
+        $data = $request->all();
+        if (!$canHavePin) {
+            unset($data['pin']);
+        }
+
+        $worker->update($data);
+        return back()->with('success', 'Treballador actualitzat correctament')->withFragment('treballadors-list');
     }
 
     public function deleteWorker($id)

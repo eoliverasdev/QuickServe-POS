@@ -105,6 +105,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/admin/products/{id}', [AdminController::class, 'deleteProduct'])->name('products.destroy');
         Route::post('/admin/workers', [AdminController::class, 'storeWorker'])->name('workers.store');
         Route::delete('/admin/workers/{id}', [AdminController::class, 'deleteWorker'])->name('workers.destroy');
+        Route::put('/admin/workers/{id}', [AdminController::class, 'updateWorker'])->name('workers.update');
         Route::patch('/admin/workers/{id}/pin', [AdminController::class, 'updatePin'])->name('workers.updatePin');
         Route::delete('/admin/orders/{id}', [AdminController::class, 'destroyOrder'])->name('orders.destroy');
     });
