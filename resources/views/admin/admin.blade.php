@@ -572,15 +572,23 @@
 
         /* Historial de vendes — optimització tàctil */
         .historial-filters {
+            margin-bottom: 0;
+        }
+
+        .historial-filters-row {
             display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 16px 28px;
+            margin-bottom: 20px;
         }
 
         .historial-payment-block {
             display: flex;
             flex-direction: column;
             gap: 10px;
+            flex: 1 1 260px;
+            min-width: 0;
         }
 
         .historial-block-label {
@@ -610,61 +618,230 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .historial-date-form {
+        .historial-date-compact-form {
+            flex: 1 1 240px;
+            max-width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 14px;
-            padding: 16px;
-            background: #f1f5f9;
-            border-radius: 16px;
+            gap: 8px;
+            padding: 10px 14px;
+            background: #f8fafc;
+            border-radius: 14px;
             border: 1px solid #e2e8f0;
         }
 
-        .historial-date-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
+        .historial-date-chips-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
-        @media (min-width: 540px) {
-            .historial-date-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        .historial-date-field label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #475569;
-            margin-bottom: 8px;
-        }
-
-        .input-date-touch {
-            width: 100%;
-            box-sizing: border-box;
-            min-height: 52px;
-            padding: 12px 14px;
-            font-size: 1rem;
+        .date-wheel-chip {
+            flex: 1;
+            min-width: 108px;
+            min-height: 48px;
+            padding: 10px 12px;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
             background: #fff;
-            font-family: inherit;
+            font-size: 0.92rem;
+            font-weight: 700;
             color: #1e293b;
+            cursor: pointer;
+            font-family: inherit;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .date-wheel-chip:active {
+            background: #f1f5f9;
+        }
+
+        .date-chip-sep {
+            color: #94a3b8;
+            font-weight: 800;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .historial-date-actions-inline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Selector de data estil roda (iOS-like) */
+        .date-wheel-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .date-wheel-overlay.is-open {
+            display: flex;
+        }
+
+        .date-wheel-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
             touch-action: manipulation;
         }
 
-        .input-date-touch:focus {
-            outline: none;
-            border-color: #4e73df;
-            box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.22);
+        .date-wheel-sheet {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            padding: 12px 12px max(20px, env(safe-area-inset-bottom));
+            box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.18);
+            animation: dateWheelSlide 0.28s ease-out;
         }
 
-        .historial-date-actions {
+        @keyframes dateWheelSlide {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .date-wheel-header {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: stretch;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 4px 4px 12px;
+            border-bottom: 1px solid #e9edf5;
+            margin-bottom: 8px;
+        }
+
+        .date-wheel-title {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #334155;
+            flex: 1;
+            text-align: center;
+        }
+
+        .date-wheel-header-btn {
+            min-height: 44px;
+            min-width: 88px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #64748b;
+            cursor: pointer;
+            font-family: inherit;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .date-wheel-header-primary {
+            color: #4e73df;
+            font-weight: 800;
+        }
+
+        .date-wheel-columns {
+            display: flex;
+            gap: 4px;
+            padding: 4px 0 8px;
+        }
+
+        .date-wheel-col {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .date-wheel-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 6px;
+        }
+
+        .date-wheel-window {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            border-radius: 12px;
+            background: #f8fafc;
+            overflow: hidden;
+        }
+
+        .date-wheel-highlight {
+            position: absolute;
+            left: 4px;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 44px;
+            border-top: 1px solid #4e73df;
+            border-bottom: 1px solid #4e73df;
+            background: rgba(78, 115, 223, 0.07);
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .date-wheel-scroll {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .date-wheel-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .wheel-pad {
+            height: 88px;
+            flex-shrink: 0;
+        }
+
+        .wheel-item {
+            height: 44px;
+            line-height: 44px;
+            text-align: center;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #334155;
+            scroll-snap-align: center;
+            scroll-snap-stop: always;
+            user-select: none;
+        }
+
+        @media (min-width: 480px) {
+            .date-wheel-overlay.is-open {
+                align-items: center;
+            }
+
+            .date-wheel-sheet {
+                border-radius: 20px;
+                margin: 16px;
+                padding-bottom: 20px;
+            }
         }
 
         .btn-touch-historial {
@@ -1336,34 +1513,33 @@
             <div class="card">
 
                 <div class="historial-filters">
-                    <div class="historial-payment-block">
-                        <span class="historial-block-label">Filtrar per mètode</span>
-                        <div class="historial-payment-pills">
-                            <a href="?payment=all{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill {{ empty($paymentFilter) || $paymentFilter === 'all' ? 'active' : '' }}" style="text-decoration:none;">🧾 Tots</a>
-                            <a href="?payment=Efectiu{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill pill-efectiu {{ $paymentFilter === 'Efectiu' ? 'active' : '' }}" style="text-decoration:none;">💵 Efectiu</a>
-                            <a href="?payment=Targeta{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill pill-targeta {{ $paymentFilter === 'Targeta' ? 'active' : '' }}" style="text-decoration:none;">💳 Targeta</a>
+                    <div class="historial-filters-row">
+                        <div class="historial-payment-block">
+                            <span class="historial-block-label">Filtrar per mètode</span>
+                            <div class="historial-payment-pills">
+                                <a href="?payment=all{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill {{ empty($paymentFilter) || $paymentFilter === 'all' ? 'active' : '' }}" style="text-decoration:none;">🧾 Tots</a>
+                                <a href="?payment=Efectiu{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill pill-efectiu {{ $paymentFilter === 'Efectiu' ? 'active' : '' }}" style="text-decoration:none;">💵 Efectiu</a>
+                                <a href="?payment=Targeta{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill pill-targeta {{ $paymentFilter === 'Targeta' ? 'active' : '' }}" style="text-decoration:none;">💳 Targeta</a>
+                            </div>
                         </div>
+                        <form class="historial-date-compact-form" action="{{ url('/admin') }}" method="GET" id="historial-date-filter-form">
+                            <input type="hidden" name="payment" value="{{ $paymentFilter ?? 'all' }}">
+                            <input type="hidden" name="start_date" id="historial-hid-start" value="{{ $startDate ?? '' }}">
+                            <input type="hidden" name="end_date" id="historial-hid-end" value="{{ $endDate ?? '' }}">
+                            <span class="historial-block-label" style="margin:0;">Període</span>
+                            <div class="historial-date-chips-row">
+                                <button type="button" class="date-wheel-chip" id="historial-chip-start" title="Des de (inclòs)">—</button>
+                                <span class="date-chip-sep">al</span>
+                                <button type="button" class="date-wheel-chip" id="historial-chip-end" title="Fins a (inclòs)">—</button>
+                            </div>
+                            <div class="historial-date-actions-inline">
+                                <button type="submit" class="btn btn-add btn-touch-historial" onclick="window.__initialHash='comandes'">Aplicar període</button>
+                                @if($startDate || $endDate)
+                                    <a href="?payment={{ $paymentFilter ?? 'all' }}#comandes" class="btn btn-delete btn-touch-historial" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;" title="Netejar dates">Netejar dates</a>
+                                @endif
+                            </div>
+                        </form>
                     </div>
-                    <form class="historial-date-form" action="{{ url('/admin') }}" method="GET" id="historial-date-filter-form">
-                        <input type="hidden" name="payment" value="{{ $paymentFilter ?? 'all' }}">
-                        <span class="historial-block-label" style="margin:0;">Període de dates</span>
-                        <div class="historial-date-grid">
-                            <div class="historial-date-field">
-                                <label for="historial-start-date">Des de (inclòs)</label>
-                                <input type="date" id="historial-start-date" name="start_date" value="{{ $startDate }}" class="input-date-touch" title="Primer dia del període" autocomplete="off">
-                            </div>
-                            <div class="historial-date-field">
-                                <label for="historial-end-date">Fins a (inclòs)</label>
-                                <input type="date" id="historial-end-date" name="end_date" value="{{ $endDate }}" class="input-date-touch" title="Darrer dia del període" autocomplete="off">
-                            </div>
-                        </div>
-                        <div class="historial-date-actions">
-                            <button type="submit" class="btn btn-add btn-touch-historial" onclick="window.__initialHash='comandes'">Aplicar període</button>
-                            @if($startDate || $endDate)
-                                <a href="?payment={{ $paymentFilter ?? 'all' }}#comandes" class="btn btn-delete btn-touch-historial" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;" title="Netejar dates">Netejar dates</a>
-                            @endif
-                        </div>
-                    </form>
                 </div>
 
                 <table id="vendesTable">
@@ -1456,6 +1632,40 @@
 
     </div>
 
+    <div id="date-wheel-overlay" class="date-wheel-overlay" aria-hidden="true" role="presentation">
+        <div class="date-wheel-backdrop" aria-hidden="true"></div>
+        <div class="date-wheel-sheet" role="dialog" aria-modal="true" aria-labelledby="date-wheel-title">
+            <div class="date-wheel-header">
+                <button type="button" class="date-wheel-header-btn" id="date-wheel-cancel">Cancel·lar</button>
+                <span id="date-wheel-title" class="date-wheel-title">Data</span>
+                <button type="button" class="date-wheel-header-btn date-wheel-header-primary" id="date-wheel-ok">D'acord</button>
+            </div>
+            <div class="date-wheel-columns">
+                <div class="date-wheel-col">
+                    <span class="date-wheel-label">Dia</span>
+                    <div class="date-wheel-window">
+                        <div class="date-wheel-highlight" aria-hidden="true"></div>
+                        <div class="date-wheel-scroll" id="wheel-day"></div>
+                    </div>
+                </div>
+                <div class="date-wheel-col">
+                    <span class="date-wheel-label">Mes</span>
+                    <div class="date-wheel-window">
+                        <div class="date-wheel-highlight" aria-hidden="true"></div>
+                        <div class="date-wheel-scroll" id="wheel-month"></div>
+                    </div>
+                </div>
+                <div class="date-wheel-col">
+                    <span class="date-wheel-label">Any</span>
+                    <div class="date-wheel-window">
+                        <div class="date-wheel-highlight" aria-hidden="true"></div>
+                        <div class="date-wheel-scroll" id="wheel-year"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         function showSection(id, element) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -1519,6 +1729,227 @@
             document.getElementById('day-content-' + dow).style.display = 'block';
             btn.classList.add('active');
         }
+
+        // ── Historial: selector de data tipus roda (tàctil) ──
+        (function historialDateWheel() {
+            const ITEM_H = 44;
+            const PAD = 88;
+            const MONTHS_CA = ['gener', 'febrer', 'març', 'abril', 'maig', 'juny', 'juliol', 'agost', 'setembre', 'octubre', 'novembre', 'desembre'];
+            const YEAR_MIN = 2020;
+            const YEAR_MAX = 2035;
+
+            let wheelTarget = null;
+            let scrollTMY = null;
+            let scrollTD = null;
+            let suppressWheelScroll = false;
+
+            function daysInMonth(y, m) {
+                return new Date(y, m + 1, 0).getDate();
+            }
+
+            function pad2(n) {
+                return String(n).padStart(2, '0');
+            }
+
+            function isoFromParts(y, m, d) {
+                return `${y}-${pad2(m + 1)}-${pad2(d)}`;
+            }
+
+            function parseISOToParts(s) {
+                if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+                const [y, mo, d] = s.split('-').map(x => parseInt(x, 10));
+                return { y, m: mo - 1, d };
+            }
+
+            function formatChip(s) {
+                if (!s) return 'Tria';
+                const p = parseISOToParts(s);
+                if (!p) return 'Tria';
+                return `${pad2(p.d)}/${pad2(p.m + 1)}/${p.y}`;
+            }
+
+            function itemCount(scrollEl) {
+                return scrollEl.querySelectorAll('.wheel-item').length;
+            }
+
+            function getIndex(scrollEl) {
+                const n = itemCount(scrollEl);
+                if (!n) return 0;
+                const i = Math.round(scrollEl.scrollTop / ITEM_H);
+                return Math.max(0, Math.min(n - 1, i));
+            }
+
+            function getValueAtIndex(scrollEl, idx) {
+                const items = scrollEl.querySelectorAll('.wheel-item');
+                return items[idx] ? items[idx].dataset.value : null;
+            }
+
+            function snapScroll(scrollEl, instant) {
+                const n = itemCount(scrollEl);
+                if (!n) return;
+                const i = getIndex(scrollEl);
+                const top = i * ITEM_H;
+                if (instant) scrollEl.scrollTop = top;
+                else scrollEl.scrollTo({ top, behavior: 'smooth' });
+            }
+
+            function fillScrollColumn(scrollEl, labels, values, selectedVal, onDone) {
+                scrollEl.innerHTML = '';
+                const topPad = document.createElement('div');
+                topPad.className = 'wheel-pad';
+                topPad.style.height = PAD + 'px';
+                scrollEl.appendChild(topPad);
+                let selIdx = 0;
+                values.forEach((v, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'wheel-item';
+                    div.textContent = labels[i];
+                    div.dataset.value = String(v);
+                    if (v === selectedVal || String(v) === String(selectedVal)) selIdx = i;
+                    scrollEl.appendChild(div);
+                });
+                const botPad = document.createElement('div');
+                botPad.className = 'wheel-pad';
+                botPad.style.height = PAD + 'px';
+                scrollEl.appendChild(botPad);
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        scrollEl.scrollTop = selIdx * ITEM_H;
+                        if (typeof onDone === 'function') onDone();
+                    });
+                });
+            }
+
+            function readPickedISO() {
+                const wy = document.getElementById('wheel-year');
+                const wm = document.getElementById('wheel-month');
+                const wd = document.getElementById('wheel-day');
+                [wy, wm, wd].forEach(el => snapScroll(el, true));
+                const y = parseInt(getValueAtIndex(wy, getIndex(wy)), 10);
+                const m = parseInt(getValueAtIndex(wm, getIndex(wm)), 10);
+                let d = parseInt(getValueAtIndex(wd, getIndex(wd)), 10);
+                const maxD = daysInMonth(y, m);
+                if (d > maxD) d = maxD;
+                return isoFromParts(y, m, d);
+            }
+
+            function onMonthYearScroll() {
+                if (suppressWheelScroll) return;
+                clearTimeout(scrollTMY);
+                scrollTMY = setTimeout(() => {
+                    const wy = document.getElementById('wheel-year');
+                    const wm = document.getElementById('wheel-month');
+                    const wd = document.getElementById('wheel-day');
+                    snapScroll(wy, true);
+                    snapScroll(wm, true);
+                    const y = parseInt(getValueAtIndex(wy, getIndex(wy)), 10);
+                    const m = parseInt(getValueAtIndex(wm, getIndex(wm)), 10);
+                    let curD = parseInt(getValueAtIndex(wd, getIndex(wd)), 10) || 1;
+                    const maxD = daysInMonth(y, m);
+                    if (curD > maxD) curD = maxD;
+                    const days = [];
+                    const labels = [];
+                    for (let i = 1; i <= maxD; i++) {
+                        days.push(i);
+                        labels.push(String(i));
+                    }
+                    fillScrollColumn(wd, labels, days, curD, () => snapScroll(wd, true));
+                }, 100);
+            }
+
+            function onDayScroll() {
+                if (suppressWheelScroll) return;
+                clearTimeout(scrollTD);
+                scrollTD = setTimeout(() => {
+                    snapScroll(document.getElementById('wheel-day'), false);
+                }, 70);
+            }
+
+            function openDateWheel(which) {
+                wheelTarget = which;
+                const hid = document.getElementById(which === 'start' ? 'historial-hid-start' : 'historial-hid-end');
+                const title = document.getElementById('date-wheel-title');
+                title.textContent = which === 'start' ? 'Data d\'inici' : 'Data de fi';
+                const p = parseISOToParts(hid.value);
+                let y;
+                let m;
+                let d;
+                if (p) {
+                    y = p.y;
+                    m = p.m;
+                    d = p.d;
+                } else {
+                    const t = new Date();
+                    y = t.getFullYear();
+                    m = t.getMonth();
+                    d = t.getDate();
+                }
+                const years = [];
+                const yLabels = [];
+                for (let yy = YEAR_MIN; yy <= YEAR_MAX; yy++) {
+                    years.push(yy);
+                    yLabels.push(String(yy));
+                }
+                const wm = document.getElementById('wheel-month');
+                const wd = document.getElementById('wheel-day');
+                fillScrollColumn(document.getElementById('wheel-year'), yLabels, years, y);
+                const monthVals = [...Array(12).keys()];
+                fillScrollColumn(wm, MONTHS_CA, monthVals, m);
+                const maxD = daysInMonth(y, m);
+                if (d > maxD) d = maxD;
+                const days = [];
+                const dLabels = [];
+                for (let i = 1; i <= maxD; i++) {
+                    days.push(i);
+                    dLabels.push(String(i));
+                }
+                fillScrollColumn(wd, dLabels, days, d);
+                const ov = document.getElementById('date-wheel-overlay');
+                ov.classList.add('is-open');
+                ov.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+                suppressWheelScroll = true;
+                setTimeout(() => { suppressWheelScroll = false; }, 400);
+            }
+
+            function closeDateWheel(save) {
+                const ov = document.getElementById('date-wheel-overlay');
+                if (save && wheelTarget) {
+                    const iso = readPickedISO();
+                    const hid = document.getElementById(wheelTarget === 'start' ? 'historial-hid-start' : 'historial-hid-end');
+                    hid.value = iso;
+                    document.getElementById(wheelTarget === 'start' ? 'historial-chip-start' : 'historial-chip-end').textContent = formatChip(iso);
+                }
+                ov.classList.remove('is-open');
+                ov.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+                wheelTarget = null;
+            }
+
+            function syncHistorialChipsFromHidden() {
+                const hs = document.getElementById('historial-hid-start');
+                const he = document.getElementById('historial-hid-end');
+                const cs = document.getElementById('historial-chip-start');
+                const ce = document.getElementById('historial-chip-end');
+                if (cs && hs) cs.textContent = formatChip(hs.value);
+                if (ce && he) ce.textContent = formatChip(he.value);
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                syncHistorialChipsFromHidden();
+                const chipS = document.getElementById('historial-chip-start');
+                const chipE = document.getElementById('historial-chip-end');
+                if (chipS) chipS.addEventListener('click', () => openDateWheel('start'));
+                if (chipE) chipE.addEventListener('click', () => openDateWheel('end'));
+                document.getElementById('date-wheel-cancel')?.addEventListener('click', () => closeDateWheel(false));
+                document.getElementById('date-wheel-ok')?.addEventListener('click', () => closeDateWheel(true));
+                document.querySelector('#date-wheel-overlay .date-wheel-backdrop')?.addEventListener('click', () => closeDateWheel(false));
+
+                document.getElementById('wheel-year')?.addEventListener('scroll', onMonthYearScroll, { passive: true });
+                document.getElementById('wheel-month')?.addEventListener('scroll', onMonthYearScroll, { passive: true });
+                document.getElementById('wheel-day')?.addEventListener('scroll', onDayScroll, { passive: true });
+            });
+        })();
 
         // ── Charts (Chart.js) ──
         window.addEventListener('DOMContentLoaded', () => {
