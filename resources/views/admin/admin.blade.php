@@ -36,6 +36,13 @@
             color: var(--dark);
         }
 
+        button,
+        .nav-link,
+        .btn {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         /* Sidebar Estil La Cresta */
         .sidebar {
             width: 280px;
@@ -561,6 +568,133 @@
         .filter-pill.pill-targeta.active {
             border-color: #3b82f6;
             background: #3b82f6;
+        }
+
+        /* Historial de vendes — optimització tàctil */
+        .historial-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .historial-payment-block {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .historial-block-label {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .historial-payment-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .historial-filters .filter-pill {
+            min-height: 48px;
+            padding: 12px 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            border-radius: 14px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .historial-date-form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 16px;
+            background: #f1f5f9;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .historial-date-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        @media (min-width: 540px) {
+            .historial-date-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .historial-date-field label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .input-date-touch {
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 52px;
+            padding: 12px 14px;
+            font-size: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: #fff;
+            font-family: inherit;
+            color: #1e293b;
+            touch-action: manipulation;
+        }
+
+        .input-date-touch:focus {
+            outline: none;
+            border-color: #4e73df;
+            box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.22);
+        }
+
+        .historial-date-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .btn-touch-historial {
+            min-height: 48px;
+            min-width: 148px;
+            padding: 14px 22px !important;
+            font-size: 0.9rem !important;
+            border-radius: 12px !important;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .pagination-admin {
+            display: inline-flex;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .pagination-admin a,
+        .pagination-admin span {
+            min-height: 48px;
+            min-width: 48px;
+            padding: 12px 18px !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem !important;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .venda-row {
@@ -1201,23 +1335,34 @@
             <h1>Historial de Vendes</h1>
             <div class="card">
 
-                <div class="filter-pills" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <div>
-                        <span style="font-size:0.75rem; font-weight:800; color:#aaa; text-transform:uppercase; margin-right:4px;">Filtrar per:</span>
-                        <a href="?payment=all{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill {{ empty($paymentFilter) || $paymentFilter === 'all' ? 'active' : '' }}" style="text-decoration:none;">🧾 Tots</a>
-                        <a href="?payment=Efectiu{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill pill-efectiu {{ $paymentFilter === 'Efectiu' ? 'active' : '' }}" style="text-decoration:none;">💵 Efectiu</a>
-                        <a href="?payment=Targeta{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill pill-targeta {{ $paymentFilter === 'Targeta' ? 'active' : '' }}" style="text-decoration:none;">💳 Targeta</a>
+                <div class="historial-filters">
+                    <div class="historial-payment-block">
+                        <span class="historial-block-label">Filtrar per mètode</span>
+                        <div class="historial-payment-pills">
+                            <a href="?payment=all{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill {{ empty($paymentFilter) || $paymentFilter === 'all' ? 'active' : '' }}" style="text-decoration:none;">🧾 Tots</a>
+                            <a href="?payment=Efectiu{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill pill-efectiu {{ $paymentFilter === 'Efectiu' ? 'active' : '' }}" style="text-decoration:none;">💵 Efectiu</a>
+                            <a href="?payment=Targeta{{ $startDate ? '&start_date='.$startDate : '' }}{{ $endDate ? '&end_date='.$endDate : '' }}#comandes" class="filter-pill pill-targeta {{ $paymentFilter === 'Targeta' ? 'active' : '' }}" style="text-decoration:none;">💳 Targeta</a>
+                        </div>
                     </div>
-                    <form action="{{ url('/admin') }}" method="GET" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <form class="historial-date-form" action="{{ url('/admin') }}" method="GET" id="historial-date-filter-form">
                         <input type="hidden" name="payment" value="{{ $paymentFilter ?? 'all' }}">
-                        <span style="font-size:0.75rem; font-weight:800; color:#aaa; text-transform:uppercase;">Data:</span>
-                        <input type="date" name="start_date" value="{{ $startDate }}" style="padding:6px; border-radius:5px; border:1px solid #ddd; font-size:0.8rem; background:#fff;" title="Des d'aquest dia">
-                        <span style="font-size:0.75rem; font-weight:800; color:#ccc;">fins a</span>
-                        <input type="date" name="end_date" value="{{ $endDate }}" style="padding:6px; border-radius:5px; border:1px solid #ddd; font-size:0.8rem; background:#fff;" title="Fins a aquest dia (inclòs)">
-                        <button type="submit" class="btn btn-add" style="padding:6px 12px; margin:0;" onclick="window.__initialHash='comandes'">Aplicar</button>
-                        @if($startDate || $endDate)
-                            <a href="?payment={{ $paymentFilter ?? 'all' }}#comandes" class="btn btn-delete" style="padding:6px 12px; margin:0; text-decoration:none; font-size:0.8rem;" title="Netejar dates">Netejar</a>
-                        @endif
+                        <span class="historial-block-label" style="margin:0;">Període de dates</span>
+                        <div class="historial-date-grid">
+                            <div class="historial-date-field">
+                                <label for="historial-start-date">Des de (inclòs)</label>
+                                <input type="date" id="historial-start-date" name="start_date" value="{{ $startDate }}" class="input-date-touch" title="Primer dia del període" autocomplete="off">
+                            </div>
+                            <div class="historial-date-field">
+                                <label for="historial-end-date">Fins a (inclòs)</label>
+                                <input type="date" id="historial-end-date" name="end_date" value="{{ $endDate }}" class="input-date-touch" title="Darrer dia del període" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="historial-date-actions">
+                            <button type="submit" class="btn btn-add btn-touch-historial" onclick="window.__initialHash='comandes'">Aplicar període</button>
+                            @if($startDate || $endDate)
+                                <a href="?payment={{ $paymentFilter ?? 'all' }}#comandes" class="btn btn-delete btn-touch-historial" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;" title="Netejar dates">Netejar dates</a>
+                            @endif
+                        </div>
                     </form>
                 </div>
 
@@ -1289,19 +1434,19 @@
                 </table>
                 @if($darreresVendes->hasPages())
                     <div style="margin-top: 25px; display: flex; justify-content: center;">
-                        <nav style="display: inline-flex; border-radius: 8px; border: 1px solid #ddd; overflow: hidden;">
+                        <nav class="pagination-admin" aria-label="Paginació historial">
                             {{-- Previous Page Link --}}
                             @if ($darreresVendes->onFirstPage())
-                                <span style="padding: 8px 16px; background: #fafafa; color: #aaa; font-weight: bold;">« Ant.</span>
+                                <span style="background: #fafafa; color: #aaa; font-weight: bold; border-right: 1px solid #e2e8f0;">« Ant.</span>
                             @else
-                                <a href="{{ $darreresVendes->previousPageUrl() }}" style="padding: 8px 16px; background: #fff; color: #4e73df; font-weight: bold; text-decoration: none; border-right: 1px solid #ddd;">« Ant.</a>
+                                <a href="{{ $darreresVendes->previousPageUrl() }}" style="background: #fff; color: #4e73df; font-weight: bold; text-decoration: none; border-right: 1px solid #e2e8f0;">« Ant.</a>
                             @endif
 
                             {{-- Next Page Link --}}
                             @if ($darreresVendes->hasMorePages())
-                                <a href="{{ $darreresVendes->nextPageUrl() }}" style="padding: 8px 16px; background: #fff; color: #4e73df; font-weight: bold; text-decoration: none; border-left: 1px solid #ddd;">Seg. »</a>
+                                <a href="{{ $darreresVendes->nextPageUrl() }}" style="background: #fff; color: #4e73df; font-weight: bold; text-decoration: none;">Seg. »</a>
                             @else
-                                <span style="padding: 8px 16px; background: #fafafa; color: #aaa; font-weight: bold;">Seg. »</span>
+                                <span style="background: #fafafa; color: #aaa; font-weight: bold;">Seg. »</span>
                             @endif
                         </nav>
                     </div>
