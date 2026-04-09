@@ -28,6 +28,135 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
+        /* Ús tàctil: menys retard del doble toc, millor resposta en botons */
+        button,
+        .cat-card,
+        .product-card,
+        .nav-icon,
+        .method-btn,
+        .worker-btn,
+        .worker-pill-btn,
+        .btn-qty,
+        .btn-card-qty,
+        .btn-remove,
+        .time-quick-btn {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-card-qty {
+            min-width: 44px;
+            min-height: 44px;
+        }
+
+        .btn-qty {
+            min-width: 44px;
+            min-height: 44px;
+        }
+
+        .method-btn {
+            min-height: 56px;
+        }
+
+        /* PIN admin: teclat numèric en pantalla */
+        .pin-modal-panel {
+            width: min(380px, 92vw);
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px 20px 28px !important;
+        }
+
+        .admin-pin-dots {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin: 12px 0 8px;
+        }
+
+        .admin-pin-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e0;
+            background: #fff;
+            transition: background 0.15s, border-color 0.15s, transform 0.15s;
+        }
+
+        .admin-pin-dot.filled {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .pin-numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 300px;
+            margin: 16px auto 0;
+        }
+
+        .pin-numpad-btn {
+            min-height: 54px;
+            font-size: 1.35rem;
+            font-weight: 800;
+            border-radius: 14px;
+            border: 1px solid #e9edf7;
+            background: #f8f9fe;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+        .pin-numpad-btn:active {
+            transform: scale(0.96);
+            background: #e8edfc;
+        }
+
+        .pin-numpad-btn.pin-numpad-wide {
+            font-size: 1rem;
+        }
+
+        .admin-pin-input-row {
+            margin: 8px 0 4px;
+        }
+
+        #admin-pin-input {
+            min-height: 48px;
+            box-sizing: border-box;
+        }
+
+        .pin-touch-hint {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            margin: 0 0 4px;
+            line-height: 1.35;
+        }
+
+        .cash-quick-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .cash-quick-btn {
+            flex: 1;
+            min-width: 72px;
+            min-height: 44px;
+            border-radius: 10px;
+            border: 1px solid #c7d7f7;
+            background: #fff;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        .cash-quick-btn:active {
+            background: #eef2ff;
+        }
+
         /* --- Estructura Principal --- */
         .app-wrapper {
             display: grid;
@@ -47,8 +176,10 @@
         }
 
         .nav-icon {
-            width: 45px;
-            height: 45px;
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            min-height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -721,20 +852,46 @@
     </div>
 
     <div id="admin-pin-modal"
-        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4000; justify-content: center; align-items: center;">
-        <div class="modal-content"
-            style="background:#fff; width:350px; padding:30px; border-radius:15px; text-align:center;">
-            <h2 style="margin-top:0; color:var(--text-main);">Accés Administració</h2>
-            <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">Introdueix el PIN d'encarregat.</p>
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4000; justify-content: center; align-items: center; padding: max(16px, env(safe-area-inset-bottom));">
+        <div class="modal-content pin-modal-panel"
+            style="background:#fff; border-radius:20px; text-align:center; box-shadow: 0 20px 50px rgba(0,0,0,0.2);">
+            <h2 style="margin-top:0; color:var(--text-main); font-size:1.35rem;">Accés Administració</h2>
+            <p style="color:#666; font-size:0.9rem; margin-bottom:6px;">Introdueix el PIN d'encarregat.</p>
+            <p class="pin-touch-hint">Teclat numèric a sota; també pots escriure amb el teclat físic (toca el camp o Tab).</p>
 
-            <input type="password" id="admin-pin-input" inputmode="numeric" pattern="\d*" maxlength="4"
-                placeholder="****"
-                style="text-align:center; font-size:2rem; letter-spacing:10px; width:150px; padding:10px; border-radius:10px; border:2px solid var(--primary); margin-bottom:20px; outline:none;">
+            <div id="admin-pin-dots" class="admin-pin-dots" aria-hidden="true">
+                <span class="admin-pin-dot"></span>
+                <span class="admin-pin-dot"></span>
+                <span class="admin-pin-dot"></span>
+                <span class="admin-pin-dot"></span>
+            </div>
 
-            <button class="btn-place-order" onclick="verifyAdminPin()"
-                style="width:100%; display:block; padding:15px; font-size:1.1rem; margin-bottom:10px;">Accedir</button>
-            <button style="border:none; background:none; color:#999; cursor:pointer; font-weight:bold;"
-                onclick="document.getElementById('admin-pin-modal').style.display='none'">Cancel·lar</button>
+            <div class="admin-pin-input-row">
+                <label for="admin-pin-input" class="pin-touch-hint" style="display:block; margin-bottom:6px;">Camp PIN (teclat físic)</label>
+                <input type="password" id="admin-pin-input" name="admin-pin" inputmode="numeric" pattern="[0-9]*" maxlength="4"
+                    placeholder="****" autocomplete="one-time-code" enterkeyhint="done"
+                    style="text-align:center; font-size:1.75rem; letter-spacing:12px; width:min(200px, 85%); padding:12px; border-radius:12px; border:2px solid var(--primary); outline:none;">
+            </div>
+
+            <div class="pin-numpad" role="group" aria-label="Teclat numèric PIN">
+                <button type="button" class="pin-numpad-btn" data-pin-key="1">1</button>
+                <button type="button" class="pin-numpad-btn" data-pin-key="2">2</button>
+                <button type="button" class="pin-numpad-btn" data-pin-key="3">3</button>
+                <button type="button" class="pin-numpad-btn" data-pin-key="4">4</button>
+                <button type="button" class="pin-numpad-btn" data-pin-key="5">5</button>
+                <button type="button" class="pin-numpad-btn" data-pin-key="6">6</button>
+                <button type="button" class="pin-numpad-btn" data-pin-key="7">7</button>
+                <button type="button" class="pin-numpad-btn" data-pin-key="8">8</button>
+                <button type="button" class="pin-numpad-btn" data-pin-key="9">9</button>
+                <button type="button" class="pin-numpad-btn pin-numpad-wide" data-pin-key="clear">Netejar</button>
+                <button type="button" class="pin-numpad-btn" data-pin-key="0">0</button>
+                <button type="button" class="pin-numpad-btn pin-numpad-wide" data-pin-key="bksp" aria-label="Esborrar">⌫</button>
+            </div>
+
+            <button type="button" class="btn-place-order" onclick="verifyAdminPin()"
+                style="width:100%; display:block; padding:15px; font-size:1.05rem; margin-top:18px; margin-bottom:10px;">Accedir</button>
+            <button type="button" style="border:none; background:none; color:#999; cursor:pointer; font-weight:bold; padding:10px; min-height:44px;"
+                onclick="closeAdminPinModal()">Cancel·lar</button>
         </div>
     </div>
 
@@ -800,10 +957,16 @@
             <div id="cash-change-section" style="display:none; background:#f0f8ff; border-radius:14px; padding:16px; margin-bottom:18px; border:1px solid #d0e8ff;">
                 <label style="font-weight:800; font-size:0.85rem; color:#4e73df; display:block; margin-bottom:8px;">💶 Import entregat pel client:</label>
                 <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
-                    <input type="number" id="cash-given" step="0.01" min="0" placeholder="0.00"
-                        style="flex:1; padding:12px 15px; font-size:1.3rem; font-weight:800; border:2px solid #4e73df; border-radius:12px; outline:none; color:#1b2559;"
+                    <input type="text" id="cash-given" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" placeholder="0,00"
+                        style="flex:1; padding:12px 15px; font-size:1.3rem; font-weight:800; border:2px solid #4e73df; border-radius:12px; outline:none; color:#1b2559; min-height:48px;"
                         oninput="calculateChange()">
                     <span style="font-size:1.5rem; font-weight:900; color:#1b2559;">€</span>
+                </div>
+                <div class="cash-quick-row" aria-label="Imports ràpids">
+                    <button type="button" class="cash-quick-btn" onclick="setCashGivenAmount(10)">10€</button>
+                    <button type="button" class="cash-quick-btn" onclick="setCashGivenAmount(20)">20€</button>
+                    <button type="button" class="cash-quick-btn" onclick="setCashGivenAmount(50)">50€</button>
+                    <button type="button" class="cash-quick-btn" onclick="setCashGivenAmount(100)">100€</button>
                 </div>
                 <div id="change-display" style="display:none; background:#fff; border-radius:10px; padding:12px 16px; border:2px solid #22c55e;">
                     <div style="font-size:0.8rem; color:#888; font-weight:600; margin-bottom:4px;">CANVI A RETORNAR</div>
@@ -933,10 +1096,16 @@
             <div id="charge-cash-section" style="display:none; background:#f0f8ff; border-radius:14px; padding:16px; margin-bottom:18px; border:1px solid #d0e8ff;">
                 <label style="font-weight:800; font-size:0.85rem; color:#4e73df; display:block; margin-bottom:8px;">💶 Import entregat pel client:</label>
                 <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
-                    <input type="number" id="charge-cash-given" step="0.01" min="0" placeholder="0.00"
-                        style="flex:1; padding:12px 15px; font-size:1.3rem; font-weight:800; border:2px solid #4e73df; border-radius:12px; outline:none; color:#1b2559;"
+                    <input type="text" id="charge-cash-given" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" placeholder="0,00"
+                        style="flex:1; padding:12px 15px; font-size:1.3rem; font-weight:800; border:2px solid #4e73df; border-radius:12px; outline:none; color:#1b2559; min-height:48px;"
                         oninput="calculateChargeChange()">
                     <span style="font-size:1.5rem; font-weight:900; color:#1b2559;">€</span>
+                </div>
+                <div class="cash-quick-row" aria-label="Imports ràpids cobrament">
+                    <button type="button" class="cash-quick-btn" onclick="setChargeCashGivenAmount(10)">10€</button>
+                    <button type="button" class="cash-quick-btn" onclick="setChargeCashGivenAmount(20)">20€</button>
+                    <button type="button" class="cash-quick-btn" onclick="setChargeCashGivenAmount(50)">50€</button>
+                    <button type="button" class="cash-quick-btn" onclick="setChargeCashGivenAmount(100)">100€</button>
                 </div>
                 <div id="charge-change-display" style="display:none; background:#fff; border-radius:10px; padding:12px 16px; border:2px solid #22c55e;">
                     <div style="font-size:0.8rem; color:#888; font-weight:600; margin-bottom:4px;">CANVI A RETORNAR</div>
@@ -972,6 +1141,28 @@
 
     <script>
         const TICKET_CONFIG = @json(config('ticket'));
+
+        function parseMoneyInput(raw) {
+            if (raw == null || raw === '') return 0;
+            const s = String(raw).trim().replace(/\s/g, '').replace(',', '.');
+            const n = parseFloat(s);
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function setCashFieldAmount(amount, inputId, calcFn) {
+            const el = document.getElementById(inputId);
+            if (!el) return;
+            el.value = Number(amount).toFixed(2).replace('.', ',');
+            if (typeof calcFn === 'function') calcFn();
+        }
+
+        function setCashGivenAmount(amount) {
+            setCashFieldAmount(amount, 'cash-given', calculateChange);
+        }
+
+        function setChargeCashGivenAmount(amount) {
+            setCashFieldAmount(amount, 'charge-cash-given', calculateChargeChange);
+        }
 
         let selectedPaymentMethod = 'Efectiu';
         let cart = [];
@@ -1311,7 +1502,7 @@
 
         function calculateChange() {
             if (selectedPaymentMethodFinal !== 'Efectiu') return;
-            const given = parseFloat(document.getElementById('cash-given').value) || 0;
+            const given = parseMoneyInput(document.getElementById('cash-given').value);
             const total = finalPaymentTotalCached;
             const changeDisplay = document.getElementById('change-display');
             const insufficient = document.getElementById('change-insufficient');
@@ -1630,7 +1821,7 @@
                         let receiptExtras = {};
                         if (paymentMethod === 'Efectiu') {
                             const givenRaw = document.getElementById('cash-given')?.value;
-                            const given = parseFloat(givenRaw) || 0;
+                            const given = parseMoneyInput(givenRaw);
                             if (given > 0) {
                                 receiptExtras.cashGiven = given;
                                 receiptExtras.changeAmount = Math.max(0, given - total);
@@ -2048,7 +2239,7 @@
 
         function calculateChargeChange() {
             if (selectedChargeMethod !== 'Efectiu') return;
-            const given = parseFloat(document.getElementById('charge-cash-given').value) || 0;
+            const given = parseMoneyInput(document.getElementById('charge-cash-given').value);
             const total = parseFloat(currentChargeTotal) + (isBagAddedCharge ? 0.10 : 0);
             const changeDisplay = document.getElementById('charge-change-display');
             const insufficient = document.getElementById('charge-change-insufficient');
@@ -2117,7 +2308,7 @@
                 if (res.success) {
                     let receiptExtras = {};
                     if (paymentMethod === 'Efectiu') {
-                        const given = parseFloat(document.getElementById('charge-cash-given').value) || 0;
+                        const given = parseMoneyInput(document.getElementById('charge-cash-given').value);
                         if (given > 0) {
                             receiptExtras.cashGiven = given;
                             receiptExtras.changeAmount = Math.max(0, given - totalToCharge);
@@ -2221,20 +2412,74 @@
             input.value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
         }
 
-        // --- PIN ADMIN ---
+        // --- PIN ADMIN (tàctil + teclat físic) ---
+        let adminPinVerifying = false;
+
+        function adminPinSyncDots() {
+            const input = document.getElementById('admin-pin-input');
+            if (!input) return;
+            const n = input.value.length;
+            document.querySelectorAll('#admin-pin-dots .admin-pin-dot').forEach((el, i) => {
+                el.classList.toggle('filled', i < n);
+            });
+        }
+
+        function adminPinKey(key) {
+            const input = document.getElementById('admin-pin-input');
+            if (!input || adminPinVerifying) return;
+            if (key === 'bksp') {
+                input.value = input.value.slice(0, -1);
+            } else if (key === 'clear') {
+                input.value = '';
+            } else if (/^\d$/.test(key) && input.value.length < 4) {
+                input.value += key;
+            }
+            adminPinSyncDots();
+            if (input.value.length === 4) {
+                setTimeout(() => verifyAdminPin(), 40);
+            }
+        }
+
+        function onAdminPinInputFromKeyboard() {
+            const input = document.getElementById('admin-pin-input');
+            if (!input || adminPinVerifying) return;
+            input.value = input.value.replace(/\D/g, '').slice(0, 4);
+            adminPinSyncDots();
+            if (input.value.length === 4) {
+                setTimeout(() => verifyAdminPin(), 40);
+            }
+        }
+
+        function closeAdminPinModal() {
+            document.getElementById('admin-pin-modal').style.display = 'none';
+            const input = document.getElementById('admin-pin-input');
+            if (input) {
+                input.value = '';
+                adminPinSyncDots();
+            }
+            adminPinVerifying = false;
+        }
+
         function openAdminPinModal() {
-            let input = document.getElementById('admin-pin-input');
+            adminPinVerifying = false;
+            const input = document.getElementById('admin-pin-input');
             input.value = '';
+            adminPinSyncDots();
             document.getElementById('admin-pin-modal').style.display = 'flex';
-            setTimeout(() => input.focus(), 100);
+            if (window.matchMedia('(pointer: fine)').matches) {
+                setTimeout(() => input.focus(), 150);
+            }
         }
 
         function verifyAdminPin() {
+            if (adminPinVerifying) return;
             const pin = document.getElementById('admin-pin-input').value;
             if (!pin || pin.length !== 4) {
                 alert('El PIN ha de tenir 4 dígits.');
                 return;
             }
+
+            adminPinVerifying = true;
 
             fetch('/admin/verify-pin', {
                 method: 'POST',
@@ -2251,24 +2496,54 @@
                     } else {
                         alert(data.error || 'PIN incorrecte.');
                         document.getElementById('admin-pin-input').value = '';
-                        document.getElementById('admin-pin-input').focus();
+                        adminPinSyncDots();
+                        adminPinVerifying = false;
+                        if (window.matchMedia('(pointer: fine)').matches) {
+                            document.getElementById('admin-pin-input').focus();
+                        }
                     }
                 })
                 .catch(err => {
                     console.error(err);
                     alert("Error validant el PIN");
+                    adminPinVerifying = false;
                 });
         }
 
+        document.addEventListener('keydown', function adminPinGlobalKeydown(e) {
+            const m = document.getElementById('admin-pin-modal');
+            if (!m || m.style.display !== 'flex') return;
+            const inp = document.getElementById('admin-pin-input');
+            if (document.activeElement === inp) return;
+            if (e.key >= '0' && e.key <= '9') {
+                e.preventDefault();
+                adminPinKey(e.key);
+            } else if (e.key === 'Backspace') {
+                e.preventDefault();
+                adminPinKey('bksp');
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                verifyAdminPin();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeAdminPinModal();
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
-            let pinInput = document.getElementById('admin-pin-input');
+            const pinInput = document.getElementById('admin-pin-input');
             if (pinInput) {
-                pinInput.addEventListener('keypress', function (e) {
+                pinInput.addEventListener('input', onAdminPinInputFromKeyboard);
+                pinInput.addEventListener('keydown', function (e) {
                     if (e.key === 'Enter') {
+                        e.preventDefault();
                         verifyAdminPin();
                     }
                 });
             }
+            document.querySelectorAll('.pin-numpad [data-pin-key]').forEach(btn => {
+                btn.addEventListener('click', () => adminPinKey(btn.getAttribute('data-pin-key')));
+            });
         });
 
     </script>
