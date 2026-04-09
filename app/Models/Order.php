@@ -18,7 +18,10 @@ class Order extends Model
         'is_preorder',
         'pickup_number',
         'pickup_time',
-        'customer_name'
+        'customer_name',
+        'fiscal_series',
+        'fiscal_sequence',
+        'fiscal_full_number',
     ];
 
     /**

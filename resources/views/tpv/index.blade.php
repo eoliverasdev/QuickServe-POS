@@ -1446,7 +1446,8 @@
 
             const series = String(cfg.invoice_series || 'QS');
             const padLen = Math.max(4, parseInt(cfg.invoice_number_pad, 10) || 8);
-            const invoiceFull = `${series}${String(order.id).padStart(padLen, '0')}`;
+            const invoiceFull = order.fiscal_full_number
+                || `${series}${String(order.id).padStart(padLen, '0')}`;
 
             const paperW = Math.min(96, Math.max(58, parseInt(cfg.paper_width_mm, 10) || 80));
 

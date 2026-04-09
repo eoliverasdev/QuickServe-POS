@@ -5,12 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\FiscalInvoiceNumberAssigner;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
-    
+    public function __construct(
+        protected FiscalInvoiceNumberAssigner $fiscalInvoiceNumberAssigner
+    ) {}
+
     public function store(Request $request) 
     {
         // 1. Validació estricta
@@ -71,12 +75,17 @@ class OrderController extends Controller
                     }
                 }
 
+                if (! $isPreorder) {
+                    $this->fiscalInvoiceNumberAssigner->assignIfMissing($order);
+                }
+
                 // Retornem l'ID per poder confirmar al frontend que s'ha creat
                 return response()->json([
                     'success'  => true,
                     'message'  => $isPreorder ? "Encàrrec #$pickupNumber guardat!" : 'Venda realitzada amb èxit!', 
                     'order_id' => $order->id,
-                    'pickup_number' => $pickupNumber
+                    'pickup_number' => $pickupNumber,
+                    'fiscal_full_number' => $order->fresh()->fiscal_full_number,
                 ], 201);
             });
 
@@ -108,19 +117,26 @@ class OrderController extends Controller
             'worker_id'      => 'required|exists:workers,id',
             'add_bag'        => 'nullable|boolean'
         ]);
-        
-        $order = Order::findOrFail($id);
-        $order->payment_method = $request->payment_method;
-        $order->worker_id = $request->worker_id; // Actulitzem al treballador que cobra
-        
-        if ($request->add_bag) {
-            $order->total_price += 0.10;
-        }
 
-        $order->status = 'Pagat';
-        $order->save();
+        return DB::transaction(function () use ($request, $id) {
+            $order = Order::query()->whereKey($id)->lockForUpdate()->firstOrFail();
+            $order->payment_method = $request->payment_method;
+            $order->worker_id = $request->worker_id;
 
-        return response()->json(['success' => true]);
+            if ($request->add_bag) {
+                $order->total_price += 0.10;
+            }
+
+            $order->status = 'Pagat';
+            $order->save();
+
+            $this->fiscalInvoiceNumberAssigner->assignIfMissing($order);
+
+            return response()->json([
+                'success' => true,
+                'fiscal_full_number' => $order->fresh()->fiscal_full_number,
+            ]);
+        });
     }
 
     public function getOrderDetails($id) {
