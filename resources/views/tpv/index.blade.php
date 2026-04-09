@@ -970,6 +970,8 @@
     </div>
 
     <script>
+        const TICKET_CONFIG = @json(config('ticket'));
+
         let selectedPaymentMethod = 'Efectiu';
         let cart = [];
         let selectedWorkerId = null;
@@ -1389,104 +1391,172 @@
                 .replace(/'/g, '&#39;');
         }
 
-        function getTicketDateLabel(rawDate) {
+        function formatTicketQty(value) {
+            return Number(value || 0).toLocaleString('ca-ES', {
+                minimumFractionDigits: 3,
+                maximumFractionDigits: 3
+            });
+        }
+
+        function formatTicketMoney(value) {
+            return Number(value || 0).toLocaleString('ca-ES', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function getTicketDataLabel(rawDate) {
             const parsedDate = rawDate ? new Date(rawDate) : new Date();
             if (Number.isNaN(parsedDate.getTime())) {
                 return '';
             }
-            return parsedDate.toLocaleString('ca-ES', {
+            return parsedDate.toLocaleDateString('ca-ES', {
                 year: 'numeric',
                 month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
+                day: '2-digit'
             });
         }
 
-        function buildTicketHtml(order, paymentMethodLabel) {
-            const total = Number(order.total_price || 0);
-            const base = total / 1.21;
-            const iva = total - base;
-            const items = Array.isArray(order.items) ? order.items : [];
-            const createdAt = getTicketDateLabel(order.created_at);
-            const paymentLabel = paymentMethodLabel || order.payment_method || 'Efectiu';
-            const workerName = order.worker ? order.worker.name : '';
+        function ticketIvaRateForProduct(productName, cfg) {
+            const name = String(productName || '').toLowerCase();
+            const keywords = cfg.general_iva_keywords || [];
+            for (let i = 0; i < keywords.length; i++) {
+                if (name.includes(String(keywords[i]).toLowerCase())) {
+                    return Number(cfg.iva_general) || 21;
+                }
+            }
+            return Number(cfg.iva_reduced) || 10;
+        }
 
-            const itemsHtml = items.map(item => {
+        function paymentTicketLabel(method) {
+            const m = String(method || '').trim();
+            if (m === 'Efectiu') return 'EFECTIU';
+            if (m === 'Targeta') return 'TARGETA';
+            return m.toUpperCase() || 'EFECTIU';
+        }
+
+        function buildTicketHtml(order, paymentMethodLabel, receiptExtras) {
+            const cfg = TICKET_CONFIG || {};
+            const extras = receiptExtras || {};
+            const total = Number(order.total_price || 0);
+            const items = Array.isArray(order.items) ? order.items : [];
+            const dataLabel = getTicketDataLabel(order.created_at);
+            const method = paymentMethodLabel || order.payment_method || 'Efectiu';
+            const payUpper = paymentTicketLabel(method);
+
+            const series = String(cfg.invoice_series || 'QS');
+            const padLen = Math.max(4, parseInt(cfg.invoice_number_pad, 10) || 8);
+            const invoiceFull = `${series}${String(order.id).padStart(padLen, '0')}`;
+
+            const paperW = Math.min(96, Math.max(58, parseInt(cfg.paper_width_mm, 10) || 80));
+
+            const ivaBuckets = {};
+
+            let itemsRowsHtml = '';
+            items.forEach(item => {
                 const qty = Number(item.quantity || 0);
                 const price = Number(item.price_at_sale || 0);
                 const lineTotal = qty * price;
-                const note = item.notes ? ` (${escapeTicketHtml(item.notes)})` : '';
-                const name = item.product && item.product.name ? item.product.name : 'Producte';
-                return `
-                    <div class="row line">
-                        <div>${qty} x ${escapeTicketHtml(name)}${note}</div>
-                        <div>${lineTotal.toFixed(2)}EUR</div>
-                    </div>
-                `;
-            }).join('');
+                const rawName = item.product && item.product.name ? item.product.name : 'Producte';
+                const note = item.notes ? ` (${String(item.notes)})` : '';
+                const desc = escapeTicketHtml((rawName + note).toUpperCase());
+                const rate = ticketIvaRateForProduct(rawName, cfg);
+                const baseLine = lineTotal / (1 + rate / 100);
+                const ivaLine = lineTotal - baseLine;
+                if (!ivaBuckets[rate]) {
+                    ivaBuckets[rate] = { base: 0, iva: 0 };
+                }
+                ivaBuckets[rate].base += baseLine;
+                ivaBuckets[rate].iva += ivaLine;
 
-            return `
-                <!doctype html>
-                <html>
-                <head>
-                    <meta charset="utf-8">
-                    <title>Ticket #${order.id}</title>
-                    <style>
-                        body {
-                            font-family: "Courier New", monospace;
-                            width: 58mm;
-                            margin: 0;
-                            padding: 6mm 4mm;
-                            color: #000;
-                        }
-                        .center { text-align: center; }
-                        .small { font-size: 11px; }
-                        .row {
-                            display: flex;
-                            justify-content: space-between;
-                            gap: 8px;
-                            font-size: 12px;
-                            margin: 2px 0;
-                        }
-                        .line div:last-child {
-                            white-space: nowrap;
-                            text-align: right;
-                        }
-                        hr {
-                            border: none;
-                            border-top: 1px dashed #000;
-                            margin: 6px 0;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="center"><strong>QuickServe</strong></div>
-                    <div class="center small">Ticket #${order.id}</div>
-                    <div class="center small">${createdAt}</div>
-                    <hr>
-                    ${itemsHtml}
-                    <hr>
-                    <div class="row"><div>Base</div><div>${base.toFixed(2)}EUR</div></div>
-                    <div class="row"><div>IVA (21%)</div><div>${iva.toFixed(2)}EUR</div></div>
-                    <div class="row"><div><strong>Total</strong></div><div><strong>${total.toFixed(2)}EUR</strong></div></div>
-                    <div class="row"><div>Pagament</div><div>${escapeTicketHtml(paymentLabel)}</div></div>
-                    ${workerName ? `<div class="row"><div>Treballador</div><div>${escapeTicketHtml(workerName)}</div></div>` : ''}
-                    <hr>
-                    <div class="center small">Gracies per la seva visita</div>
-                    <script>
-                        window.onload = function() {
-                            window.focus();
-                            window.print();
-                            setTimeout(function() { window.close(); }, 200);
-                        };
-                    <\/script>
-                </body>
-                </html>
-            `;
+                itemsRowsHtml += '<tr>'
+                    + '<td class="num">' + formatTicketQty(qty) + '</td>'
+                    + '<td class="desc">' + desc + '</td>'
+                    + '<td class="num">' + formatTicketMoney(price) + '</td>'
+                    + '<td class="num">' + formatTicketMoney(lineTotal) + '</td>'
+                    + '</tr>';
+            });
+
+            const ivaRates = Object.keys(ivaBuckets).map(r => parseFloat(r, 10)).sort((a, b) => a - b);
+            let ivaRowsHtml = '';
+            ivaRates.forEach(rate => {
+                const b = ivaBuckets[rate];
+                ivaRowsHtml += '<tr>'
+                    + '<td class="num">' + formatTicketMoney(b.base) + '</td>'
+                    + '<td class="num">' + formatTicketMoney(rate) + ' %</td>'
+                    + '<td class="num">' + formatTicketMoney(b.iva) + '</td>'
+                    + '</tr>';
+            });
+
+            const cashGiven = extras.cashGiven != null ? Number(extras.cashGiven) : null;
+            const changeAmt = extras.changeAmount != null ? Number(extras.changeAmount) : null;
+            const showCash = method === 'Efectiu' && cashGiven != null && !Number.isNaN(cashGiven) && cashGiven > 0;
+
+            let cashBlockHtml = '';
+            if (showCash) {
+                cashBlockHtml += '<div class="twocol"><span>LLIURAT</span><span>' + formatTicketMoney(cashGiven) + '</span></div>';
+                cashBlockHtml += '<div class="twocol"><span>CANVI</span><span>' + formatTicketMoney(changeAmt != null && !Number.isNaN(changeAmt) ? changeAmt : 0) + '</span></div>';
+            }
+            cashBlockHtml += '<div class="twocol payline"><span>' + escapeTicketHtml(payUpper) + '</span><span>' + formatTicketMoney(total) + '</span></div>';
+
+            const biz = escapeTicketHtml(cfg.business_name || 'LA CRESTA');
+            const addr1 = escapeTicketHtml(cfg.address_line1 || '');
+            const city = escapeTicketHtml(cfg.postal_city || '');
+            const phone = escapeTicketHtml(cfg.phone || '');
+            const nif = escapeTicketHtml(cfg.nif_line || '');
+
+            return '<!doctype html><html><head><meta charset="utf-8">'
+                + '<title>Ticket ' + order.id + '</title>'
+                + '<style>'
+                + '@page { margin: 4mm; }'
+                + 'body{font-family:"Courier New",Courier,monospace;font-size:11px;width:' + paperW + 'mm;max-width:' + paperW + 'mm;margin:0 auto;padding:2mm 1mm;color:#000;}'
+                + '.center{text-align:center;}'
+                + '.biz{font-weight:700;font-size:12px;margin-bottom:2px;}'
+                + '.hdrline{margin:1px 0;}'
+                + 'hr{border:none;border-top:1px solid #000;margin:6px 0;}'
+                + '.twocol{display:flex;justify-content:space-between;gap:6px;margin:3px 0;}'
+                + '.twocol span:last-child{text-align:right;white-space:nowrap;}'
+                + '.totalrow{font-weight:700;font-size:12px;margin-top:4px;}'
+                + '.payline{margin-top:4px;}'
+                + 'table.items{width:100%;border-collapse:collapse;margin:4px 0;font-size:10px;}'
+                + 'table.items th{text-align:left;font-weight:700;border-bottom:1px solid #000;padding:2px 0;}'
+                + 'table.items th.num{text-align:right;}'
+                + 'table.items td{padding:2px 0;vertical-align:top;}'
+                + 'table.items td.num{text-align:right;white-space:nowrap;}'
+                + 'table.items td.desc{word-break:break-word;padding-right:4px;}'
+                + 'table.iva{width:100%;border-collapse:collapse;margin:4px 0;font-size:10px;}'
+                + 'table.iva th{text-align:left;font-weight:700;border-bottom:1px solid #000;padding:2px 0;}'
+                + 'table.iva th.num,table.iva td.num{text-align:right;}'
+                + '.metahead{display:flex;justify-content:space-between;gap:8px;margin:4px 0;font-size:10px;}'
+                + '.footer{margin-top:8px;text-align:center;font-size:10px;}'
+                + '</style></head><body>'
+                + '<div class="center"><div class="biz">' + biz + '</div></div>'
+                + '<div class="center hdrline">' + addr1 + '</div>'
+                + '<div class="center hdrline">' + city + '</div>'
+                + '<div class="center hdrline">Tel: ' + phone + '</div>'
+                + '<div class="center hdrline">NIF: ' + nif + '</div>'
+                + '<hr>'
+                + '<div class="metahead"><span>FACTURA: ' + escapeTicketHtml(invoiceFull) + '</span><span>DATA: ' + escapeTicketHtml(dataLabel) + '</span></div>'
+                + '<hr>'
+                + '<table class="items"><thead><tr>'
+                + '<th>UNIT.</th><th>DESCRIPCIÓ</th><th class="num">PREU</th><th class="num">IMPORT</th>'
+                + '</tr></thead><tbody>' + itemsRowsHtml + '</tbody></table>'
+                + '<hr>'
+                + '<div class="twocol totalrow"><span>TOTAL</span><span>' + formatTicketMoney(total) + '</span></div>'
+                + cashBlockHtml
+                + '<hr>'
+                + '<table class="iva"><thead><tr>'
+                + '<th>BASE</th><th class="num">% IVA</th><th class="num">TOTAL IVA</th>'
+                + '</tr></thead><tbody>' + ivaRowsHtml + '</tbody></table>'
+                + '<hr>'
+                + '<div class="footer">GRÀCIES PER LA SEVA VISITA</div>'
+                + '<script>'
+                + 'window.onload=function(){window.focus();window.print();setTimeout(function(){window.close();},200);};'
+                + '<\/script>'
+                + '</body></html>';
         }
 
-        async function printTicketByOrderId(orderId, paymentMethodLabel) {
+        async function printTicketByOrderId(orderId, paymentMethodLabel, receiptExtras) {
             if (!orderId) return;
 
             try {
@@ -1500,14 +1570,14 @@
                     throw new Error('Resposta invalida del ticket');
                 }
 
-                const printWindow = window.open('', '_blank', 'width=420,height=760');
+                const printWindow = window.open('', '_blank', 'width=520,height=820');
                 if (!printWindow) {
                     alert("No s'ha pogut obrir la finestra d'impressio. Comprova el bloquejador de pop-ups.");
                     return;
                 }
 
                 printWindow.document.open();
-                printWindow.document.write(buildTicketHtml(data.order, paymentMethodLabel));
+                printWindow.document.write(buildTicketHtml(data.order, paymentMethodLabel, receiptExtras));
                 printWindow.document.close();
             } catch (error) {
                 console.error(error);
@@ -1555,7 +1625,16 @@
                     alert(data.message);
 
                     if (!isCreatingPreorder && data.order_id) {
-                        await printTicketByOrderId(data.order_id, paymentMethod);
+                        let receiptExtras = {};
+                        if (paymentMethod === 'Efectiu') {
+                            const givenRaw = document.getElementById('cash-given')?.value;
+                            const given = parseFloat(givenRaw) || 0;
+                            if (given > 0) {
+                                receiptExtras.cashGiven = given;
+                                receiptExtras.changeAmount = Math.max(0, given - total);
+                            }
+                        }
+                        await printTicketByOrderId(data.order_id, paymentMethod, receiptExtras);
                     }
 
                     // Actualitzem l'estoc visualment al DOM (sense recarregar la pàgina)
@@ -2019,8 +2098,17 @@
                     worker_id: workerId,
                     add_bag: isBagAddedCharge
                 })
-            }).then(r => r.json()).then(res => {
+            }).then(r => r.json()).then(async res => {
                 if (res.success) {
+                    let receiptExtras = {};
+                    if (paymentMethod === 'Efectiu') {
+                        const given = parseFloat(document.getElementById('charge-cash-given').value) || 0;
+                        if (given > 0) {
+                            receiptExtras.cashGiven = given;
+                            receiptExtras.changeAmount = Math.max(0, given - totalToCharge);
+                        }
+                    }
+                    await printTicketByOrderId(id, paymentMethod, receiptExtras);
                     document.getElementById('charge-preorder-modal').style.display = 'none';
                     fetchPendingPreorders();
                 } else {
