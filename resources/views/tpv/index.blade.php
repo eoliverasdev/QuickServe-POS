@@ -823,6 +823,19 @@
         </div>
     </div>
 
+    <div id="aggregated-products-modal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(8px); z-index:3000; justify-content:center; align-items:center;">
+        <div style="background:#fff; border-radius:24px; width:450px; max-height:85vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.2);">
+            <div style="padding:20px 30px; border-bottom:1px solid #e9edf7; display:flex; align-items:center; justify-content:space-between; background:#f4f7fe; flex-shrink:0;">
+                <h2 style="margin:0; font-size:1.3rem;">📦 Sumatori de Productes</h2>
+                <button onclick="closeAggregatedProductsModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#aaa; transition:0.2s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#aaa'">&times;</button>
+            </div>
+            <div id="aggregated-list" style="flex:1; overflow-y:auto; padding:20px 30px;">
+                <!-- Aquí s'injecten -->
+            </div>
+        </div>
+    </div>
+
     {{-- ===== PÀGINA COMPLETA D'ENCÀRRECS ===== --}}
     <div id="pending-preorders-modal"
         style="display:none; position:fixed; inset:0; background:#f4f7fe; z-index:2000; flex-direction:column; overflow:hidden;">
@@ -837,12 +850,20 @@
                     <p style="margin:0; color:#aaa; font-size:0.8rem;" id="preorders-page-subtitle">Carregant...</p>
                 </div>
             </div>
-            <button onclick="closePendingPreordersPage()"
-                style="background:#f4f7fe; border:none; padding:12px 22px; border-radius:12px; cursor:pointer; font-weight:800; color:var(--text-main); font-size:0.9rem; display:flex; align-items:center; gap:8px; transition:0.2s;"
-                onmouseover="this.style.background='#e9edf7'" onmouseout="this.style.background='#f4f7fe'">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                Tornar al TPV
-            </button>
+            <div style="display:flex; gap:10px;">
+                <button onclick="openAggregatedProductsModal()"
+                    style="background:#fff; border:2px solid var(--primary); padding:10px 20px; border-radius:12px; cursor:pointer; font-weight:800; color:var(--primary); font-size:0.9rem; display:flex; align-items:center; gap:8px; transition:0.2s;"
+                    onmouseover="this.style.background='var(--primary)'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='var(--primary)';">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    Productes encarregats
+                </button>
+                <button onclick="closePendingPreordersPage()"
+                    style="background:#f4f7fe; border:none; padding:12px 22px; border-radius:12px; cursor:pointer; font-weight:800; color:var(--text-main); font-size:0.9rem; display:flex; align-items:center; gap:8px; transition:0.2s;"
+                    onmouseover="this.style.background='#e9edf7'" onmouseout="this.style.background='#f4f7fe'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    Tornar al TPV
+                </button>
+            </div>
         </div>
 
         <div style="flex:1; overflow-y:auto; padding:30px 35px;">
@@ -1154,6 +1175,10 @@
             });
         }
 
+        // Variables per preservar les dades quan editem un encàrrec existent
+        let _editPreorderTime = null;
+        let _editPreorderName = null;
+
         function openUserModal(asPreorder) {
             if (cart.length === 0) { alert("La comanda està buida!"); return; }
             isCreatingPreorder = asPreorder;
@@ -1168,11 +1193,19 @@
             document.getElementById('btn-final-confirm').style.display = 'none';
 
             if (asPreorder) {
-                let d = new Date(); d.setMinutes(d.getMinutes() + 15);
-                let hh = String(d.getHours()).padStart(2, '0');
-                let mm = String(d.getMinutes()).padStart(2, '0');
-                document.getElementById('preorder-time').value = `${hh}:${mm}`;
-                document.getElementById('preorder-name').value = '';
+                // Si venim d'editar un encàrrec, restaurem la seva hora i nom originals
+                if (_editPreorderTime !== null) {
+                    document.getElementById('preorder-time').value = _editPreorderTime;
+                    document.getElementById('preorder-name').value = _editPreorderName || '';
+                    _editPreorderTime = null;
+                    _editPreorderName = null;
+                } else {
+                    let d = new Date(); d.setMinutes(d.getMinutes() + 15);
+                    let hh = String(d.getHours()).padStart(2, '0');
+                    let mm = String(d.getMinutes()).padStart(2, '0');
+                    document.getElementById('preorder-time').value = `${hh}:${mm}`;
+                    document.getElementById('preorder-name').value = '';
+                }
             }
         }
 
@@ -1347,6 +1380,141 @@
             document.getElementById('payment-modal').style.display = 'none';
         }
 
+        function escapeTicketHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function getTicketDateLabel(rawDate) {
+            const parsedDate = rawDate ? new Date(rawDate) : new Date();
+            if (Number.isNaN(parsedDate.getTime())) {
+                return '';
+            }
+            return parsedDate.toLocaleString('ca-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function buildTicketHtml(order, paymentMethodLabel) {
+            const total = Number(order.total_price || 0);
+            const base = total / 1.21;
+            const iva = total - base;
+            const items = Array.isArray(order.items) ? order.items : [];
+            const createdAt = getTicketDateLabel(order.created_at);
+            const paymentLabel = paymentMethodLabel || order.payment_method || 'Efectiu';
+            const workerName = order.worker ? order.worker.name : '';
+
+            const itemsHtml = items.map(item => {
+                const qty = Number(item.quantity || 0);
+                const price = Number(item.price_at_sale || 0);
+                const lineTotal = qty * price;
+                const note = item.notes ? ` (${escapeTicketHtml(item.notes)})` : '';
+                const name = item.product && item.product.name ? item.product.name : 'Producte';
+                return `
+                    <div class="row line">
+                        <div>${qty} x ${escapeTicketHtml(name)}${note}</div>
+                        <div>${lineTotal.toFixed(2)}EUR</div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <!doctype html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <title>Ticket #${order.id}</title>
+                    <style>
+                        body {
+                            font-family: "Courier New", monospace;
+                            width: 58mm;
+                            margin: 0;
+                            padding: 6mm 4mm;
+                            color: #000;
+                        }
+                        .center { text-align: center; }
+                        .small { font-size: 11px; }
+                        .row {
+                            display: flex;
+                            justify-content: space-between;
+                            gap: 8px;
+                            font-size: 12px;
+                            margin: 2px 0;
+                        }
+                        .line div:last-child {
+                            white-space: nowrap;
+                            text-align: right;
+                        }
+                        hr {
+                            border: none;
+                            border-top: 1px dashed #000;
+                            margin: 6px 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="center"><strong>QuickServe</strong></div>
+                    <div class="center small">Ticket #${order.id}</div>
+                    <div class="center small">${createdAt}</div>
+                    <hr>
+                    ${itemsHtml}
+                    <hr>
+                    <div class="row"><div>Base</div><div>${base.toFixed(2)}EUR</div></div>
+                    <div class="row"><div>IVA (21%)</div><div>${iva.toFixed(2)}EUR</div></div>
+                    <div class="row"><div><strong>Total</strong></div><div><strong>${total.toFixed(2)}EUR</strong></div></div>
+                    <div class="row"><div>Pagament</div><div>${escapeTicketHtml(paymentLabel)}</div></div>
+                    ${workerName ? `<div class="row"><div>Treballador</div><div>${escapeTicketHtml(workerName)}</div></div>` : ''}
+                    <hr>
+                    <div class="center small">Gracies per la seva visita</div>
+                    <script>
+                        window.onload = function() {
+                            window.focus();
+                            window.print();
+                            setTimeout(function() { window.close(); }, 200);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `;
+        }
+
+        async function printTicketByOrderId(orderId, paymentMethodLabel) {
+            if (!orderId) return;
+
+            try {
+                const response = await fetch(`/orders/${orderId}/details`);
+                if (!response.ok) {
+                    throw new Error('No s han pogut obtenir les dades del ticket');
+                }
+
+                const data = await response.json();
+                if (!data || !data.order) {
+                    throw new Error('Resposta invalida del ticket');
+                }
+
+                const printWindow = window.open('', '_blank', 'width=420,height=760');
+                if (!printWindow) {
+                    alert("No s'ha pogut obrir la finestra d'impressio. Comprova el bloquejador de pop-ups.");
+                    return;
+                }
+
+                printWindow.document.open();
+                printWindow.document.write(buildTicketHtml(data.order, paymentMethodLabel));
+                printWindow.document.close();
+            } catch (error) {
+                console.error(error);
+                alert("La venda s'ha registrat, pero el ticket no s'ha pogut imprimir.");
+            }
+        }
+
         function processCheckout(paymentMethod) {
             if (!selectedWorkerId) return;
 
@@ -1383,8 +1551,12 @@
                     if (!res.ok) return res.json().then(err => { throw err; });
                     return res.json();
                 })
-                .then(data => {
+                .then(async data => {
                     alert(data.message);
+
+                    if (!isCreatingPreorder && data.order_id) {
+                        await printTicketByOrderId(data.order_id, paymentMethod);
+                    }
 
                     // Actualitzem l'estoc visualment al DOM (sense recarregar la pàgina)
                     cart.forEach(item => {
@@ -1430,10 +1602,13 @@
         }
 
         // --- LÒGICA D'ENCÀRRECS / CUES ---
+        window.currentPendingOrders = [];
+        
         function fetchPendingPreorders() {
             fetch('/orders/pending')
                 .then(res => res.json())
                 .then(data => {
+                    window.currentPendingOrders = data.orders || [];
                     const list = document.getElementById('preorders-list');
                     const emptyState = document.getElementById('preorders-empty');
                     list.innerHTML = '';
@@ -1537,6 +1712,59 @@
 
         function closePendingPreordersPage() {
             document.getElementById('pending-preorders-modal').style.display = 'none';
+        }
+
+        function openAggregatedProductsModal() {
+            const list = document.getElementById('aggregated-list');
+            list.innerHTML = '';
+            
+            let productSummary = {};
+            
+            if (window.currentPendingOrders) {
+                window.currentPendingOrders.forEach(order => {
+                    order.items.forEach(item => {
+                        let name = item.product.name;
+                        // Opcionalment pots agrupar per "producte + nota" o només per "producte"
+                        // Aquí agrupem per nom per mantenir-ho senzill i global.
+                        if (!productSummary[name]) {
+                            productSummary[name] = {
+                                img: item.product.image_path,
+                                qty: 0
+                            };
+                        }
+                        productSummary[name].qty += parseFloat(item.quantity);
+                    });
+                });
+            }
+            
+            let sortedProducts = Object.keys(productSummary).sort((a,b) => productSummary[b].qty - productSummary[a].qty);
+            
+            if (sortedProducts.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#888;">Cap producte encarregat.</p>';
+            } else {
+                sortedProducts.forEach(name => {
+                    let info = productSummary[name];
+                    let imgString = info.img ? `<img src="/${info.img}" style="width:50px; height:50px; object-fit:cover; border-radius:10px;">` : `<div style="width:50px;height:50px;background:#eee;border-radius:10px;"></div>`;
+                    list.innerHTML += `
+                        <div style="display:flex; align-items:center; gap:15px; border-bottom:1px solid #f0f0f0; padding-bottom:15px; margin-bottom:15px;">
+                            ${imgString}
+                            <div style="flex:1;">
+                                <div style="font-weight:800; color:var(--text-main);">${name}</div>
+                                <div style="font-size:0.85rem; color:#888;">Encàrrecs pendents</div>
+                            </div>
+                            <div style="font-size:1.4rem; font-weight:900; background:var(--primary); color:white; padding:8px 16px; border-radius:12px;">
+                                ${info.qty}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            document.getElementById('aggregated-products-modal').style.display = 'flex';
+        }
+
+        function closeAggregatedProductsModal() {
+            document.getElementById('aggregated-products-modal').style.display = 'none';
         }
 
         // --- LÒGICA DE TICKETS APARCATS ---
@@ -1830,10 +2058,10 @@
                         cartKey: item.product_id + '|' + (item.notes || '')
                     }));
 
-                    // Emmagatzemar les metadades de l'encàrrec a la UI
-                    // Així quan modifiqui i doni a Encàrrec tindrà les hores guardades
-                    document.getElementById('preorder-time').value = data.order.pickup_time || '';
-                    document.getElementById('preorder-name').value = data.order.customer_name || '';
+                    // Guardem la hora i el nom en variables globals perquè
+                    // openUserModal no les sobreescrigui quan l'usuari cliqui "Encàrrec"
+                    _editPreorderTime = data.order.pickup_time || '';
+                    _editPreorderName = data.order.customer_name || '';
 
                     // Ara ho cancelem al backend per restaurar l'estoc temporalment
                     fetch(`/orders/${id}/cancel`, {

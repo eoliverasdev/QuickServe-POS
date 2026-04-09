@@ -124,7 +124,7 @@ class OrderController extends Controller
     }
 
     public function getOrderDetails($id) {
-        $order = Order::with('items.product')->findOrFail($id);
+        $order = Order::with(['items.product', 'worker'])->findOrFail($id);
         return response()->json(['order' => $order]);
     }
 
