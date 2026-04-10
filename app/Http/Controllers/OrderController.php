@@ -115,7 +115,7 @@ class OrderController extends Controller
         $request->validate([
             'payment_method' => 'required|string',
             'worker_id'      => 'required|exists:workers,id',
-            'add_bag'        => 'nullable|boolean'
+            'bag_count'      => 'nullable|integer|min:0|max:99',
         ]);
 
         return DB::transaction(function () use ($request, $id) {
@@ -123,8 +123,9 @@ class OrderController extends Controller
             $order->payment_method = $request->payment_method;
             $order->worker_id = $request->worker_id;
 
-            if ($request->add_bag) {
-                $order->total_price += 0.10;
+            $bagCount = max(0, min(99, (int) $request->input('bag_count', 0)));
+            if ($bagCount > 0) {
+                $order->total_price = round((float) $order->total_price + ($bagCount * 0.10), 2);
             }
 
             $order->status = 'Pagat';

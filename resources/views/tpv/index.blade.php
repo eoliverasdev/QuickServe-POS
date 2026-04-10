@@ -913,12 +913,18 @@
                     <span>IVA (21%)</span><span id="payment-iva">0.00€</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="display:flex; gap:10px;">
-                        <button id="btn-add-bag-payment"
-                            style="border:1px solid var(--primary); background:#fff; color:var(--primary); padding:5px 12px; border-radius:8px; cursor:pointer; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:5px; transition:0.2s;"
-                            onclick="toggleBagPayment()">
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <button type="button" id="btn-add-bag-payment"
+                            style="border:1px solid var(--primary); background:#fff; color:var(--primary); padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:6px; transition:0.2s; min-height:48px; touch-action:manipulation;"
+                            onclick="addBagPayment()">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                            + Bossa (0,10€)
+                            <span>Bossa (+0,10€)</span>
+                            <span id="bag-count-badge-payment" style="display:none; font-weight:900; background:rgba(255,255,255,0.3); padding:2px 8px; border-radius:8px; font-size:0.75rem;">×0</span>
+                        </button>
+                        <button type="button" id="btn-remove-bag-payment" onclick="removeBagPayment()" title="Treure una bossa"
+                            style="display:none; align-items:center; justify-content:center; width:48px; height:48px; border-radius:12px; border:2px solid var(--danger); background:#fff5f5; color:var(--danger); cursor:pointer; flex-shrink:0; touch-action:manipulation; -webkit-tap-highlight-color:transparent;"
+                            aria-label="Treure una bossa">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                         <button id="btn-discount-payment"
                             style="border:1px solid #10b981; background:#fff; color:#10b981; padding:5px 12px; border-radius:8px; cursor:pointer; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:5px; transition:0.2s;"
@@ -1058,13 +1064,21 @@
                 <p style="font-size:0.7rem; font-weight:800; color:#aaa; text-transform:uppercase; margin:0 0 12px 0;">Productes de l'encàrrec</p>
                 <div id="charge-order-summary" style="display:flex; flex-direction:column; gap:6px;"></div>
                 <div style="border-top:1px dashed #dde; margin:12px 0 8px;"></div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <button id="btn-add-bag-charge"
-                        style="border:1px solid var(--primary); background:#fff; color:var(--primary); padding:5px 12px; border-radius:8px; cursor:pointer; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:5px; transition:0.2s;"
-                        onclick="toggleBagCharge()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                        + Bossa (0,10€)
-                    </button>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button type="button" id="btn-add-bag-charge"
+                            style="border:1px solid var(--primary); background:#fff; color:var(--primary); padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:6px; transition:0.2s; min-height:48px; touch-action:manipulation;"
+                            onclick="addBagCharge()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                            <span>Bossa (+0,10€)</span>
+                            <span id="bag-count-badge-charge" style="display:none; font-weight:900; background:rgba(255,255,255,0.3); padding:2px 8px; border-radius:8px; font-size:0.75rem;">×0</span>
+                        </button>
+                        <button type="button" id="btn-remove-bag-charge" onclick="removeBagCharge()" title="Treure una bossa"
+                            style="display:none; align-items:center; justify-content:center; width:48px; height:48px; border-radius:12px; border:2px solid var(--danger); background:#fff5f5; color:var(--danger); cursor:pointer; flex-shrink:0; touch-action:manipulation; -webkit-tap-highlight-color:transparent;"
+                            aria-label="Treure una bossa">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </div>
                     <div style="font-size:1.5rem; font-weight:900; color:var(--text-main);">Total: <span id="charge-total-price">0.00€</span></div>
                 </div>
             </div>
@@ -1416,21 +1430,42 @@
 
         function closeUserModal() { document.getElementById('user-modal').style.display = 'none'; }
 
-        let isBagAddedPayment = false;
+        const BAG_UNIT_PRICE = 0.10;
+        const BAG_MAX_COUNT = 50;
+
+        let bagCountPayment = 0;
         let isDiscountAppliedPayment = false;
         let currentPaymentTotal = 0;
         let finalPaymentTotalCached = 0; // Guardem el final calculat
         let selectedPaymentMethodFinal = null;
 
-        function toggleBagPayment() {
-            isBagAddedPayment = !isBagAddedPayment;
-            let btn = document.getElementById('btn-add-bag-payment');
-            if (isBagAddedPayment) {
+        function addBagPayment() {
+            if (bagCountPayment >= BAG_MAX_COUNT) return;
+            bagCountPayment++;
+            syncBagPaymentUI();
+        }
+
+        function removeBagPayment() {
+            if (bagCountPayment <= 0) return;
+            bagCountPayment--;
+            syncBagPaymentUI();
+        }
+
+        function syncBagPaymentUI() {
+            const btn = document.getElementById('btn-add-bag-payment');
+            const trash = document.getElementById('btn-remove-bag-payment');
+            const badge = document.getElementById('bag-count-badge-payment');
+            if (bagCountPayment > 0) {
                 btn.style.background = 'var(--primary)';
                 btn.style.color = '#fff';
+                trash.style.display = 'inline-flex';
+                badge.style.display = 'inline';
+                badge.textContent = '×' + bagCountPayment;
             } else {
                 btn.style.background = '#fff';
                 btn.style.color = 'var(--primary)';
+                trash.style.display = 'none';
+                badge.style.display = 'none';
             }
             updatePaymentTotalUI();
             calculateChange();
@@ -1458,7 +1493,7 @@
             if (isDiscountAppliedPayment) {
                 baseTotal = baseTotal * 0.85; // Apliquem 15% de descompte als productes
             }
-            let finalTotal = baseTotal + (isBagAddedPayment ? 0.10 : 0); // La bossa no té descompte
+            let finalTotal = baseTotal + bagCountPayment * BAG_UNIT_PRICE; // Bosses sense descompte
             finalPaymentTotalCached = finalTotal;
 
             document.getElementById('payment-total-price').innerText = finalTotal.toFixed(2) + '€';
@@ -1545,12 +1580,10 @@
                 return;
             }
 
-            isBagAddedPayment = false;
+            bagCountPayment = 0;
             isDiscountAppliedPayment = false;
             selectedPaymentMethodFinal = null;
-
-            let bagBtn = document.getElementById('btn-add-bag-payment');
-            if (bagBtn) { bagBtn.style.background = '#fff'; bagBtn.style.color = 'var(--primary)'; }
+            syncBagPaymentUI();
 
             let discBtn = document.getElementById('btn-discount-payment');
             if (discBtn) { discBtn.style.background = '#fff'; discBtn.style.color = '#10b981'; }
@@ -2151,27 +2184,45 @@
             openParkedTicketsModal(); // Refresca el modal si estava obert
         }
 
-        let isBagAddedCharge = false;
+        let bagCountCharge = 0;
         let currentChargeTotal = 0;
         let selectedChargeMethod = null;
         let currentChargeItems = [];
 
-        function toggleBagCharge() {
-            isBagAddedCharge = !isBagAddedCharge;
-            let btn = document.getElementById('btn-add-bag-charge');
-            if (isBagAddedCharge) {
+        function addBagCharge() {
+            if (bagCountCharge >= BAG_MAX_COUNT) return;
+            bagCountCharge++;
+            syncBagChargeUI();
+        }
+
+        function removeBagCharge() {
+            if (bagCountCharge <= 0) return;
+            bagCountCharge--;
+            syncBagChargeUI();
+        }
+
+        function syncBagChargeUI() {
+            const btn = document.getElementById('btn-add-bag-charge');
+            const trash = document.getElementById('btn-remove-bag-charge');
+            const badge = document.getElementById('bag-count-badge-charge');
+            if (bagCountCharge > 0) {
                 btn.style.background = 'var(--primary)';
                 btn.style.color = '#fff';
+                trash.style.display = 'inline-flex';
+                badge.style.display = 'inline';
+                badge.textContent = '×' + bagCountCharge;
             } else {
                 btn.style.background = '#fff';
                 btn.style.color = 'var(--primary)';
+                trash.style.display = 'none';
+                badge.style.display = 'none';
             }
             updateChargeTotalUI();
             calculateChargeChange();
         }
 
         function updateChargeTotalUI() {
-            let finalTotal = parseFloat(currentChargeTotal) + (isBagAddedCharge ? 0.10 : 0);
+            let finalTotal = parseFloat(currentChargeTotal) + bagCountCharge * BAG_UNIT_PRICE;
             document.getElementById('charge-total-price').innerText = finalTotal.toFixed(2) + '€';
         }
 
@@ -2183,12 +2234,9 @@
 
             currentChargeTotal = parseFloat(total);
             currentChargeItems = items || [];
-            isBagAddedCharge = false;
+            bagCountCharge = 0;
             selectedChargeMethod = null;
-
-            // Reset bag btn
-            let bagBtn = document.getElementById('btn-add-bag-charge');
-            if (bagBtn) { bagBtn.style.background = '#fff'; bagBtn.style.color = 'var(--primary)'; }
+            syncBagChargeUI();
 
             // Reset mètodes
             document.getElementById('charge-btn-efectiu').classList.remove('active');
@@ -2240,7 +2288,7 @@
         function calculateChargeChange() {
             if (selectedChargeMethod !== 'Efectiu') return;
             const given = parseMoneyInput(document.getElementById('charge-cash-given').value);
-            const total = parseFloat(currentChargeTotal) + (isBagAddedCharge ? 0.10 : 0);
+            const total = parseFloat(currentChargeTotal) + bagCountCharge * BAG_UNIT_PRICE;
             const changeDisplay = document.getElementById('charge-change-display');
             const insufficient = document.getElementById('charge-change-insufficient');
             const confirmBtn = document.getElementById('btn-confirm-charge');
@@ -2291,7 +2339,7 @@
             const id = document.getElementById('charging-preorder-id').value;
             const workerId = document.getElementById('charging-worker-id').value;
 
-            let totalToCharge = parseFloat(currentChargeTotal) + (isBagAddedCharge ? 0.10 : 0);
+            let totalToCharge = parseFloat(currentChargeTotal) + bagCountCharge * BAG_UNIT_PRICE;
 
             fetch(`/orders/${id}/charge`, {
                 method: 'POST',
@@ -2302,7 +2350,7 @@
                 body: JSON.stringify({
                     payment_method: paymentMethod,
                     worker_id: workerId,
-                    add_bag: isBagAddedCharge
+                    bag_count: bagCountCharge
                 })
             }).then(r => r.json()).then(async res => {
                 if (res.success) {
