@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'core/config/app_config.dart';
 import 'core/network/api_client.dart';
-import 'features/health/data/health_service.dart';
+import 'core/theme/tpv_theme.dart';
+import 'features/auth/data/auth_service.dart';
+import 'features/tpv/presentation/tpv_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,106 +12,194 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({
     super.key,
-    this.enableHealthCheck = true,
+    this.enableSessionRestore = true,
   });
 
-  final bool enableHealthCheck;
+  final bool enableSessionRestore;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Quickserve Flutter',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-      ),
-      home: HealthCheckPage(autoCheck: enableHealthCheck),
+      theme: TpvTheme.build(),
+      home: AuthGate(enableSessionRestore: enableSessionRestore),
     );
   }
 }
 
-class HealthCheckPage extends StatefulWidget {
-  const HealthCheckPage({
+class AuthGate extends StatefulWidget {
+  const AuthGate({
     super.key,
-    this.autoCheck = true,
+    this.enableSessionRestore = true,
   });
 
-  final bool autoCheck;
+  final bool enableSessionRestore;
 
   @override
-  State<HealthCheckPage> createState() => _HealthCheckPageState();
+  State<AuthGate> createState() => _AuthGateState();
 }
 
-class _HealthCheckPageState extends State<HealthCheckPage> {
-  late final HealthService _healthService;
-  String _status = 'Comprobando conexion...';
-  bool _loading = true;
+class _AuthGateState extends State<AuthGate> {
+  final AuthService _authService = AuthService(ApiClient());
+  Map<String, dynamic>? _loggedUser;
+  bool _checkingSession = true;
 
   @override
   void initState() {
     super.initState();
-    _healthService = HealthService(ApiClient());
-    if (widget.autoCheck) {
-      _checkApi();
+    if (widget.enableSessionRestore) {
+      _restoreSession();
     } else {
-      _loading = false;
-      _status = 'Comprobacion manual lista';
+      _checkingSession = false;
     }
   }
 
-  Future<void> _checkApi() async {
-    setState(() {
-      _loading = true;
-      _status = 'Comprobando conexion...';
-    });
-
+  Future<void> _restoreSession() async {
     try {
-      final String result = await _healthService.ping();
+      final Map<String, dynamic> user = await _authService.me();
+      if (!mounted) return;
       setState(() {
-        _status = '$result\n${AppConfig.apiBaseUrl}/ping';
+        _loggedUser = user;
       });
-    } catch (error) {
+    } catch (_) {
+      if (!mounted) return;
       setState(() {
-        _status = 'No se pudo conectar con Laravel API.\n'
-            'URL actual: ${AppConfig.apiBaseUrl}\n'
-            'Error: $error';
+        _loggedUser = null;
       });
     } finally {
-      setState(() {
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _checkingSession = false;
+        });
+      }
     }
+  }
+
+  Future<void> _onLoginSuccess(Map<String, dynamic> user) async {
+    setState(() {
+      _loggedUser = user;
+    });
+  }
+
+  Future<void> _logout() async {
+    await _authService.logout();
+    if (!mounted) return;
+    setState(() {
+      _loggedUser = null;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool isOk = _status.startsWith('API OK');
+    if (_checkingSession) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
+    if (_loggedUser == null) {
+      return LoginPage(authService: _authService, onLoggedIn: _onLoginSuccess);
+    }
+
+    return TpvPage(
+      authService: _authService,
+      userName: (_loggedUser!['name'] ?? 'Usuari').toString(),
+      onLogout: _logout,
+    );
+  }
+}
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({
+    super.key,
+    required this.authService,
+    required this.onLoggedIn,
+  });
+
+  final AuthService authService;
+  final Future<void> Function(Map<String, dynamic> user) onLoggedIn;
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  String _status = 'Introduce credenciales para iniciar sesion';
+  bool _busy = false;
+
+  Future<void> _login() async {
+    setState(() {
+      _busy = true;
+      _status = 'Iniciando sesion...';
+    });
+
+    try {
+      await widget.authService.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      final Map<String, dynamic> user = await widget.authService.me();
+      await widget.onLoggedIn(user);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _status = 'Error de login: $error';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Quickserve API check')),
+      appBar: AppBar(title: const Text('Quickserve Login')),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              if (_loading) const CircularProgressIndicator(),
-              if (!_loading)
-                Icon(
-                  isOk ? Icons.check_circle : Icons.error,
-                  size: 44,
-                  color: isOk ? Colors.green : Colors.red,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                TextField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email'),
                 ),
-              const SizedBox(height: 16),
-              Text(
-                _status,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              OutlinedButton(
-                onPressed: _checkApi,
-                child: const Text('Reintentar'),
-              ),
-            ],
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _busy ? null : _login,
+                  child: const Text('Entrar'),
+                ),
+                const SizedBox(height: 12),
+                Text(_status, textAlign: TextAlign.center),
+                if (_busy) ...<Widget>[
+                  const SizedBox(height: 12),
+                  const Center(child: CircularProgressIndicator()),
+                ],
+              ],
+            ),
           ),
         ),
       ),

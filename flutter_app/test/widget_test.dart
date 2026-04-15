@@ -10,12 +10,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_app/main.dart';
 
 void main() {
-  testWidgets('Shows API health check screen', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp(enableHealthCheck: false));
-
-    expect(find.text('Quickserve API check'), findsOneWidget);
-    expect(find.text('Reintentar'), findsOneWidget);
-
+  testWidgets('Shows login screen', (WidgetTester tester) async {
+    await tester.pumpWidget(const MyApp(enableSessionRestore: false));
     await tester.pump();
+
+    expect(find.text('Quickserve Login'), findsOneWidget);
+    expect(find.text('Entrar'), findsOneWidget);
   });
 }

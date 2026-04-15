@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\OrderController;
+use App\Models\Worker;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', function () {
@@ -8,4 +12,26 @@ Route::get('/ping', function () {
         'service' => 'quickserve-api',
         'timestamp' => now()->toIso8601String(),
     ]);
+});
+
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/me', [AuthController::class, 'me']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/catalog', [CatalogController::class, 'index']);
+    Route::get('/workers', function () {
+        return response()->json([
+            'workers' => Worker::query()
+                ->where('active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
+        ]);
+    });
+    Route::post('/orders', [OrderController::class, 'store']);
+    Route::get('/orders/pending', [OrderController::class, 'getPendingPreorders']);
 });
