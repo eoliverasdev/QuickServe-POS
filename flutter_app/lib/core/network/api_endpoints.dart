@@ -20,4 +20,14 @@ class ApiEndpoints {
   // Admin
   static const String adminVerifyPin = '/admin/verify-pin';
   static const String adminDashboard = '/admin/dashboard';
+  static const String adminCategories = '/admin/categories';
+  static const String adminProducts = '/admin/products';
+  static const String adminProductsUpload = '/admin/products/upload-image';
+  static const String adminWorkers = '/admin/workers';
+  static const String adminOrders = '/admin/orders';
+
+  static String adminCategory(int id) => '/admin/categories/$id';
+  static String adminProduct(int id) => '/admin/products/$id';
+  static String adminWorker(int id) => '/admin/workers/$id';
+  static String adminOrder(int id) => '/admin/orders/$id';
 }

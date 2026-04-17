@@ -197,6 +197,226 @@ class AdminDashboardData {
   }
 }
 
+class AdminCategory {
+  const AdminCategory({
+    required this.id,
+    required this.name,
+    required this.productsCount,
+    this.color,
+  });
+
+  final int id;
+  final String name;
+  final String? color;
+  final int productsCount;
+
+  factory AdminCategory.fromJson(Map<String, dynamic> json) {
+    return AdminCategory(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      name: json['name']?.toString() ?? '',
+      color: json['color']?.toString(),
+      productsCount: (json['products_count'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+class AdminProduct {
+  const AdminProduct({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.stock,
+    required this.isGlutenFree,
+    required this.active,
+    this.description,
+    this.imagePath,
+    this.categoryId,
+    this.categoryName,
+    this.categoryColor,
+  });
+
+  final int id;
+  final String name;
+  final double price;
+  final int stock;
+  final bool isGlutenFree;
+  final bool active;
+  final String? description;
+  final String? imagePath;
+  final int? categoryId;
+  final String? categoryName;
+  final String? categoryColor;
+
+  factory AdminProduct.fromJson(Map<String, dynamic> json) {
+    return AdminProduct(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      name: json['name']?.toString() ?? '',
+      price: _asDouble(json['price']),
+      stock: (json['stock'] as num?)?.toInt() ?? 0,
+      isGlutenFree: (json['is_gluten_free'] as bool?) ?? false,
+      active: (json['active'] as bool?) ?? true,
+      description: json['description']?.toString(),
+      imagePath: json['image_path']?.toString(),
+      categoryId: (json['category_id'] as num?)?.toInt(),
+      categoryName: json['category_name']?.toString(),
+      categoryColor: json['category_color']?.toString(),
+    );
+  }
+}
+
+class AdminWorker {
+  const AdminWorker({
+    required this.id,
+    required this.name,
+    required this.hasPin,
+    required this.active,
+    required this.ordersCount,
+    this.pin,
+  });
+
+  final int id;
+  final String name;
+  final bool hasPin;
+  final bool active;
+  final int ordersCount;
+  final String? pin;
+
+  factory AdminWorker.fromJson(Map<String, dynamic> json) {
+    return AdminWorker(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      name: json['name']?.toString() ?? '',
+      hasPin: (json['has_pin'] as bool?) ?? false,
+      active: (json['active'] as bool?) ?? true,
+      ordersCount: (json['orders_count'] as num?)?.toInt() ?? 0,
+      pin: json['pin']?.toString(),
+    );
+  }
+}
+
+class AdminOrderSummary {
+  const AdminOrderSummary({
+    required this.id,
+    required this.totalPrice,
+    required this.status,
+    required this.isPreorder,
+    required this.itemsCount,
+    this.paymentMethod,
+    this.pickupNumber,
+    this.pickupTime,
+    this.customerName,
+    this.fiscalFullNumber,
+    this.workerId,
+    this.workerName,
+    this.createdAt,
+  });
+
+  final int id;
+  final double totalPrice;
+  final String? paymentMethod;
+  final String status;
+  final bool isPreorder;
+  final int itemsCount;
+  final String? pickupNumber;
+  final String? pickupTime;
+  final String? customerName;
+  final String? fiscalFullNumber;
+  final int? workerId;
+  final String? workerName;
+  final DateTime? createdAt;
+
+  factory AdminOrderSummary.fromJson(Map<String, dynamic> json) {
+    return AdminOrderSummary(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      totalPrice: _asDouble(json['total_price']),
+      paymentMethod: json['payment_method']?.toString(),
+      status: json['status']?.toString() ?? '',
+      isPreorder: (json['is_preorder'] as bool?) ?? false,
+      itemsCount: (json['items_count'] as num?)?.toInt() ?? 0,
+      pickupNumber: json['pickup_number']?.toString(),
+      pickupTime: json['pickup_time']?.toString(),
+      customerName: json['customer_name']?.toString(),
+      fiscalFullNumber: json['fiscal_full_number']?.toString(),
+      workerId: (json['worker_id'] as num?)?.toInt(),
+      workerName: json['worker_name']?.toString(),
+      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
+    );
+  }
+}
+
+class AdminOrderItem {
+  const AdminOrderItem({
+    required this.id,
+    required this.name,
+    required this.quantity,
+    required this.price,
+    required this.subtotal,
+  });
+
+  final int id;
+  final String name;
+  final int quantity;
+  final double price;
+  final double subtotal;
+
+  factory AdminOrderItem.fromJson(Map<String, dynamic> json) {
+    return AdminOrderItem(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      name: json['name']?.toString() ?? '',
+      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
+      price: _asDouble(json['price']),
+      subtotal: _asDouble(json['subtotal']),
+    );
+  }
+}
+
+class AdminOrderDetail {
+  const AdminOrderDetail({required this.summary, required this.items});
+
+  final AdminOrderSummary summary;
+  final List<AdminOrderItem> items;
+
+  factory AdminOrderDetail.fromJson(Map<String, dynamic> json) {
+    return AdminOrderDetail(
+      summary: AdminOrderSummary.fromJson(json),
+      items: (json['items'] as List<dynamic>? ?? <dynamic>[])
+          .whereType<Map<String, dynamic>>()
+          .map(AdminOrderItem.fromJson)
+          .toList(),
+    );
+  }
+}
+
+class AdminOrdersPage {
+  const AdminOrdersPage({
+    required this.orders,
+    required this.currentPage,
+    required this.lastPage,
+    required this.total,
+    required this.perPage,
+  });
+
+  final List<AdminOrderSummary> orders;
+  final int currentPage;
+  final int lastPage;
+  final int total;
+  final int perPage;
+
+  factory AdminOrdersPage.fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> meta =
+        (json['meta'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
+    return AdminOrdersPage(
+      orders: (json['orders'] as List<dynamic>? ?? <dynamic>[])
+          .whereType<Map<String, dynamic>>()
+          .map(AdminOrderSummary.fromJson)
+          .toList(),
+      currentPage: (meta['current_page'] as num?)?.toInt() ?? 1,
+      lastPage: (meta['last_page'] as num?)?.toInt() ?? 1,
+      total: (meta['total'] as num?)?.toInt() ?? 0,
+      perPage: (meta['per_page'] as num?)?.toInt() ?? 20,
+    );
+  }
+}
+
 double _asDouble(dynamic value) {
   if (value is num) return value.toDouble();
   if (value is String) return double.tryParse(value) ?? 0;

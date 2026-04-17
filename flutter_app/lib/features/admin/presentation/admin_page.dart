@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/tpv_theme.dart';
 import '../../auth/data/auth_service.dart';
+import 'sections/caixa_section.dart';
+import 'sections/categories_section.dart';
 import 'sections/dashboard_section.dart';
+import 'sections/history_section.dart';
+import 'sections/products_section.dart';
+import 'sections/workers_section.dart';
 
 enum AdminSection { resum, caixa, categories, productes, treballadors, historial }
 
@@ -93,11 +98,15 @@ class _AdminPageState extends State<AdminPage> {
       case AdminSection.resum:
         return DashboardSection(authService: widget.authService);
       case AdminSection.caixa:
+        return CaixaSection(authService: widget.authService);
       case AdminSection.categories:
+        return CategoriesSection(authService: widget.authService);
       case AdminSection.productes:
+        return ProductsSection(authService: widget.authService);
       case AdminSection.treballadors:
+        return WorkersSection(authService: widget.authService);
       case AdminSection.historial:
-        return const _ComingSoonPlaceholder();
+        return HistorySection(authService: widget.authService);
     }
   }
 
@@ -423,28 +432,3 @@ class _AdminHeader extends StatelessWidget {
   }
 }
 
-class _ComingSoonPlaceholder extends StatelessWidget {
-  const _ComingSoonPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          const Icon(Icons.build_circle_outlined, size: 56, color: Color(0xFFB0B6C9)),
-          const SizedBox(height: 10),
-          const Text(
-            'Aquesta secció estarà disponible aviat',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: TpvTheme.textMain),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'L\'estem migrant des del panell antic.',
-            style: TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
-    );
-  }
-}

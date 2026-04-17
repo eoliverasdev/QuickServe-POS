@@ -42,5 +42,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->group(function () {
         Route::post('/verify-pin', [AdminController::class, 'verifyPin']);
         Route::get('/dashboard', [AdminController::class, 'dashboard']);
+
+        Route::get('/categories', [AdminController::class, 'listCategories']);
+        Route::post('/categories', [AdminController::class, 'storeCategory']);
+        Route::put('/categories/{id}', [AdminController::class, 'updateCategory']);
+        Route::delete('/categories/{id}', [AdminController::class, 'destroyCategory']);
+
+        Route::get('/products', [AdminController::class, 'listProducts']);
+        Route::post('/products', [AdminController::class, 'storeProduct']);
+        Route::post('/products/upload-image', [AdminController::class, 'uploadProductImage']);
+        Route::put('/products/{id}', [AdminController::class, 'updateProduct']);
+        Route::delete('/products/{id}', [AdminController::class, 'destroyProduct']);
+
+        Route::get('/workers', [AdminController::class, 'listWorkers']);
+        Route::post('/workers', [AdminController::class, 'storeWorker']);
+        Route::put('/workers/{id}', [AdminController::class, 'updateWorker']);
+        Route::delete('/workers/{id}', [AdminController::class, 'destroyWorker']);
+
+        Route::get('/orders', [AdminController::class, 'listOrders']);
+        Route::get('/orders/{id}', [AdminController::class, 'showOrder']);
+        Route::delete('/orders/{id}', [AdminController::class, 'destroyOrder']);
     });
 });
