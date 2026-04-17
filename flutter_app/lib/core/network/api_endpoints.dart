@@ -16,4 +16,8 @@ class ApiEndpoints {
   static String orderCharge(int orderId) => '/orders/$orderId/charge';
   static String orderDetails(int orderId) => '/orders/$orderId/details';
   static String orderCancel(int orderId) => '/orders/$orderId/cancel';
+
+  // Admin
+  static const String adminVerifyPin = '/admin/verify-pin';
+  static const String adminDashboard = '/admin/dashboard';
 }

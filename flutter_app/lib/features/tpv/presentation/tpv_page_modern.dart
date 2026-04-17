@@ -8,6 +8,8 @@ import 'package:printing/printing.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/tpv_theme.dart';
+import '../../admin/data/admin_service.dart';
+import '../../admin/presentation/admin_page.dart';
 import '../../auth/data/auth_service.dart';
 import '../data/parked_tickets_store.dart';
 import '../data/tpv_catalog_service.dart';
@@ -33,7 +35,6 @@ class TpvPage extends StatefulWidget {
 }
 
 class _TpvPageState extends State<TpvPage> {
-  static const String _adminPin = '1234';
   static const String _halfChickenName = '1/2 Pollastre (Pit i cuixa)';
   static const String _fullChickenName = 'Pollastre';
   static const String _bagProductName = 'Bossa';
@@ -1059,13 +1060,29 @@ class _TpvPageState extends State<TpvPage> {
               setModalState(() {});
             }
 
-            void submit() {
+            Future<void> submit() async {
               if (!canSubmit) return;
-              final bool ok = _adminPinController.text.trim() == _adminPin;
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(this.context).showSnackBar(
-                SnackBar(content: Text(ok ? 'PIN correcte' : 'PIN incorrecte')),
-              );
+              final NavigatorState navigator = Navigator.of(context);
+              final ScaffoldMessengerState messenger = ScaffoldMessenger.of(this.context);
+              try {
+                final AdminService admin = AdminService(ApiClient(), widget.authService);
+                final String adminName = await admin.verifyPin(_adminPinController.text.trim());
+                navigator.pop();
+                if (!mounted) return;
+                await Navigator.of(this.context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => AdminPage(
+                      authService: widget.authService,
+                      adminName: adminName,
+                    ),
+                  ),
+                );
+              } catch (error) {
+                clearPin();
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('PIN incorrecte')),
+                );
+              }
             }
 
             return Dialog(

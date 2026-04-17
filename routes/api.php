@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\OrderController;
@@ -37,4 +38,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/{id}/charge', [OrderController::class, 'chargePreorder']);
     Route::get('/orders/{id}/details', [OrderController::class, 'getOrderDetails']);
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancelPreorder']);
+
+    Route::prefix('admin')->group(function () {
+        Route::post('/verify-pin', [AdminController::class, 'verifyPin']);
+        Route::get('/dashboard', [AdminController::class, 'dashboard']);
+    });
 });
