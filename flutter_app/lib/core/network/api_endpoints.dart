@@ -12,4 +12,8 @@ class ApiEndpoints {
   static const String workers = '/workers';
   static const String orders = '/orders';
   static const String pendingOrders = '/orders/pending';
+
+  static String orderCharge(int orderId) => '/orders/$orderId/charge';
+  static String orderDetails(int orderId) => '/orders/$orderId/details';
+  static String orderCancel(int orderId) => '/orders/$orderId/cancel';
 }

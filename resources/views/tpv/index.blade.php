@@ -918,7 +918,7 @@
                             style="border:1px solid var(--primary); background:#fff; color:var(--primary); padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:6px; transition:0.2s; min-height:48px; touch-action:manipulation;"
                             onclick="addBagPayment()">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                            <span>Bossa (+0,10€)</span>
+                            <span id="bag-label-payment">Bossa</span>
                             <span id="bag-count-badge-payment" style="display:none; font-weight:900; background:rgba(255,255,255,0.3); padding:2px 8px; border-radius:8px; font-size:0.75rem;">×0</span>
                         </button>
                         <button type="button" id="btn-remove-bag-payment" onclick="removeBagPayment()" title="Treure una bossa"
@@ -1070,7 +1070,7 @@
                             style="border:1px solid var(--primary); background:#fff; color:var(--primary); padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:6px; transition:0.2s; min-height:48px; touch-action:manipulation;"
                             onclick="addBagCharge()">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                            <span>Bossa (+0,10€)</span>
+                            <span id="bag-label-charge">Bossa</span>
                             <span id="bag-count-badge-charge" style="display:none; font-weight:900; background:rgba(255,255,255,0.3); padding:2px 8px; border-radius:8px; font-size:0.75rem;">×0</span>
                         </button>
                         <button type="button" id="btn-remove-bag-charge" onclick="removeBagCharge()" title="Treure una bossa"
@@ -1430,14 +1430,64 @@
 
         function closeUserModal() { document.getElementById('user-modal').style.display = 'none'; }
 
-        const BAG_UNIT_PRICE = 0.10;
         const BAG_MAX_COUNT = 50;
+        const BAG_PRODUCT_NAMES = ['Bossa', 'Bolsa'];
 
         let bagCountPayment = 0;
         let isDiscountAppliedPayment = false;
         let currentPaymentTotal = 0;
         let finalPaymentTotalCached = 0; // Guardem el final calculat
         let selectedPaymentMethodFinal = null;
+        let currentBagProduct = null;
+
+        function findBagProduct() {
+            const normalizeText = (value) => String(value || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim()
+                .toLowerCase();
+
+            const normalizedNames = BAG_PRODUCT_NAMES.map(name => normalizeText(name));
+            const cards = Array.from(document.querySelectorAll('.product-card'));
+            const card = cards.find(c => {
+                const productName = normalizeText(c.dataset.name);
+                const categories = normalizeText(c.dataset.categories);
+
+                if (normalizedNames.includes(productName)) {
+                    return true;
+                }
+
+                // Fallback: only accept whole-word match to avoid false positives
+                // like "Carbasso Arrebossat" (contains "...bossa..." as substring).
+                const hasBagWord = /\b(bossa|bolsa)\b/.test(productName);
+                return hasBagWord && categories.includes('complements');
+            });
+            if (!card) return null;
+            const id = parseInt(card.dataset.id, 10);
+            const price = parseFloat(card.dataset.price);
+            if (!id || Number.isNaN(price)) return null;
+            return {
+                id,
+                name: card.dataset.name || 'Bossa',
+                price,
+                img: card.dataset.image || '/images/default.jpg'
+            };
+        }
+
+        function bagUnitPricePayment() {
+            if (!currentBagProduct) currentBagProduct = findBagProduct();
+            return currentBagProduct ? currentBagProduct.price : 0;
+        }
+
+        function updateBagLabels() {
+            const unit = bagUnitPricePayment();
+            const bagName = currentBagProduct ? currentBagProduct.name : 'Bossa';
+            const label = unit > 0 ? `${bagName} (+${unit.toFixed(2).replace('.', ',')}€)` : bagName;
+            const paymentLabel = document.getElementById('bag-label-payment');
+            const chargeLabel = document.getElementById('bag-label-charge');
+            if (paymentLabel) paymentLabel.innerText = label;
+            if (chargeLabel) chargeLabel.innerText = label;
+        }
 
         function addBagPayment() {
             if (bagCountPayment >= BAG_MAX_COUNT) return;
@@ -1468,6 +1518,7 @@
                 badge.style.display = 'none';
             }
             updatePaymentTotalUI();
+            renderPaymentOrderSummary();
             calculateChange();
         }
 
@@ -1493,7 +1544,7 @@
             if (isDiscountAppliedPayment) {
                 baseTotal = baseTotal * 0.85; // Apliquem 15% de descompte als productes
             }
-            let finalTotal = baseTotal + bagCountPayment * BAG_UNIT_PRICE; // Bosses sense descompte
+            let finalTotal = baseTotal + bagCountPayment * bagUnitPricePayment(); // Bosses sense descompte
             finalPaymentTotalCached = finalTotal;
 
             document.getElementById('payment-total-price').innerText = finalTotal.toFixed(2) + '€';
@@ -1515,6 +1566,14 @@
                         <span style="font-weight:700; color:#1b2559;">${lineTotal}€</span>
                     </div>`;
             });
+            if (bagCountPayment > 0 && currentBagProduct) {
+                const lineTotal = (currentBagProduct.price * bagCountPayment).toFixed(2);
+                container.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
+                        <span style="color:#555;">${bagCountPayment}× <strong>${currentBagProduct.name}</strong></span>
+                        <span style="font-weight:700; color:#1b2559;">${lineTotal}€</span>
+                    </div>`;
+            }
         }
 
         function selectPaymentMethod(method) {
@@ -1581,6 +1640,8 @@
             }
 
             bagCountPayment = 0;
+            currentBagProduct = findBagProduct();
+            updateBagLabels();
             isDiscountAppliedPayment = false;
             selectedPaymentMethodFinal = null;
             syncBagPaymentUI();
@@ -1815,6 +1876,23 @@
             if (!selectedWorkerId) return;
 
             let total = finalPaymentTotalCached; // Enviem el total ja calculat amb descompte i bossa
+            const payloadCart = [...cart];
+            if (bagCountPayment > 0) {
+                const bagProduct = findBagProduct();
+                if (!bagProduct) {
+                    alert('No s\'ha trobat el producte "Bossa" al catàleg.');
+                    return;
+                }
+                payloadCart.push({
+                    id: bagProduct.id,
+                    name: bagProduct.name,
+                    price: bagProduct.price,
+                    quantity: bagCountPayment,
+                    img: bagProduct.img,
+                    notes: '',
+                    cartKey: `bag-${bagProduct.id}`
+                });
+            }
 
             // NOTA: isCreatingPreorder en teoria skipeja this modal, 
             // però per si de cas no apliquem discount a pendents (preorders)
@@ -1826,7 +1904,7 @@
                 worker_id: selectedWorkerId,
                 total_price: total,
                 payment_method: paymentMethod,
-                cart: cart,
+                cart: payloadCart,
                 is_preorder: isCreatingPreorder
             };
 
@@ -2188,6 +2266,7 @@
         let currentChargeTotal = 0;
         let selectedChargeMethod = null;
         let currentChargeItems = [];
+        let currentChargeBagProduct = null;
 
         function addBagCharge() {
             if (bagCountCharge >= BAG_MAX_COUNT) return;
@@ -2218,12 +2297,36 @@
                 badge.style.display = 'none';
             }
             updateChargeTotalUI();
+            renderChargeOrderSummary();
             calculateChargeChange();
         }
 
         function updateChargeTotalUI() {
-            let finalTotal = parseFloat(currentChargeTotal) + bagCountCharge * BAG_UNIT_PRICE;
+            const unit = currentChargeBagProduct ? currentChargeBagProduct.price : bagUnitPricePayment();
+            let finalTotal = parseFloat(currentChargeTotal) + bagCountCharge * unit;
             document.getElementById('charge-total-price').innerText = finalTotal.toFixed(2) + '€';
+        }
+
+        function renderChargeOrderSummary() {
+            const summaryContainer = document.getElementById('charge-order-summary');
+            summaryContainer.innerHTML = '';
+            currentChargeItems.forEach(item => {
+                const lineTotal = (parseFloat(item.price_at_sale) * item.quantity).toFixed(2);
+                let noteTxt = item.notes ? `<span style="color:#e67e22; font-size:0.75rem;"> (${item.notes})</span>` : '';
+                summaryContainer.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
+                        <span style="color:#555;">${item.quantity}× <strong>${item.product.name}</strong>${noteTxt}</span>
+                        <span style="font-weight:700; color:#1b2559;">${lineTotal}€</span>
+                    </div>`;
+            });
+            if (bagCountCharge > 0 && currentChargeBagProduct) {
+                const lineTotal = (currentChargeBagProduct.price * bagCountCharge).toFixed(2);
+                summaryContainer.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
+                        <span style="color:#555;">${bagCountCharge}× <strong>${currentChargeBagProduct.name}</strong></span>
+                        <span style="font-weight:700; color:#1b2559;">${lineTotal}€</span>
+                    </div>`;
+            }
         }
 
         function openChargePreorderModal(id, total, items, pickupNum) {
@@ -2234,8 +2337,10 @@
 
             currentChargeTotal = parseFloat(total);
             currentChargeItems = items || [];
+            currentChargeBagProduct = findBagProduct();
             bagCountCharge = 0;
             selectedChargeMethod = null;
+            updateBagLabels();
             syncBagChargeUI();
 
             // Reset mètodes
@@ -2249,17 +2354,7 @@
             updateChargeTotalUI();
 
             // Resum productes
-            const summaryContainer = document.getElementById('charge-order-summary');
-            summaryContainer.innerHTML = '';
-            currentChargeItems.forEach(item => {
-                const lineTotal = (parseFloat(item.price_at_sale) * item.quantity).toFixed(2);
-                let noteTxt = item.notes ? `<span style="color:#e67e22; font-size:0.75rem;"> (${item.notes})</span>` : '';
-                summaryContainer.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
-                        <span style="color:#555;">${item.quantity}× <strong>${item.product.name}</strong>${noteTxt}</span>
-                        <span style="font-weight:700; color:#1b2559;">${lineTotal}€</span>
-                    </div>`;
-            });
+            renderChargeOrderSummary();
 
             // Badge encàrrec
             document.getElementById('charge-order-badge').innerText = pickupNum ? `Encàrrec #${pickupNum}` : `ID #${id}`;
@@ -2288,7 +2383,8 @@
         function calculateChargeChange() {
             if (selectedChargeMethod !== 'Efectiu') return;
             const given = parseMoneyInput(document.getElementById('charge-cash-given').value);
-            const total = parseFloat(currentChargeTotal) + bagCountCharge * BAG_UNIT_PRICE;
+            const unit = currentChargeBagProduct ? currentChargeBagProduct.price : bagUnitPricePayment();
+            const total = parseFloat(currentChargeTotal) + bagCountCharge * unit;
             const changeDisplay = document.getElementById('charge-change-display');
             const insufficient = document.getElementById('charge-change-insufficient');
             const confirmBtn = document.getElementById('btn-confirm-charge');
@@ -2339,7 +2435,8 @@
             const id = document.getElementById('charging-preorder-id').value;
             const workerId = document.getElementById('charging-worker-id').value;
 
-            let totalToCharge = parseFloat(currentChargeTotal) + bagCountCharge * BAG_UNIT_PRICE;
+            const unit = currentChargeBagProduct ? currentChargeBagProduct.price : bagUnitPricePayment();
+            let totalToCharge = parseFloat(currentChargeTotal) + bagCountCharge * unit;
 
             fetch(`/orders/${id}/charge`, {
                 method: 'POST',
@@ -2350,7 +2447,8 @@
                 body: JSON.stringify({
                     payment_method: paymentMethod,
                     worker_id: workerId,
-                    bag_count: bagCountCharge
+                    bag_count: bagCountCharge,
+                    bag_product_id: currentChargeBagProduct ? currentChargeBagProduct.id : null
                 })
             }).then(r => r.json()).then(async res => {
                 if (res.success) {

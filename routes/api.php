@@ -34,4 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/pending', [OrderController::class, 'getPendingPreorders']);
+    Route::post('/orders/{id}/charge', [OrderController::class, 'chargePreorder']);
+    Route::get('/orders/{id}/details', [OrderController::class, 'getOrderDetails']);
+    Route::post('/orders/{id}/cancel', [OrderController::class, 'cancelPreorder']);
 });

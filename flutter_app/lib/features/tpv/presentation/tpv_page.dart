@@ -574,7 +574,7 @@ class _TpvPageState extends State<TpvPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Encàrrec guardat correctament')),
       );
-      await _loadPendingPreorders();
+      await _loadPendingPreorders(showError: true);
       await _loadCatalog();
     } catch (error) {
       if (!mounted) return;
@@ -586,88 +586,373 @@ class _TpvPageState extends State<TpvPage> {
     }
   }
 
-  Future<void> _loadPendingPreorders() async {
+  Future<void> _loadPendingPreorders({bool showError = false}) async {
     try {
       final List<TpvPreorder> pending = await TpvSalesService(ApiClient(), widget.authService).fetchPendingPreorders();
       if (!mounted) return;
       setState(() => _pendingPreorders = pending);
-    } catch (_) {
-      // Keep silent in background loads.
+    } catch (error) {
+      if (!mounted) return;
+      if (showError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No s\'han pogut carregar els encàrrecs pendents: $error')),
+        );
+      }
     }
   }
 
   Future<void> _openPendingPreordersDialog() async {
-    await _loadPendingPreorders();
+    await _loadPendingPreorders(showError: true);
     if (!mounted) return;
     showDialog<void>(
       context: context,
       builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: const EdgeInsets.all(24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 700, maxHeight: 600),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const Text('Encàrrecs pendents', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22)),
-                  const SizedBox(height: 14),
-                  Expanded(
-                    child: _pendingPreorders.isEmpty
-                        ? const Center(child: Text('Cap encàrrec pendent'))
-                        : ListView.separated(
-                            itemCount: _pendingPreorders.length,
-                            separatorBuilder: (BuildContext context, int index) => const SizedBox(height: 10),
-                            itemBuilder: (BuildContext context, int index) {
-                              final TpvPreorder order = _pendingPreorders[index];
-                              return Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF8F9FE),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  children: <Widget>[
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Text(
-                                            'Encàrrec #${order.pickupNumber ?? order.id}',
-                                            style: const TextStyle(fontWeight: FontWeight.w800),
-                                          ),
-                                          Text(
-                                            '${order.customerName ?? 'Sense nom'} · ${order.pickupTime ?? '--:--'}',
-                                          ),
-                                          Text(
-                                            '${order.itemsCount} productes · ${order.totalPrice.toStringAsFixed(2)}€',
-                                            style: const TextStyle(color: TpvTheme.textSecondary),
-                                          ),
-                                        ],
-                                      ),
+        List<TpvPreorder> dialogPreorders = List<TpvPreorder>.from(_pendingPreorders);
+        return StatefulBuilder(
+          builder: (BuildContext context, void Function(void Function()) setModalState) {
+            return Dialog(
+              insetPadding: const EdgeInsets.all(24),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 700, maxHeight: 600),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const Text('Encàrrecs pendents', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22)),
+                      const SizedBox(height: 14),
+                      Expanded(
+                        child: dialogPreorders.isEmpty
+                            ? const Center(child: Text('Cap encàrrec pendent'))
+                            : ListView.separated(
+                                itemCount: dialogPreorders.length,
+                                separatorBuilder: (BuildContext context, int index) => const SizedBox(height: 10),
+                                itemBuilder: (BuildContext context, int index) {
+                                  final TpvPreorder order = dialogPreorders[index];
+                                  return Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF8F9FE),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
+                                    child: Row(
+                                      children: <Widget>[
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: <Widget>[
+                                              Text(
+                                                'Encàrrec #${order.pickupNumber ?? order.id}',
+                                                style: const TextStyle(fontWeight: FontWeight.w800),
+                                              ),
+                                              Text(
+                                                '${order.customerName ?? 'Sense nom'} · ${order.pickupTime ?? '--:--'}',
+                                              ),
+                                              Text(
+                                                '${order.itemsCount} productes · ${order.totalPrice.toStringAsFixed(2)}€',
+                                                style: const TextStyle(color: TpvTheme.textSecondary),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Column(
+                                          children: <Widget>[
+                                            FilledButton(
+                                              onPressed: _submittingOrder
+                                                  ? null
+                                                  : () async {
+                                                      final bool charged = await _openChargePreorderDialog(order);
+                                                      if (!charged || !mounted) return;
+                                                      await _loadPendingPreorders(showError: true);
+                                                      if (!mounted) return;
+                                                      setModalState(() {
+                                                        dialogPreorders = List<TpvPreorder>.from(_pendingPreorders);
+                                                      });
+                                                    },
+                                              child: const Text('Cobrar'),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            OutlinedButton(
+                                              onPressed: _submittingOrder
+                                                  ? null
+                                                  : () async {
+                                                      final bool cancelled = await _cancelPreorder(order);
+                                                      if (!cancelled || !mounted) return;
+                                                      await _loadPendingPreorders(showError: true);
+                                                      if (!mounted) return;
+                                                      setModalState(() {
+                                                        dialogPreorders = List<TpvPreorder>.from(_pendingPreorders);
+                                                      });
+                                                    },
+                                              style: OutlinedButton.styleFrom(foregroundColor: TpvTheme.danger),
+                                              child: const Text('Anul·lar'),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Tancar'),
+                        ),
+                      ),
+                    ],
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Tancar'),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
+  }
+
+  Future<bool> _openChargePreorderDialog(TpvPreorder order) async {
+    final TpvSalesService salesService = TpvSalesService(ApiClient(), widget.authService);
+    if (_workers.isEmpty) {
+      try {
+        final List<TpvWorker> workers = await salesService.fetchWorkers();
+        if (!mounted) return false;
+        setState(() {
+          _workers = workers;
+          _selectedWorkerId ??= workers.isNotEmpty ? workers.first.id : null;
+        });
+      } catch (error) {
+        if (!mounted) return false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No s\'han pogut carregar treballadors: $error')),
+        );
+        return false;
+      }
+    }
+
+    if (!mounted) return false;
+
+    int bagCount = 0;
+    String? paymentMethod;
+    int? workerId = _selectedWorkerId ?? (_workers.isNotEmpty ? _workers.first.id : null);
+    final TextEditingController cashGivenController = TextEditingController();
+    bool didCharge = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, void Function(void Function()) setModalState) {
+            final double totalWithBags = order.totalPrice + (bagCount * _bagUnitPrice);
+            final double cashGiven = _parseMoneyInput(cashGivenController.text);
+            final bool insufficientCash =
+                paymentMethod == 'Efectiu' && cashGiven > 0 && cashGiven < totalWithBags;
+            final double changeAmount = (cashGiven - totalWithBags).clamp(0, double.infinity);
+            final bool canConfirm =
+                workerId != null && paymentMethod != null && !_submittingOrder && !insufficientCash;
+
+            return AlertDialog(
+              title: Text('Cobrar encàrrec #${order.pickupNumber ?? order.id}'),
+              content: SizedBox(
+                width: 520,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        '${order.customerName ?? 'Sense nom'} · ${order.pickupTime ?? '--:--'}',
+                        style: const TextStyle(color: TpvTheme.textSecondary),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Total encàrrec: ${order.totalPrice.toStringAsFixed(2)}€',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: <Widget>[
+                          OutlinedButton.icon(
+                            onPressed: bagCount >= _bagMaxCount ? null : () => setModalState(() => bagCount++),
+                            icon: const Icon(Icons.shopping_bag_outlined, size: 16),
+                            label: Text('Bossa (+0,10€)${bagCount > 0 ? ' ×$bagCount' : ''}'),
+                          ),
+                          if (bagCount > 0)
+                            OutlinedButton(
+                              onPressed: () => setModalState(() => bagCount--),
+                              style: OutlinedButton.styleFrom(foregroundColor: TpvTheme.danger),
+                              child: const Text('Treure'),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Total a cobrar: ${totalWithBags.toStringAsFixed(2)}€',
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
+                      ),
+                      const SizedBox(height: 14),
+                      DropdownButtonFormField<int>(
+                        initialValue: workerId,
+                        decoration: const InputDecoration(labelText: 'Treballador'),
+                        items: _workers
+                            .map((TpvWorker w) => DropdownMenuItem<int>(value: w.id, child: Text(w.name)))
+                            .toList(),
+                        onChanged: (int? value) => setModalState(() => workerId = value),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: _paymentMethodButton(
+                              label: 'Efectiu',
+                              icon: Icons.payments_outlined,
+                              selected: paymentMethod == 'Efectiu',
+                              onTap: () {
+                                setModalState(() => paymentMethod = 'Efectiu');
+                                cashGivenController.clear();
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _paymentMethodButton(
+                              label: 'Targeta',
+                              icon: Icons.credit_card,
+                              selected: paymentMethod == 'Targeta',
+                              onTap: () => setModalState(() => paymentMethod = 'Targeta'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (paymentMethod == 'Efectiu') ...<Widget>[
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: cashGivenController,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: const InputDecoration(
+                            labelText: 'Import entregat',
+                            hintText: '0,00',
+                            suffixText: '€',
+                          ),
+                          onChanged: (_) => setModalState(() {}),
+                        ),
+                        const SizedBox(height: 8),
+                        if (cashGiven > 0 && !insufficientCash)
+                          Text(
+                            'Canvi: ${changeAmount.toStringAsFixed(2)}€',
+                            style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w800),
+                          ),
+                        if (insufficientCash)
+                          const Text(
+                            'Import insuficient per cobrir el total.',
+                            style: TextStyle(color: Colors.red, fontWeight: FontWeight.w700),
+                          ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: _submittingOrder ? null : () => Navigator.of(context).pop(),
+                  child: const Text('Tancar'),
+                ),
+                FilledButton(
+                  onPressed: !canConfirm
+                      ? null
+                      : () async {
+                          final NavigatorState navigator = Navigator.of(this.context);
+                          final ScaffoldMessengerState messenger = ScaffoldMessenger.of(this.context);
+                          setState(() => _submittingOrder = true);
+                          try {
+                            await salesService.chargePreorder(
+                              orderId: order.id,
+                              paymentMethod: paymentMethod!,
+                              workerId: workerId!,
+                              bagCount: bagCount,
+                            );
+                            if (!mounted) return;
+                            navigator.pop();
+                            messenger.showSnackBar(
+                              const SnackBar(content: Text('Encàrrec cobrat correctament')),
+                            );
+                            didCharge = true;
+                          } catch (error) {
+                            if (!mounted) return;
+                            messenger.showSnackBar(
+                              SnackBar(content: Text('Error cobrant encàrrec: $error')),
+                            );
+                          } finally {
+                            if (mounted) {
+                              setState(() => _submittingOrder = false);
+                            }
+                          }
+                        },
+                  child: const Text('Confirmar cobrament'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    cashGivenController.dispose();
+    return didCharge;
+  }
+
+  Future<bool> _cancelPreorder(TpvPreorder order) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Anul·lar encàrrec'),
+          content: Text(
+            'Vols anul·lar l\'encàrrec #${order.pickupNumber ?? order.id}? Es restaurara l\'estoc.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('No'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: FilledButton.styleFrom(backgroundColor: TpvTheme.danger),
+              child: const Text('Si, anul·lar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return false;
+
+    setState(() => _submittingOrder = true);
+    try {
+      await TpvSalesService(ApiClient(), widget.authService).cancelPreorder(orderId: order.id);
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Encàrrec anul·lat')),
+      );
+      await _loadCatalog();
+      return true;
+    } catch (error) {
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error anul·lant encàrrec: $error')),
+      );
+      return false;
+    } finally {
+      if (mounted) {
+        setState(() => _submittingOrder = false);
+      }
+    }
   }
 
   double _parseMoneyInput(String raw) {

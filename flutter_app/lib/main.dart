@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'core/network/api_client.dart';
 import 'core/theme/tpv_theme.dart';
 import 'features/auth/data/auth_service.dart';
-import 'features/tpv/presentation/tpv_page.dart';
+import 'features/tpv/presentation/tpv_page_modern.dart';
 
 void main() {
   runApp(const MyApp());

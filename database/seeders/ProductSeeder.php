@@ -95,6 +95,7 @@ class ProductSeeder extends Seeder
             ['name' => 'Morro de Porc', 'cats' => ['Complements'], 'price' => 3.50, 'is_gluten_free' => true, 'image_path' => 'images/carns/morro.jpg'],
             ['name' => '2 Carxofes', 'cats' => ['Complements'], 'price' => 3.00, 'is_gluten_free' => true, 'image_path' => 'images/complements/alcatwo.jpg'],
             ['name' => 'Plat 4 Carxofes', 'cats' => ['Complements'], 'price' => 5.50, 'is_gluten_free' => true, 'image_path' => 'images/complements/alcafor.jpg'],
+            ['name' => 'Bossa', 'cats' => ['Complements'], 'price' => 0.10, 'is_gluten_free' => true, 'image_path' => 'images/default.jpg'],
 
             // --- 6. POSTRES ---
             ['name' => 'Gelat Tarrina Petita', 'cats' => ['Postres'], 'price' => 2.50, 'is_gluten_free' => true, 'image_path' => 'images/postres/gelatpetit.jpg'],

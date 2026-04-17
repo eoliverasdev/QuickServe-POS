@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
 use App\Services\FiscalInvoiceNumberAssigner;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -116,6 +117,7 @@ class OrderController extends Controller
             'payment_method' => 'required|string',
             'worker_id'      => 'required|exists:workers,id',
             'bag_count'      => 'nullable|integer|min:0|max:99',
+            'bag_product_id' => 'nullable|exists:products,id',
         ]);
 
         return DB::transaction(function () use ($request, $id) {
@@ -125,7 +127,37 @@ class OrderController extends Controller
 
             $bagCount = max(0, min(99, (int) $request->input('bag_count', 0)));
             if ($bagCount > 0) {
-                $order->total_price = round((float) $order->total_price + ($bagCount * 0.10), 2);
+                $bagProductId = (int) $request->input('bag_product_id', 0);
+                $bagProduct = null;
+
+                if ($bagProductId > 0) {
+                    $bagProduct = Product::query()->find($bagProductId);
+                }
+
+                if (! $bagProduct) {
+                    $bagProduct = Product::query()
+                        ->where('name', 'Bossa')
+                        ->orWhere('name', 'Bolsa')
+                        ->first();
+                }
+
+                if (! $bagProduct) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No s\'ha trobat el producte de bossa.',
+                    ], 422);
+                }
+
+                $bagUnitPrice = (float) $bagProduct->price;
+                $order->total_price = round((float) $order->total_price + ($bagCount * $bagUnitPrice), 2);
+
+                OrderItem::create([
+                    'order_id'      => $order->id,
+                    'product_id'    => $bagProduct->id,
+                    'quantity'      => $bagCount,
+                    'price_at_sale' => $bagUnitPrice,
+                    'notes'         => null,
+                ]);
             }
 
             $order->status = 'Pagat';
