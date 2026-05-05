@@ -12,6 +12,8 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
@@ -276,7 +278,7 @@ class AdminController extends Controller
         $product = Product::create([
             'name' => $data['name'],
             'price' => $data['price'],
-            'stock' => $data['stock'] ?? 0,
+            'stock' => $data['stock'] ?? null,
             'is_gluten_free' => (bool) ($data['is_gluten_free'] ?? false),
             'description' => $data['description'] ?? null,
             'image_path' => $data['image_path'] ?? null,
@@ -482,9 +484,16 @@ class AdminController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'pin' => 'nullable|string|size:4|unique:workers,pin',
+            'pin' => [
+                'nullable',
+                'string',
+                'size:4',
+                Rule::unique('workers', 'pin')->whereNull('deleted_at'),
+            ],
             'active' => 'nullable|boolean',
         ]);
+
+        $this->ensureSingleWorkerPin($data['pin'] ?? null);
 
         $worker = new Worker();
         $worker->name = $data['name'];
@@ -504,9 +513,16 @@ class AdminController extends Controller
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'pin' => 'nullable|string|size:4|unique:workers,pin,' . $worker->id,
+            'pin' => [
+                'nullable',
+                'string',
+                'size:4',
+                Rule::unique('workers', 'pin')->ignore($worker->id)->whereNull('deleted_at'),
+            ],
             'active' => 'nullable|boolean',
         ]);
+
+        $this->ensureSingleWorkerPin($data['pin'] ?? null, $worker->id);
 
         $worker->name = $data['name'];
         $worker->pin = !empty($data['pin']) ? $data['pin'] : null;
@@ -528,6 +544,27 @@ class AdminController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    protected function ensureSingleWorkerPin(?string $pin, ?int $currentWorkerId = null): void
+    {
+        if (empty($pin)) {
+            return;
+        }
+
+        $query = Worker::whereNotNull('pin')->where('pin', '!=', '');
+        if ($currentWorkerId !== null) {
+            $query->where('id', '!=', $currentWorkerId);
+        }
+
+        $owner = $query->first();
+        if (!$owner) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'pin' => "Ja hi ha un PIN assignat a {$owner->name}. Només un treballador pot tenir PIN.",
+        ]);
+    }
+
     protected function mapWorker(Worker $w): array
     {
         return [
@@ -547,7 +584,7 @@ class AdminController extends Controller
             'id' => $p->id,
             'name' => $p->name,
             'price' => (float) $p->price,
-            'stock' => (int) ($p->stock ?? 0),
+            'stock' => $p->stock === null ? null : (int) $p->stock,
             'is_gluten_free' => (bool) $p->is_gluten_free,
             'description' => $p->description,
             'image_path' => $p->image_path,

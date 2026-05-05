@@ -9,7 +9,14 @@ import 'sections/history_section.dart';
 import 'sections/products_section.dart';
 import 'sections/workers_section.dart';
 
-enum AdminSection { resum, caixa, categories, productes, treballadors, historial }
+enum AdminSection {
+  resum,
+  caixa,
+  categories,
+  productes,
+  treballadors,
+  historial,
+}
 
 class AdminPage extends StatefulWidget {
   const AdminPage({
@@ -64,7 +71,11 @@ class _AdminPageState extends State<AdminPage> {
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: const Color(0xFFE4E8F4)),
                       boxShadow: const <BoxShadow>[
-                        BoxShadow(color: Color(0x10000000), blurRadius: 20, offset: Offset(0, 8)),
+                        BoxShadow(
+                          color: Color(0x10000000),
+                          blurRadius: 20,
+                          offset: Offset(0, 8),
+                        ),
                       ],
                     ),
                     child: Column(
@@ -124,12 +135,19 @@ class _AdminPageState extends State<AdminPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: AdminSection.values
-                  .map((AdminSection s) => ListTile(
-                        leading: Icon(_iconFor(s), color: TpvTheme.primary),
-                        title: Text(_labelFor(s), style: const TextStyle(fontWeight: FontWeight.w700)),
-                        trailing: _current == s ? const Icon(Icons.check, color: TpvTheme.primary) : null,
-                        onTap: () => Navigator.of(context).pop(s),
-                      ))
+                  .map(
+                    (AdminSection s) => ListTile(
+                      leading: Icon(_iconFor(s), color: TpvTheme.primary),
+                      title: Text(
+                        _labelFor(s),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      trailing: _current == s
+                          ? const Icon(Icons.check, color: TpvTheme.primary)
+                          : null,
+                      onTap: () => Navigator.of(context).pop(s),
+                    ),
+                  )
                   .toList(),
             ),
           ),
@@ -197,7 +215,11 @@ class _AdminSidebar extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE4E8F4)),
         boxShadow: const <BoxShadow>[
-          BoxShadow(color: Color(0x12000000), blurRadius: 16, offset: Offset(0, 6)),
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
         ],
       ),
       child: Column(
@@ -216,19 +238,32 @@ class _AdminSidebar extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.shield_moon_rounded, color: Colors.white),
+                child: const Icon(
+                  Icons.shield_moon_rounded,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const Text('Admin', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                    const Text(
+                      'Admin',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                     Text(
                       adminName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w600, fontSize: 12),
+                      style: const TextStyle(
+                        color: TpvTheme.textSecondary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -290,7 +325,18 @@ class _AdminSidebar extends StatelessWidget {
             onPressed: onBackToTpv,
             icon: const Icon(Icons.chevron_left_rounded, size: 20),
             label: const Text('Tornar al TPV'),
-            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(54),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+              side: const BorderSide(color: Color(0xFFBFC8E4), width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
         ],
       ),
@@ -352,13 +398,21 @@ class _SidebarItem extends StatelessWidget {
             color: active ? null : Colors.transparent,
             boxShadow: active
                 ? const <BoxShadow>[
-                    BoxShadow(color: Color(0x334E73DF), blurRadius: 12, offset: Offset(0, 5)),
+                    BoxShadow(
+                      color: Color(0x334E73DF),
+                      blurRadius: 12,
+                      offset: Offset(0, 5),
+                    ),
                   ]
                 : null,
           ),
           child: Row(
             children: <Widget>[
-              Icon(icon, size: 20, color: active ? Colors.white : TpvTheme.textSecondary),
+              Icon(
+                icon,
+                size: 20,
+                color: active ? Colors.white : TpvTheme.textSecondary,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -412,11 +466,18 @@ class _AdminHeader extends StatelessWidget {
             children: <Widget>[
               Text(
                 _labelFor(section),
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 28),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 28,
+                ),
               ),
               Text(
                 'Admin · $adminName',
-                style: const TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w600, fontSize: 13),
+                style: const TextStyle(
+                  color: TpvTheme.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
@@ -431,4 +492,3 @@ class _AdminHeader extends StatelessWidget {
     );
   }
 }
-

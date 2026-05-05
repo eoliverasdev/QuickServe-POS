@@ -29,13 +29,20 @@ class PendingPreordersPage extends StatefulWidget {
 }
 
 class _PendingPreordersPageState extends State<PendingPreordersPage> {
-  late final TpvSalesService _salesService = TpvSalesService(ApiClient(), widget.authService);
+  late final TpvSalesService _salesService = TpvSalesService(
+    ApiClient(),
+    widget.authService,
+  );
   bool _loading = true;
   List<TpvPreorder> _preorders = <TpvPreorder>[];
-  final Map<int, Future<TpvOrderDetail>> _detailsFutures = <int, Future<TpvOrderDetail>>{};
+  final Map<int, Future<TpvOrderDetail>> _detailsFutures =
+      <int, Future<TpvOrderDetail>>{};
 
   Future<TpvOrderDetail> _detailFor(int orderId) {
-    return _detailsFutures.putIfAbsent(orderId, () => _salesService.fetchOrderDetails(orderId: orderId));
+    return _detailsFutures.putIfAbsent(
+      orderId,
+      () => _salesService.fetchOrderDetails(orderId: orderId),
+    );
   }
 
   int _gridColumns(double width) {
@@ -54,7 +61,8 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final List<TpvPreorder> pending = await _salesService.fetchPendingPreorders();
+      final List<TpvPreorder> pending = await _salesService
+          .fetchPendingPreorders();
       if (!mounted) return;
       setState(() => _preorders = pending);
     } finally {
@@ -86,7 +94,11 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE4E8F4)),
                 boxShadow: const <BoxShadow>[
-                  BoxShadow(color: Color(0x12000000), blurRadius: 18, offset: Offset(0, 7)),
+                  BoxShadow(
+                    color: Color(0x12000000),
+                    blurRadius: 18,
+                    offset: Offset(0, 7),
+                  ),
                 ],
               ),
               child: Column(
@@ -97,8 +109,19 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            const Text('Encarrecs Pendents', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-                            Text('${_preorders.length} encarregs pendents', style: const TextStyle(color: TpvTheme.textSecondary)),
+                            const Text(
+                              'Encarrecs Pendents',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            Text(
+                              '${_preorders.length} encarregs pendents',
+                              style: const TextStyle(
+                                color: TpvTheme.textSecondary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -108,10 +131,28 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
                         label: const Text('Productes encarregats'),
                       ),
                       const SizedBox(width: 10),
-                      TextButton.icon(
+                      OutlinedButton.icon(
                         onPressed: widget.onBack,
                         icon: const Icon(Icons.chevron_left_rounded),
                         label: const Text('Tornar al TPV'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(154, 48),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
+                          side: const BorderSide(
+                            color: Color(0xFFBFC8E4),
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -120,17 +161,19 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
                     child: _loading
                         ? const Center(child: CircularProgressIndicator())
                         : _preorders.isEmpty
-                            ? const Center(child: Text('Cap encarrec pendent'))
-                            : GridView.builder(
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        ? const Center(child: Text('Cap encarrec pendent'))
+                        : GridView.builder(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: columns,
                                   crossAxisSpacing: 12,
                                   mainAxisSpacing: 12,
                                   childAspectRatio: columns == 1 ? 3.0 : 2.15,
                                 ),
-                                itemCount: _preorders.length,
-                                itemBuilder: (_, int i) => _buildPreorderCard(_preorders[i]),
-                              ),
+                            itemCount: _preorders.length,
+                            itemBuilder: (_, int i) =>
+                                _buildPreorderCard(_preorders[i]),
+                          ),
                   ),
                 ],
               ),
@@ -149,7 +192,11 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE4E8F4)),
         boxShadow: const <BoxShadow>[
-          BoxShadow(color: Color(0x10000000), blurRadius: 10, offset: Offset(0, 3)),
+          BoxShadow(
+            color: Color(0x10000000),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
         ],
       ),
       child: Column(
@@ -160,19 +207,30 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
               Expanded(
                 child: Text(
                   'Encarrec #${p.pickupNumber ?? p.id}',
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 24,
+                  ),
                 ),
               ),
               Text(
                 '${p.totalPrice.toStringAsFixed(2)}€',
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20, color: TpvTheme.primary),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 20,
+                  color: TpvTheme.primary,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
             '${p.pickupTime ?? '--:--'} · ${p.customerName ?? 'Sense nom'}',
-            style: const TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w700, fontSize: 13),
+            style: const TextStyle(
+              color: TpvTheme.textSecondary,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -185,31 +243,45 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
               ),
               child: FutureBuilder<TpvOrderDetail>(
                 future: _detailFor(p.id),
-                builder: (BuildContext context, AsyncSnapshot<TpvOrderDetail> snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Carregant detall...', style: TextStyle(color: TpvTheme.textSecondary)),
-                    );
-                  }
-                  final List<TpvOrderDetailItem> items = snapshot.data!.items;
-                  if (items.isEmpty) {
-                    return const Text('Sense productes', style: TextStyle(color: TpvTheme.textSecondary));
-                  }
-                  return ListView.separated(
-                    itemCount: items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 4),
-                    itemBuilder: (_, int idx) {
-                      final TpvOrderDetailItem item = items[idx];
-                      return Text(
-                        '${item.quantity}x ${item.productName}',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                builder:
+                    (
+                      BuildContext context,
+                      AsyncSnapshot<TpvOrderDetail> snapshot,
+                    ) {
+                      if (!snapshot.hasData) {
+                        return const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Carregant detall...',
+                            style: TextStyle(color: TpvTheme.textSecondary),
+                          ),
+                        );
+                      }
+                      final List<TpvOrderDetailItem> items =
+                          snapshot.data!.items;
+                      if (items.isEmpty) {
+                        return const Text(
+                          'Sense productes',
+                          style: TextStyle(color: TpvTheme.textSecondary),
+                        );
+                      }
+                      return ListView.separated(
+                        itemCount: items.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 4),
+                        itemBuilder: (_, int idx) {
+                          final TpvOrderDetailItem item = items[idx];
+                          return Text(
+                            '${item.quantity}x ${item.productName}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          );
+                        },
                       );
                     },
-                  );
-                },
               ),
             ),
           ),
@@ -236,7 +308,9 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
                   _detailsFutures.remove(p.id);
                   await _load();
                 },
-                style: OutlinedButton.styleFrom(minimumSize: const Size(104, 40)),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(104, 40),
+                ),
                 child: const Text('Modificar'),
               ),
               const Spacer(),

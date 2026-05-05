@@ -159,7 +159,7 @@ class AdminService {
     int? id,
     required String name,
     required double price,
-    required int stock,
+    int? stock,
     required int categoryId,
     bool isGlutenFree = false,
     bool active = true,
@@ -167,15 +167,17 @@ class AdminService {
     String? imagePath,
   }) async {
     final String token = await _requireToken();
+    final String? descriptionValue = description?.isNotEmpty == true ? description : null;
+    final String? imagePathValue = imagePath?.isNotEmpty == true ? imagePath : null;
     final Map<String, dynamic> payload = <String, dynamic>{
       'name': name,
       'price': price,
-      'stock': stock,
       'category_id': categoryId,
       'is_gluten_free': isGlutenFree,
       'active': active,
-      if (description != null && description.isNotEmpty) 'description': description,
-      if (imagePath != null && imagePath.isNotEmpty) 'image_path': imagePath,
+      'stock': ?stock,
+      'description': ?descriptionValue,
+      'image_path': ?imagePathValue,
     };
     try {
       final Response<dynamic> response = id == null
@@ -310,7 +312,7 @@ class AdminService {
       if (paymentMethod != null && paymentMethod.isNotEmpty) 'payment_method': paymentMethod,
       if (from != null) 'from': _formatDate(from),
       if (to != null) 'to': _formatDate(to),
-      if (workerId != null) 'worker_id': workerId,
+      'worker_id': ?workerId,
       if (search != null && search.isNotEmpty) 'search': search,
     };
     final Response<dynamic> response = await _apiClient.dio.get(

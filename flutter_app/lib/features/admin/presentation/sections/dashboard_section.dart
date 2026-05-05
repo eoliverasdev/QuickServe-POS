@@ -346,7 +346,12 @@ class _RevenueChartCard extends StatelessWidget {
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipColor: (_) => TpvTheme.primary,
                     tooltipBorderRadius: BorderRadius.circular(10),
-                    getTooltipItem: (BarChartGroupData group, int _, BarChartRodData rod, int __) {
+                    getTooltipItem: (
+                      BarChartGroupData group,
+                      int groupIndex,
+                      BarChartRodData rod,
+                      int rodIndex,
+                    ) {
                       final int i = group.x;
                       if (i < 0 || i >= days.length) return null;
                       return BarTooltipItem(

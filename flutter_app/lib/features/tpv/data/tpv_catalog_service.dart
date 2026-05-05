@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../auth/data/auth_service.dart';
@@ -20,9 +21,7 @@ class TpvCatalogService {
     final Response<dynamic> response = await _apiClient.dio.get(
       ApiEndpoints.catalog,
       options: Options(
-        headers: <String, dynamic>{
-          'Authorization': 'Bearer $token',
-        },
+        headers: <String, dynamic>{'Authorization': 'Bearer $token'},
       ),
     );
 
@@ -40,27 +39,35 @@ class TpvCatalogService {
     final List<TpvCategory> categories = <TpvCategory>[
       TpvCategory(id: 'all', name: 'Tots'),
       ...categoriesRaw.whereType<Map<String, dynamic>>().map(
-            (Map<String, dynamic> c) => TpvCategory(
-              id: (c['id'] ?? '').toString(),
-              name: (c['name'] ?? '').toString(),
-            ),
-          ),
+        (Map<String, dynamic> c) => TpvCategory(
+          id: (c['id'] ?? '').toString(),
+          name: (c['name'] ?? '').toString(),
+          color: c['color']?.toString(),
+        ),
+      ),
     ];
 
-    final List<TpvProduct> products = productsRaw.whereType<Map<String, dynamic>>().map((Map<String, dynamic> p) {
-      final List<String> categoryIds = (p['category_ids'] as List<dynamic>? ?? <dynamic>[])
-          .map((dynamic id) => id.toString())
-          .toList();
+    final List<TpvProduct> products = productsRaw
+        .whereType<Map<String, dynamic>>()
+        .map((Map<String, dynamic> p) {
+          final List<String> categoryIds =
+              (p['category_ids'] as List<dynamic>? ?? <dynamic>[])
+                  .map((dynamic id) => id.toString())
+                  .toList();
 
-      return TpvProduct(
-        id: (p['id'] as num?)?.toInt() ?? 0,
-        name: (p['name'] ?? '').toString(),
-        price: (p['price'] as num?)?.toDouble() ?? 0,
-        stock: (p['stock'] as num?)?.toInt(),
-        imageUrl: p['image_path']?.toString(),
-        categoryIds: categoryIds,
-      );
-    }).toList();
+          final String? rawImage = p['image_path']?.toString();
+          return TpvProduct(
+            id: (p['id'] as num?)?.toInt() ?? 0,
+            name: (p['name'] ?? '').toString(),
+            price: (p['price'] as num?)?.toDouble() ?? 0,
+            stock: (p['stock'] as num?)?.toInt(),
+            imageUrl: rawImage == null || rawImage.isEmpty
+                ? null
+                : AppConfig.resolveAsset(rawImage),
+            categoryIds: categoryIds,
+          );
+        })
+        .toList();
 
     return TpvCatalogData(categories: categories, products: products);
   }

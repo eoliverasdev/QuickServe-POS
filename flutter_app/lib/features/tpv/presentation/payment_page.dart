@@ -34,7 +34,8 @@ class PaymentPage extends StatefulWidget {
     required bool discount,
     required double finalTotal,
     double? cashGiven,
-  }) onConfirm;
+  })
+  onConfirm;
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
@@ -53,30 +54,71 @@ class _PaymentPageState extends State<PaymentPage> {
     super.dispose();
   }
 
-  double get _productsTotal => _discount ? widget.initialTotal * 0.85 : widget.initialTotal;
+  double get _productsTotal =>
+      _discount ? widget.initialTotal * 0.85 : widget.initialTotal;
   double get _finalTotal => _productsTotal + (_bagCount * widget.bagUnitPrice);
-  double get _cashGiven => double.tryParse(_cashController.text.trim().replaceAll(',', '.')) ?? 0;
-  bool get _insufficientCash => _paymentMethod == 'Efectiu' && _cashGiven > 0 && _cashGiven < _finalTotal;
-  bool get _canConfirm => _paymentMethod != null && !_insufficientCash && !_submitting;
+  double get _cashGiven =>
+      double.tryParse(_cashController.text.trim().replaceAll(',', '.')) ?? 0;
+  bool get _insufficientCash =>
+      _paymentMethod == 'Efectiu' && _cashGiven > 0 && _cashGiven < _finalTotal;
+  bool get _canConfirm =>
+      _paymentMethod != null && !_insufficientCash && !_submitting;
   double get _changeToReturn {
     if (_paymentMethod != 'Efectiu') return 0;
     final double diff = _cashGiven - _finalTotal;
     return diff > 0 ? diff : 0;
   }
 
-  List<double> get _quickCashOptions {
-    final double total = _finalTotal;
-    final int round5 = ((total / 5).ceil()) * 5;
-    final int round10 = ((total / 10).ceil()) * 10;
-    final Set<double> values = <double>{5, 10, 15, 20, 25, 30, 40, 50, 100, total, round5.toDouble(), round10.toDouble()};
-    final List<double> sorted = values.where((double v) => v > 0).toList()..sort((a, b) => a.compareTo(b));
-    return sorted;
-  }
-
   String _amountLabel(double amount) {
     if ((amount - _finalTotal).abs() < 0.01) return 'Exacte';
     if (amount % 1 == 0) return '${amount.toInt()}€';
     return '${amount.toStringAsFixed(2).replaceAll('.', ',')}€';
+  }
+
+  String get _cashDisplay {
+    final String text = _cashController.text.trim();
+    return text.isEmpty ? '0,00€' : '${text.replaceAll('.', ',')}€';
+  }
+
+  void _setCashText(String value) {
+    _cashController.text = value;
+    _cashController.selection = TextSelection.collapsed(
+      offset: _cashController.text.length,
+    );
+  }
+
+  void _setCashAmount(double amount) {
+    setState(
+      () => _setCashText(amount.toStringAsFixed(2).replaceAll('.', ',')),
+    );
+  }
+
+  void _appendCashKey(String key) {
+    setState(() {
+      String text = _cashController.text.trim().replaceAll('.', ',');
+      if (key == ',') {
+        if (text.contains(',')) return;
+        _setCashText(text.isEmpty ? '0,' : '$text,');
+        return;
+      }
+
+      final int comma = text.indexOf(',');
+      if (comma >= 0 && text.length - comma > 2) return;
+      if (text == '0') text = '';
+      _setCashText('$text$key');
+    });
+  }
+
+  void _deleteCashDigit() {
+    setState(() {
+      final String text = _cashController.text.trim();
+      if (text.isEmpty) return;
+      _setCashText(text.substring(0, text.length - 1));
+    });
+  }
+
+  void _clearCash() {
+    setState(() => _cashController.clear());
   }
 
   Future<void> _confirm() async {
@@ -119,18 +161,25 @@ class _PaymentPageState extends State<PaymentPage> {
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE4E8F4)),
                 boxShadow: const <BoxShadow>[
-                  BoxShadow(color: Color(0x12000000), blurRadius: 18, offset: Offset(0, 7)),
+                  BoxShadow(
+                    color: Color(0x12000000),
+                    blurRadius: 18,
+                    offset: Offset(0, 7),
+                  ),
                 ],
               ),
               child: Column(
                 children: <Widget>[
                   _TopBar(
                     title: widget.title,
-                    subtitle: widget.subtitle ?? 'Treballador: ${widget.workerName}',
+                    subtitle:
+                        widget.subtitle ?? 'Treballador: ${widget.workerName}',
                     onBack: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(height: 14),
-                  Expanded(child: wide ? _buildWideLayout() : _buildNarrowLayout()),
+                  Expanded(
+                    child: wide ? _buildWideLayout() : _buildNarrowLayout(),
+                  ),
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
@@ -138,9 +187,13 @@ class _PaymentPageState extends State<PaymentPage> {
                       onPressed: _canConfirm ? _confirm : null,
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(58),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
-                      child: Text(_submitting ? 'Processant...' : widget.confirmLabel),
+                      child: Text(
+                        _submitting ? 'Processant...' : widget.confirmLabel,
+                      ),
                     ),
                   ),
                 ],
@@ -160,7 +213,11 @@ class _PaymentPageState extends State<PaymentPage> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE4E8F4)),
         boxShadow: const <BoxShadow>[
-          BoxShadow(color: Color(0x0F000000), blurRadius: 14, offset: Offset(0, 5)),
+          BoxShadow(
+            color: Color(0x0F000000),
+            blurRadius: 14,
+            offset: Offset(0, 5),
+          ),
         ],
       ),
       child: child,
@@ -192,7 +249,10 @@ class _PaymentPageState extends State<PaymentPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Text('Resum', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+          const Text(
+            'Resum',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 10),
           Expanded(
             child: Container(
@@ -205,7 +265,8 @@ class _PaymentPageState extends State<PaymentPage> {
                 itemCount: widget.cartItems.length + (_bagCount > 0 ? 1 : 0),
                 separatorBuilder: (_, _) => const SizedBox(height: 6),
                 itemBuilder: (_, int i) {
-                  final bool isBagRow = _bagCount > 0 && i == widget.cartItems.length;
+                  final bool isBagRow =
+                      _bagCount > 0 && i == widget.cartItems.length;
                   if (isBagRow) {
                     final double bagTotal = widget.bagUnitPrice * _bagCount;
                     return Row(
@@ -218,7 +279,10 @@ class _PaymentPageState extends State<PaymentPage> {
                             style: TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
-                        Text('${bagTotal.toStringAsFixed(2)}€', style: const TextStyle(fontWeight: FontWeight.w900)),
+                        Text(
+                          '${bagTotal.toStringAsFixed(2)}€',
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
                       ],
                     );
                   }
@@ -234,7 +298,10 @@ class _PaymentPageState extends State<PaymentPage> {
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
-                      Text('${item.lineTotal.toStringAsFixed(2)}€', style: const TextStyle(fontWeight: FontWeight.w900)),
+                      Text(
+                        '${item.lineTotal.toStringAsFixed(2)}€',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
                     ],
                   );
                 },
@@ -242,23 +309,38 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
           ),
           const SizedBox(height: 12),
-          _TwoCol(label: 'Base imposable', value: (_productsTotal / 1.21).toStringAsFixed(2)),
-          _TwoCol(label: 'IVA (21%)', value: (_productsTotal - (_productsTotal / 1.21)).toStringAsFixed(2)),
+          _TwoCol(
+            label: 'Base imposable',
+            value: (_productsTotal / 1.21).toStringAsFixed(2),
+          ),
+          _TwoCol(
+            label: 'IVA (21%)',
+            value: (_productsTotal - (_productsTotal / 1.21)).toStringAsFixed(
+              2,
+            ),
+          ),
           const SizedBox(height: 10),
           Wrap(
             spacing: 10,
             runSpacing: 10,
             children: <Widget>[
               OutlinedButton.icon(
-                onPressed: _bagCount >= widget.bagMaxCount ? null : () => setState(() => _bagCount++),
+                onPressed: _bagCount >= widget.bagMaxCount
+                    ? null
+                    : () => setState(() => _bagCount++),
                 icon: const Icon(Icons.shopping_bag_outlined, size: 18),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(140, 46),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                 ),
-                label: Text(widget.bagUnitPrice > 0
-                    ? 'Bossa (+${widget.bagUnitPrice.toStringAsFixed(2)}€)${_bagCount > 0 ? ' ×$_bagCount' : ''}'
-                    : 'Bossa${_bagCount > 0 ? ' ×$_bagCount' : ''}'),
+                label: Text(
+                  widget.bagUnitPrice > 0
+                      ? 'Bossa (+${widget.bagUnitPrice.toStringAsFixed(2)}€)${_bagCount > 0 ? ' ×$_bagCount' : ''}'
+                      : 'Bossa${_bagCount > 0 ? ' ×$_bagCount' : ''}',
+                ),
               ),
               if (_bagCount > 0)
                 OutlinedButton(
@@ -266,7 +348,10 @@ class _PaymentPageState extends State<PaymentPage> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: TpvTheme.danger,
                     minimumSize: const Size(96, 46),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                   ),
                   child: const Text('Treure'),
                 ),
@@ -274,11 +359,18 @@ class _PaymentPageState extends State<PaymentPage> {
                 OutlinedButton(
                   onPressed: () => setState(() => _discount = !_discount),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: _discount ? Colors.white : Colors.green.shade800,
+                    foregroundColor: _discount
+                        ? Colors.white
+                        : Colors.green.shade800,
                     side: BorderSide(color: Colors.green.shade800),
-                    backgroundColor: _discount ? Colors.green.shade700 : Colors.white,
+                    backgroundColor: _discount
+                        ? Colors.green.shade700
+                        : Colors.white,
                     minimumSize: const Size(150, 46),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                   ),
                   child: const Text('-15% Treballador'),
                 ),
@@ -289,7 +381,11 @@ class _PaymentPageState extends State<PaymentPage> {
             alignment: Alignment.centerRight,
             child: Text(
               'Total: ${_finalTotal.toStringAsFixed(2)}€',
-              style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: TpvTheme.primary),
+              style: const TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.w900,
+                color: TpvTheme.primary,
+              ),
             ),
           ),
         ],
@@ -302,43 +398,148 @@ class _PaymentPageState extends State<PaymentPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Text('Mètode de pagament', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+          const Text(
+            'Mètode de pagament',
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+          ),
           const SizedBox(height: 12),
           Row(
             children: <Widget>[
-              Expanded(child: _MethodCard(label: '💶 Efectiu', selected: _paymentMethod == 'Efectiu', onTap: () => setState(() => _paymentMethod = 'Efectiu'))),
+              Expanded(
+                child: _MethodCard(
+                  label: '💶 Efectiu',
+                  selected: _paymentMethod == 'Efectiu',
+                  onTap: () => setState(() => _paymentMethod = 'Efectiu'),
+                ),
+              ),
               const SizedBox(width: 12),
-              Expanded(child: _MethodCard(label: '💳 Targeta', selected: _paymentMethod == 'Targeta', onTap: () => setState(() => _paymentMethod = 'Targeta'))),
+              Expanded(
+                child: _MethodCard(
+                  label: '💳 Targeta',
+                  selected: _paymentMethod == 'Targeta',
+                  onTap: () => setState(() => _paymentMethod = 'Targeta'),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 14),
-          if (_paymentMethod == 'Efectiu') ...<Widget>[
-            TextField(
-              controller: _cashController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(hintText: 'Import entregat', suffixText: '€'),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: <Widget>[
-                for (final double amount in _quickCashOptions)
-                  OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(88, 44),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    ),
-                    onPressed: () => setState(() => _cashController.text = amount.toStringAsFixed(2).replaceAll('.', ',')),
-                    child: Text(_amountLabel(amount)),
-                  ),
-              ],
-            ),
-          ],
-          const Spacer(),
+          if (_paymentMethod == 'Efectiu')
+            Expanded(child: _buildCashKeypad())
+          else
+            const Spacer(),
           _buildStatusPanel(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCashKeypad() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final double maxHeight = constraints.maxHeight.isFinite
+              ? constraints.maxHeight
+              : 260;
+          final double displayHeight = maxHeight < 250 ? 48 : 56;
+          const double buttonRowHeight = 42;
+          const double verticalGaps = 20;
+          final double availableGridHeight =
+              maxHeight - displayHeight - verticalGaps - buttonRowHeight;
+          final double gridHeight = availableGridHeight.clamp(132.0, 230.0);
+          final double keyWidth = (constraints.maxWidth - 16) / 3;
+          final double keyHeight = (gridHeight - 24) / 4;
+          final double aspectRatio = keyWidth / keyHeight;
+
+          return Column(
+            children: <Widget>[
+              Container(
+                height: displayHeight,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4F7FF),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE1E6F5)),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    const Expanded(
+                      child: Text(
+                        'Import entregat',
+                        style: TextStyle(
+                          color: TpvTheme.textSecondary,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      _cashDisplay,
+                      style: const TextStyle(
+                        color: TpvTheme.textMain,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: gridHeight,
+                child: GridView.count(
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: aspectRatio,
+                  children: <Widget>[
+                    _KeypadButton(label: '7', onTap: () => _appendCashKey('7')),
+                    _KeypadButton(label: '8', onTap: () => _appendCashKey('8')),
+                    _KeypadButton(label: '9', onTap: () => _appendCashKey('9')),
+                    _KeypadButton(label: '4', onTap: () => _appendCashKey('4')),
+                    _KeypadButton(label: '5', onTap: () => _appendCashKey('5')),
+                    _KeypadButton(label: '6', onTap: () => _appendCashKey('6')),
+                    _KeypadButton(label: '1', onTap: () => _appendCashKey('1')),
+                    _KeypadButton(label: '2', onTap: () => _appendCashKey('2')),
+                    _KeypadButton(label: '3', onTap: () => _appendCashKey('3')),
+                    _KeypadButton(label: ',', onTap: () => _appendCashKey(',')),
+                    _KeypadButton(label: '0', onTap: () => _appendCashKey('0')),
+                    _KeypadButton(
+                      icon: Icons.backspace_outlined,
+                      onTap: _deleteCashDigit,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _clearCash,
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(42),
+                        foregroundColor: TpvTheme.danger,
+                      ),
+                      child: const Text('Esborrar'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => _setCashAmount(_finalTotal),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(42),
+                      ),
+                      child: Text(_amountLabel(_finalTotal)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -351,48 +552,60 @@ class _PaymentPageState extends State<PaymentPage> {
       final Color bg = _insufficientCash
           ? const Color(0xFFFFECEC)
           : showChange
-              ? const Color(0xFFE8F7EE)
-              : const Color(0xFFF4F7FF);
+          ? const Color(0xFFE8F7EE)
+          : const Color(0xFFF4F7FF);
       final Color border = _insufficientCash
           ? const Color(0xFFF3B6B6)
           : showChange
-              ? const Color(0xFFB7E3C5)
-              : const Color(0xFFE1E6F5);
+          ? const Color(0xFFB7E3C5)
+          : const Color(0xFFE1E6F5);
       final Color accent = _insufficientCash
           ? TpvTheme.danger
           : showChange
-              ? const Color(0xFF1C8B43)
-              : TpvTheme.textSecondary;
+          ? const Color(0xFF1C8B43)
+          : TpvTheme.textSecondary;
 
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              _insufficientCash
-                  ? 'Import insuficient'
-                  : 'Canvi a retornar',
-              style: TextStyle(color: accent, fontWeight: FontWeight.w800, fontSize: 14, letterSpacing: 0.2),
+              _insufficientCash ? 'Import insuficient' : 'Canvi a retornar',
+              style: TextStyle(
+                color: accent,
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+                letterSpacing: 0.2,
+              ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               _insufficientCash
                   ? 'Falten ${(_finalTotal - _cashGiven).toStringAsFixed(2).replaceAll('.', ',')}€'
                   : '${_changeToReturn.toStringAsFixed(2).replaceAll('.', ',')}€',
-              style: TextStyle(color: accent, fontWeight: FontWeight.w900, fontSize: 34, height: 1.1),
+              style: TextStyle(
+                color: accent,
+                fontWeight: FontWeight.w900,
+                fontSize: 27,
+                height: 1.1,
+              ),
             ),
             if (!_insufficientCash && hasCash) ...<Widget>[
               const SizedBox(height: 4),
               Text(
                 'Entregat ${_cashGiven.toStringAsFixed(2).replaceAll('.', ',')}€ · Total ${_finalTotal.toStringAsFixed(2).replaceAll('.', ',')}€',
-                style: const TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w600, fontSize: 12),
+                style: const TextStyle(
+                  color: TpvTheme.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
               ),
             ],
           ],
@@ -411,14 +624,66 @@ class _PaymentPageState extends State<PaymentPage> {
         _paymentMethod == null
             ? 'Selecciona el mètode per confirmar.'
             : 'Llest per confirmar.',
-        style: const TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w700),
+        style: const TextStyle(
+          color: TpvTheme.textSecondary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _KeypadButton extends StatelessWidget {
+  const _KeypadButton({this.label, this.icon, required this.onTap})
+    : assert(label != null || icon != null);
+
+  final String? label;
+  final IconData? icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(9),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(9),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(color: const Color(0xFFE0E3EE)),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: Color(0x08000000),
+                blurRadius: 8,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: icon != null
+              ? Icon(icon, color: TpvTheme.textMain, size: 22)
+              : Text(
+                  label!,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: TpvTheme.textMain,
+                  ),
+                ),
+        ),
       ),
     );
   }
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.title, required this.subtitle, required this.onBack});
+  const _TopBar({
+    required this.title,
+    required this.subtitle,
+    required this.onBack,
+  });
   final String title;
   final String subtitle;
   final VoidCallback onBack;
@@ -427,7 +692,19 @@ class _TopBar extends StatelessWidget {
     return Row(
       children: <Widget>[
         Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)), Text(subtitle)]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(subtitle),
+            ],
+          ),
         ),
         TextButton.icon(
           onPressed: onBack,
@@ -436,7 +713,10 @@ class _TopBar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           icon: const Icon(Icons.chevron_left_rounded, size: 22),
-          label: const Text('Tornar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          label: const Text(
+            'Tornar',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
         ),
       ],
     );
@@ -444,7 +724,11 @@ class _TopBar extends StatelessWidget {
 }
 
 class _MethodCard extends StatelessWidget {
-  const _MethodCard({required this.label, required this.selected, required this.onTap});
+  const _MethodCard({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -454,10 +738,13 @@ class _MethodCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        height: 76,
+        height: 60,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: selected ? TpvTheme.primary : const Color(0xFFE0E3EE), width: 2),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: selected ? TpvTheme.primary : const Color(0xFFE0E3EE),
+            width: 2,
+          ),
           color: selected ? const Color(0xFFF0F3FF) : Colors.white,
         ),
         child: Center(child: Text(label)),
@@ -472,7 +759,9 @@ class _TwoCol extends StatelessWidget {
   final String value;
   @override
   Widget build(BuildContext context) {
-    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: <Widget>[Text(label), Text('$value€')]);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: <Widget>[Text(label), Text('$value€')],
+    );
   }
 }
-

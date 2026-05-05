@@ -42,11 +42,14 @@ class _TpvPageState extends State<TpvPage> {
 
   final ParkedTicketsStore _parkedTicketsStore = ParkedTicketsStore();
   final Map<String, CartItem> _cart = <String, CartItem>{};
-  final TextEditingController _preorderCustomerController = TextEditingController();
+  final TextEditingController _preorderCustomerController =
+      TextEditingController();
   final TextEditingController _preorderTimeController = TextEditingController();
   final TextEditingController _adminPinController = TextEditingController();
 
-  List<TpvCategory> _categories = <TpvCategory>[TpvCategory(id: 'all', name: 'Tots')];
+  List<TpvCategory> _categories = <TpvCategory>[
+    TpvCategory(id: 'all', name: 'Tots'),
+  ];
   List<TpvProduct> _products = <TpvProduct>[];
   List<TpvWorker> _workers = <TpvWorker>[];
   List<TpvPreorder> _pendingPreorders = <TpvPreorder>[];
@@ -62,10 +65,16 @@ class _TpvPageState extends State<TpvPage> {
   static const double _dialogMaxWidth = 760;
   static const double _dialogVerticalMargin = 24;
 
-  BoxConstraints _dialogConstraints(BuildContext context, {double maxWidth = _dialogMaxWidth}) {
+  BoxConstraints _dialogConstraints(
+    BuildContext context, {
+    double maxWidth = _dialogMaxWidth,
+  }) {
     final Size size = MediaQuery.of(context).size;
     // Prevent render overflows on smaller heights (tablet/web resize).
-    final double maxHeight = max(420, size.height - (_dialogVerticalMargin * 2));
+    final double maxHeight = max(
+      420,
+      size.height - (_dialogVerticalMargin * 2),
+    );
     return BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight);
   }
 
@@ -73,7 +82,10 @@ class _TpvPageState extends State<TpvPage> {
   void initState() {
     super.initState();
     _loadInitialData();
-    _pendingRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) => _loadPendingPreorders());
+    _pendingRefreshTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadPendingPreorders(),
+    );
   }
 
   @override
@@ -87,15 +99,20 @@ class _TpvPageState extends State<TpvPage> {
 
   List<TpvProduct> get _filteredProducts {
     if (_selectedCategory == 'all') return _products;
-    return _products.where((TpvProduct p) => p.categoryIds.contains(_selectedCategory)).toList();
+    return _products
+        .where((TpvProduct p) => p.categoryIds.contains(_selectedCategory))
+        .toList();
   }
 
   List<CartItem> get _cartItems => _cart.values.toList();
-  double get _total => _cartItems.fold(0, (double sum, CartItem item) => sum + item.lineTotal);
+  double get _total =>
+      _cartItems.fold(0, (double sum, CartItem item) => sum + item.lineTotal);
   double get _subTotal => _total / 1.21;
   double get _iva => _total - _subTotal;
-  int get _pendingUrgentCount => _pendingPreorders.where(_isPreorderUrgent).length;
-  TpvProduct? get _bagProduct => _findProductByName(_bagProductName) ?? _findProductByName('Bolsa');
+  int get _pendingUrgentCount =>
+      _pendingPreorders.where(_isPreorderUrgent).length;
+  TpvProduct? get _bagProduct =>
+      _findProductByName(_bagProductName) ?? _findProductByName('Bolsa');
   double get _bagUnitPrice => _bagProduct?.price ?? 0;
 
   List<CartItem> _buildCheckoutCartItems({
@@ -123,8 +140,13 @@ class _TpvPageState extends State<TpvPage> {
     });
 
     try {
-      final TpvCatalogData data = await TpvCatalogService(ApiClient(), widget.authService).fetchCatalog();
-      final List<ParkedTicket> parked = await _parkedTicketsStore.load(data.products);
+      final TpvCatalogData data = await TpvCatalogService(
+        ApiClient(),
+        widget.authService,
+      ).fetchCatalog();
+      final List<ParkedTicket> parked = await _parkedTicketsStore.load(
+        data.products,
+      );
       if (!mounted) return;
       setState(() {
         _categories = data.categories;
@@ -141,7 +163,10 @@ class _TpvPageState extends State<TpvPage> {
 
   Future<void> _loadWorkers() async {
     try {
-      final List<TpvWorker> workers = await TpvSalesService(ApiClient(), widget.authService).fetchWorkers();
+      final List<TpvWorker> workers = await TpvSalesService(
+        ApiClient(),
+        widget.authService,
+      ).fetchWorkers();
       if (!mounted) return;
       setState(() => _workers = workers);
     } catch (_) {}
@@ -149,13 +174,18 @@ class _TpvPageState extends State<TpvPage> {
 
   Future<void> _loadPendingPreorders({bool showError = false}) async {
     try {
-      final List<TpvPreorder> pending = await TpvSalesService(ApiClient(), widget.authService).fetchPendingPreorders();
+      final List<TpvPreorder> pending = await TpvSalesService(
+        ApiClient(),
+        widget.authService,
+      ).fetchPendingPreorders();
       if (!mounted) return;
       setState(() => _pendingPreorders = pending);
     } catch (error) {
       if (!mounted || !showError) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No s\'han pogut carregar els pendents: $error')),
+        SnackBar(
+          content: Text('No s\'han pogut carregar els pendents: $error'),
+        ),
       );
     }
   }
@@ -196,7 +226,11 @@ class _TpvPageState extends State<TpvPage> {
       if (nextQty <= 0) {
         _cart.remove(key);
       } else {
-        _cart[key] = CartItem(product: product, quantity: nextQty, notes: notes);
+        _cart[key] = CartItem(
+          product: product,
+          quantity: nextQty,
+          notes: notes,
+        );
       }
     });
   }
@@ -214,7 +248,9 @@ class _TpvPageState extends State<TpvPage> {
     double used = 0;
     for (final CartItem item in _cartItems) {
       if (item.product.id == productId) used += item.quantity;
-      if (fullChicken != null && fullChicken.id == productId && item.product.name == _halfChickenName) {
+      if (fullChicken != null &&
+          fullChicken.id == productId &&
+          item.product.name == _halfChickenName) {
         used += item.quantity * 0.5;
       }
     }
@@ -248,23 +284,33 @@ class _TpvPageState extends State<TpvPage> {
       _parkedTickets = next;
       _cart.clear();
     });
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ticket aparcat')));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Ticket aparcat')));
   }
 
   Future<void> _restoreParkedTicket(ParkedTicket ticket) async {
     setState(() {
       _cart
         ..clear()
-        ..addEntries(ticket.items.map((CartItem item) => MapEntry<String, CartItem>(item.cartKey, item)));
+        ..addEntries(
+          ticket.items.map(
+            (CartItem item) => MapEntry<String, CartItem>(item.cartKey, item),
+          ),
+        );
     });
-    final List<ParkedTicket> next = _parkedTickets.where((ParkedTicket t) => t.id != ticket.id).toList();
+    final List<ParkedTicket> next = _parkedTickets
+        .where((ParkedTicket t) => t.id != ticket.id)
+        .toList();
     await _parkedTicketsStore.save(next);
     if (!mounted) return;
     setState(() => _parkedTickets = next);
   }
 
   Future<void> _deleteParkedTicket(ParkedTicket ticket) async {
-    final List<ParkedTicket> next = _parkedTickets.where((ParkedTicket t) => t.id != ticket.id).toList();
+    final List<ParkedTicket> next = _parkedTickets
+        .where((ParkedTicket t) => t.id != ticket.id)
+        .toList();
     await _parkedTicketsStore.save(next);
     if (!mounted) return;
     setState(() => _parkedTickets = next);
@@ -279,24 +325,42 @@ class _TpvPageState extends State<TpvPage> {
           builder: (BuildContext context, void Function(void Function()) setModalState) {
             return Dialog(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 760, maxHeight: 600),
+                constraints: const BoxConstraints(
+                  maxWidth: 760,
+                  maxHeight: 600,
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(18),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const Text('Tickets aparcats', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22)),
+                      const Text(
+                        'Tickets aparcats',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 22,
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       Expanded(
                         child: _parkedTickets.isEmpty
-                            ? const Center(child: Text('No hi ha tickets aparcats'))
+                            ? const Center(
+                                child: Text('No hi ha tickets aparcats'),
+                              )
                             : ListView.separated(
                                 itemCount: _parkedTickets.length,
-                                separatorBuilder: (BuildContext context, int index) => const SizedBox(height: 10),
+                                separatorBuilder:
+                                    (BuildContext context, int index) =>
+                                        const SizedBox(height: 10),
                                 itemBuilder: (_, int index) {
-                                  final ParkedTicket ticket = _parkedTickets[index];
-                                  final double total = ticket.items.fold(0, (double a, CartItem b) => a + b.lineTotal);
-                                  final bool expanded = expandedTicketIndex == index;
+                                  final ParkedTicket ticket =
+                                      _parkedTickets[index];
+                                  final double total = ticket.items.fold(
+                                    0,
+                                    (double a, CartItem b) => a + b.lineTotal,
+                                  );
+                                  final bool expanded =
+                                      expandedTicketIndex == index;
                                   return Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
@@ -304,27 +368,41 @@ class _TpvPageState extends State<TpvPage> {
                                       color: const Color(0xFFF8F9FE),
                                     ),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: <Widget>[
                                         InkWell(
                                           onTap: () {
                                             setModalState(() {
-                                              expandedTicketIndex = expanded ? null : index;
+                                              expandedTicketIndex = expanded
+                                                  ? null
+                                                  : index;
                                             });
                                           },
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                           child: Padding(
-                                            padding: const EdgeInsets.symmetric(vertical: 2),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 2,
+                                            ),
                                             child: Row(
                                               children: <Widget>[
                                                 Expanded(
                                                   child: Text(
                                                     '${ticket.items.length} línies · ${total.toStringAsFixed(2)}€ · ${ticket.createdAt.hour.toString().padLeft(2, '0')}:${ticket.createdAt.minute.toString().padLeft(2, '0')}',
-                                                    style: const TextStyle(fontWeight: FontWeight.w700),
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
                                                   ),
                                                 ),
                                                 Icon(
-                                                  expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                                                  expanded
+                                                      ? Icons
+                                                            .keyboard_arrow_up_rounded
+                                                      : Icons
+                                                            .keyboard_arrow_down_rounded,
                                                   color: TpvTheme.textSecondary,
                                                 ),
                                               ],
@@ -338,25 +416,41 @@ class _TpvPageState extends State<TpvPage> {
                                             padding: const EdgeInsets.all(10),
                                             decoration: BoxDecoration(
                                               color: Colors.white,
-                                              borderRadius: BorderRadius.circular(10),
-                                              border: Border.all(color: const Color(0xFFE6EAF5)),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: const Color(0xFFE6EAF5),
+                                              ),
                                             ),
                                             child: Column(
-                                              children: ticket.items.map((CartItem item) {
+                                              children: ticket.items.map((
+                                                CartItem item,
+                                              ) {
                                                 return Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 3),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 3,
+                                                      ),
                                                   child: Row(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
                                                     children: <Widget>[
                                                       Expanded(
                                                         child: Text(
                                                           '${item.quantity}x ${item.product.name}${(item.notes ?? '').trim().isNotEmpty ? ' · ${item.notes}' : ''}',
-                                                          style: const TextStyle(fontSize: 13),
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 13,
+                                                              ),
                                                         ),
                                                       ),
                                                       Text(
                                                         '${item.lineTotal.toStringAsFixed(2)}€',
-                                                        style: const TextStyle(fontWeight: FontWeight.w700),
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
                                                       ),
                                                     ],
                                                   ),
@@ -371,20 +465,29 @@ class _TpvPageState extends State<TpvPage> {
                                             const Spacer(),
                                             FilledButton(
                                               onPressed: () async {
-                                                await _restoreParkedTicket(ticket);
+                                                final NavigatorState navigator =
+                                                    Navigator.of(context);
+                                                await _restoreParkedTicket(
+                                                  ticket,
+                                                );
                                                 if (!mounted) return;
-                                                setModalState(() {});
+                                                navigator.pop();
                                               },
                                               child: const Text('Recuperar'),
                                             ),
                                             const SizedBox(width: 8),
                                             OutlinedButton(
                                               onPressed: () async {
-                                                await _deleteParkedTicket(ticket);
+                                                await _deleteParkedTicket(
+                                                  ticket,
+                                                );
                                                 if (!mounted) return;
                                                 setModalState(() {});
                                               },
-                                              style: OutlinedButton.styleFrom(foregroundColor: TpvTheme.danger),
+                                              style: OutlinedButton.styleFrom(
+                                                foregroundColor:
+                                                    TpvTheme.danger,
+                                              ),
                                               child: const Text('Eliminar'),
                                             ),
                                           ],
@@ -397,7 +500,29 @@ class _TpvPageState extends State<TpvPage> {
                       ),
                       Align(
                         alignment: Alignment.centerRight,
-                        child: TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Tancar')),
+                        child: OutlinedButton.icon(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.close_rounded, size: 20),
+                          label: const Text('Tancar'),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(132, 48),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 14,
+                            ),
+                            side: const BorderSide(
+                              color: Color(0xFFBFC8E4),
+                              width: 1.5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -424,7 +549,9 @@ class _TpvPageState extends State<TpvPage> {
   }
 
   Future<void> _openPaymentPage(int workerId) async {
-    final TpvWorker worker = _workers.firstWhere((TpvWorker w) => w.id == workerId);
+    final TpvWorker worker = _workers.firstWhere(
+      (TpvWorker w) => w.id == workerId,
+    );
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => PaymentPage(
@@ -433,25 +560,26 @@ class _TpvPageState extends State<TpvPage> {
           initialTotal: _total,
           bagUnitPrice: _bagUnitPrice,
           bagMaxCount: _bagMaxCount,
-          onConfirm: ({
-            required String paymentMethod,
-            required int bagCount,
-            required bool discount,
-            required double finalTotal,
-            double? cashGiven,
-          }) async {
-            final List<CartItem> checkoutItems = _buildCheckoutCartItems(
-              sourceItems: _cartItems,
-              bagCount: bagCount,
-            );
-            return _submitOrder(
-              workerId: workerId,
-              paymentMethod: paymentMethod,
-              totalPrice: finalTotal,
-              cartItems: checkoutItems,
-              cashGiven: cashGiven,
-            );
-          },
+          onConfirm:
+              ({
+                required String paymentMethod,
+                required int bagCount,
+                required bool discount,
+                required double finalTotal,
+                double? cashGiven,
+              }) async {
+                final List<CartItem> checkoutItems = _buildCheckoutCartItems(
+                  sourceItems: _cartItems,
+                  bagCount: bagCount,
+                );
+                return _submitOrder(
+                  workerId: workerId,
+                  paymentMethod: paymentMethod,
+                  totalPrice: finalTotal,
+                  cartItems: checkoutItems,
+                  cashGiven: cashGiven,
+                );
+              },
         ),
       ),
     );
@@ -466,12 +594,13 @@ class _TpvPageState extends State<TpvPage> {
   }) async {
     setState(() => _submittingOrder = true);
     try {
-      final Map<String, dynamic> data = await TpvSalesService(ApiClient(), widget.authService).createOrder(
-        workerId: workerId,
-        paymentMethod: paymentMethod,
-        cartItems: cartItems,
-        totalPrice: totalPrice,
-      );
+      final Map<String, dynamic> data =
+          await TpvSalesService(ApiClient(), widget.authService).createOrder(
+            workerId: workerId,
+            paymentMethod: paymentMethod,
+            cartItems: cartItems,
+            totalPrice: totalPrice,
+          );
       if (!mounted) return false;
       final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
       await _printOrderTicket(
@@ -485,7 +614,9 @@ class _TpvPageState extends State<TpvPage> {
       return true;
     } catch (error) {
       if (!mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error en la venda: $error')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error en la venda: $error')));
       return false;
     } finally {
       if (mounted) setState(() => _submittingOrder = false);
@@ -497,7 +628,9 @@ class _TpvPageState extends State<TpvPage> {
     await _ensureWorkersLoaded();
     if (_workers.isEmpty || !mounted) return;
     if (_preorderTimeController.text.trim().isEmpty) {
-      _preorderTimeController.text = _formatTime(_roundUpToQuarter(DateTime.now()));
+      _preorderTimeController.text = _formatTime(
+        _roundUpToQuarter(DateTime.now()),
+      );
     }
     int? workerId = _workers.first.id;
 
@@ -505,98 +638,178 @@ class _TpvPageState extends State<TpvPage> {
       context: context,
       builder: (BuildContext dialogContext) {
         return StatefulBuilder(
-          builder: (BuildContext context, void Function(void Function()) setModalState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-              child: ConstrainedBox(
-                constraints: _dialogConstraints(context, maxWidth: 760),
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        const Center(
-                          child: Text(
-                            'Qui està gestionant?',
-                            style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: _workers.map((TpvWorker worker) {
-                            final bool active = workerId == worker.id;
-                            return _workerTouchPill(
-                              label: worker.name,
-                              active: active,
-                              onTap: () => setModalState(() => workerId = worker.id),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text('Hora de recollida:', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
+          builder:
+              (
+                BuildContext context,
+                void Function(void Function()) setModalState,
+              ) {
+                return Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(26),
+                  ),
+                  child: ConstrainedBox(
+                    constraints: _dialogConstraints(context, maxWidth: 760),
+                    child: Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            _timeAdjustButton('-60m', () => setModalState(() => _adjustPreorderTime(minutesDelta: -60))),
-                            _timeAdjustButton('-30m', () => setModalState(() => _adjustPreorderTime(minutesDelta: -30))),
-                            _timeAdjustButton('-15m', () => setModalState(() => _adjustPreorderTime(minutesDelta: -15))),
-                            _timeAdjustButton('Ara', () => setModalState(() => _adjustPreorderTime(now: true))),
-                            _timeAdjustButton('+15m', () => setModalState(() => _adjustPreorderTime(minutesDelta: 15))),
-                            _timeAdjustButton('+30m', () => setModalState(() => _adjustPreorderTime(minutesDelta: 30))),
-                            _timeAdjustButton('+60m', () => setModalState(() => _adjustPreorderTime(minutesDelta: 60))),
+                            const Center(
+                              child: Text(
+                                'Qui està gestionant?',
+                                style: TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: _workers.map((TpvWorker worker) {
+                                final bool active = workerId == worker.id;
+                                return _workerTouchPill(
+                                  label: worker.name,
+                                  active: active,
+                                  onTap: () =>
+                                      setModalState(() => workerId = worker.id),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Hora de recollida:',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: <Widget>[
+                                _timeAdjustButton(
+                                  '-60m',
+                                  () => setModalState(
+                                    () =>
+                                        _adjustPreorderTime(minutesDelta: -60),
+                                  ),
+                                ),
+                                _timeAdjustButton(
+                                  '-30m',
+                                  () => setModalState(
+                                    () =>
+                                        _adjustPreorderTime(minutesDelta: -30),
+                                  ),
+                                ),
+                                _timeAdjustButton(
+                                  '-15m',
+                                  () => setModalState(
+                                    () =>
+                                        _adjustPreorderTime(minutesDelta: -15),
+                                  ),
+                                ),
+                                _timeAdjustButton(
+                                  'Ara',
+                                  () => setModalState(
+                                    () => _adjustPreorderTime(now: true),
+                                  ),
+                                ),
+                                _timeAdjustButton(
+                                  '+15m',
+                                  () => setModalState(
+                                    () => _adjustPreorderTime(minutesDelta: 15),
+                                  ),
+                                ),
+                                _timeAdjustButton(
+                                  '+30m',
+                                  () => setModalState(
+                                    () => _adjustPreorderTime(minutesDelta: 30),
+                                  ),
+                                ),
+                                _timeAdjustButton(
+                                  '+60m',
+                                  () => setModalState(
+                                    () => _adjustPreorderTime(minutesDelta: 60),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: _preorderTimeController,
+                              style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                              ),
+                              decoration: const InputDecoration(),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Nom del Client (Opcional):',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _preorderCustomerController,
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                            const SizedBox(height: 14),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                onPressed: workerId == null || _submittingOrder
+                                    ? null
+                                    : () async {
+                                        final NavigatorState navigator =
+                                            Navigator.of(dialogContext);
+                                        await _submitPreorder(workerId!);
+                                        if (mounted) navigator.pop();
+                                      },
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(56),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Guardar Encàrrec',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Center(
+                              child: TextButton(
+                                onPressed: _submittingOrder
+                                    ? null
+                                    : () => Navigator.of(dialogContext).pop(),
+                                child: const Text(
+                                  'Cancel·lar',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: TpvTheme.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 10),
-                        TextField(
-                          controller: _preorderTimeController,
-                          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
-                          decoration: const InputDecoration(),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text('Nom del Client (Opcional):', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _preorderCustomerController,
-                          style: const TextStyle(fontSize: 18),
-                        ),
-                        const SizedBox(height: 14),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            onPressed: workerId == null || _submittingOrder
-                                ? null
-                                : () async {
-                                    final NavigatorState navigator = Navigator.of(dialogContext);
-                                    await _submitPreorder(workerId!);
-                                    if (mounted) navigator.pop();
-                                  },
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size.fromHeight(56),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                            ),
-                            child: const Text('Guardar Encàrrec', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Center(
-                          child: TextButton(
-                            onPressed: _submittingOrder ? null : () => Navigator.of(dialogContext).pop(),
-                            child: const Text('Cancel·lar', style: TextStyle(fontSize: 16, color: TpvTheme.textSecondary)),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-            );
-          },
+                );
+              },
         );
       },
     );
@@ -611,19 +824,27 @@ class _TpvPageState extends State<TpvPage> {
         cartItems: _cartItems,
         totalPrice: _total,
         isPreorder: true,
-        pickupTime: _preorderTimeController.text.trim().isEmpty ? null : _preorderTimeController.text.trim(),
-        customerName: _preorderCustomerController.text.trim().isEmpty ? null : _preorderCustomerController.text.trim(),
+        pickupTime: _preorderTimeController.text.trim().isEmpty
+            ? null
+            : _preorderTimeController.text.trim(),
+        customerName: _preorderCustomerController.text.trim().isEmpty
+            ? null
+            : _preorderCustomerController.text.trim(),
       );
       if (!mounted) return;
       setState(() => _cart.clear());
       _preorderTimeController.clear();
       _preorderCustomerController.clear();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Encàrrec guardat')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Encàrrec guardat')));
       await _loadPendingPreorders();
       await _loadCatalog();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error guardant encàrrec: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error guardant encàrrec: $error')),
+      );
     } finally {
       if (mounted) setState(() => _submittingOrder = false);
     }
@@ -638,59 +859,91 @@ class _TpvPageState extends State<TpvPage> {
       context: context,
       builder: (BuildContext dialogContext) {
         return StatefulBuilder(
-          builder: (BuildContext context, void Function(void Function()) setModalState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-              child: ConstrainedBox(
-                constraints: _dialogConstraints(context, maxWidth: 760),
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Text(title, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w900), textAlign: TextAlign.center),
-                        const SizedBox(height: 14),
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: _workers.map((TpvWorker worker) {
-                            final bool active = selectedWorkerId == worker.id;
-                            return _workerTouchPill(
-                              label: worker.name,
-                              active: active,
-                              onTap: () => setModalState(() => selectedWorkerId = worker.id),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            onPressed: selectedWorkerId == null ? null : () => Navigator.of(dialogContext).pop(),
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size.fromHeight(56),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          builder:
+              (
+                BuildContext context,
+                void Function(void Function()) setModalState,
+              ) {
+                return Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  child: ConstrainedBox(
+                    constraints: _dialogConstraints(context, maxWidth: 760),
+                    child: Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                fontSize: 30,
+                                fontWeight: FontWeight.w900,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            child: Text(confirmLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-                          ),
+                            const SizedBox(height: 14),
+                            Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: _workers.map((TpvWorker worker) {
+                                final bool active =
+                                    selectedWorkerId == worker.id;
+                                return _workerTouchPill(
+                                  label: worker.name,
+                                  active: active,
+                                  onTap: () => setModalState(
+                                    () => selectedWorkerId = worker.id,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                onPressed: selectedWorkerId == null
+                                    ? null
+                                    : () => Navigator.of(dialogContext).pop(),
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(56),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                ),
+                                child: Text(
+                                  confirmLabel,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Center(
+                              child: TextButton(
+                                onPressed: () {
+                                  selectedWorkerId = null;
+                                  Navigator.of(dialogContext).pop();
+                                },
+                                child: const Text(
+                                  'Cancel·lar',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: TpvTheme.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        Center(
-                          child: TextButton(
-                            onPressed: () {
-                              selectedWorkerId = null;
-                              Navigator.of(dialogContext).pop();
-                            },
-                            child: const Text('Cancel·lar', style: TextStyle(fontSize: 16, color: TpvTheme.textSecondary)),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-            );
-          },
+                );
+              },
         );
       },
     );
@@ -704,7 +957,8 @@ class _TpvPageState extends State<TpvPage> {
           authService: widget.authService,
           onBack: () => Navigator.of(context).pop(),
           onOpenProductsSummary: _openPendingProductsSummaryDialog,
-          onCharge: (TpvPreorder preorder) => _openChargePreorderPaymentPage(preorder),
+          onCharge: (TpvPreorder preorder) =>
+              _openChargePreorderPaymentPage(preorder),
           onModify: (TpvPreorder preorder) async {
             final bool ok = await _editPreorder(preorder);
             if (!ok || !mounted) return false;
@@ -733,20 +987,27 @@ class _TpvPageState extends State<TpvPage> {
     final Map<String, int> totals = <String, int>{};
     for (final TpvPreorder preorder in _pendingPreorders) {
       try {
-        final TpvOrderDetail detail = await TpvSalesService(ApiClient(), widget.authService).fetchOrderDetails(orderId: preorder.id);
+        final TpvOrderDetail detail = await TpvSalesService(
+          ApiClient(),
+          widget.authService,
+        ).fetchOrderDetails(orderId: preorder.id);
         for (final TpvOrderDetailItem item in detail.items) {
-          totals[item.productName] = (totals[item.productName] ?? 0) + item.quantity;
+          totals[item.productName] =
+              (totals[item.productName] ?? 0) + item.quantity;
         }
       } catch (_) {}
     }
     if (!mounted) return;
 
-    final List<MapEntry<String, int>> sorted = totals.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final List<MapEntry<String, int>> sorted = totals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     showDialog<void>(
       context: context,
       builder: (_) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 700, maxHeight: 760),
             child: Padding(
@@ -760,18 +1021,29 @@ class _TpvPageState extends State<TpvPage> {
                       const Expanded(
                         child: Text(
                           'Sumatori de Productes',
-                          style: TextStyle(fontSize: 38, fontWeight: FontWeight.w900),
+                          style: TextStyle(
+                            fontSize: 38,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
                       IconButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close, color: TpvTheme.textSecondary),
+                        icon: const Icon(
+                          Icons.close,
+                          color: TpvTheme.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                   Text(
-                    sorted.isEmpty ? 'Sense productes pendents' : '${sorted.length} productes amb encàrrecs pendents',
-                    style: const TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w600),
+                    sorted.isEmpty
+                        ? 'Sense productes pendents'
+                        : '${sorted.length} productes amb encàrrecs pendents',
+                    style: const TextStyle(
+                      color: TpvTheme.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Expanded(
@@ -779,31 +1051,46 @@ class _TpvPageState extends State<TpvPage> {
                         ? const Center(
                             child: Text(
                               'No hi ha productes pendents',
-                              style: TextStyle(fontSize: 16, color: TpvTheme.textSecondary),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: TpvTheme.textSecondary,
+                              ),
                             ),
                           )
                         : ListView.separated(
                             itemCount: sorted.length,
-                            separatorBuilder: (_, _) => const SizedBox(height: 8),
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 8),
                             itemBuilder: (_, int index) {
                               final MapEntry<String, int> entry = sorted[index];
                               return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF7F8FD),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: const Color(0xFFE6EAF5)),
+                                  border: Border.all(
+                                    color: const Color(0xFFE6EAF5),
+                                  ),
                                 ),
                                 child: Row(
                                   children: <Widget>[
                                     Expanded(
                                       child: Text(
                                         entry.key,
-                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w800,
+                                        ),
                                       ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 8,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: TpvTheme.primary,
                                         borderRadius: BorderRadius.circular(12),
@@ -825,9 +1112,28 @@ class _TpvPageState extends State<TpvPage> {
                   ),
                   Align(
                     alignment: Alignment.centerRight,
-                    child: TextButton(
+                    child: OutlinedButton.icon(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Tancar', style: TextStyle(fontSize: 20)),
+                      icon: const Icon(Icons.close_rounded, size: 22),
+                      label: const Text('Tancar'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(150, 54),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        side: const BorderSide(
+                          color: Color(0xFFBFC8E4),
+                          width: 1.6,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -849,14 +1155,20 @@ class _TpvPageState extends State<TpvPage> {
     );
     if (!mounted || workerId == null) return false;
 
-    final TpvWorker worker = _workers.firstWhere((TpvWorker w) => w.id == workerId);
-    final TpvSalesService salesService = TpvSalesService(ApiClient(), widget.authService);
+    final TpvWorker worker = _workers.firstWhere(
+      (TpvWorker w) => w.id == workerId,
+    );
+    final TpvSalesService salesService = TpvSalesService(
+      ApiClient(),
+      widget.authService,
+    );
     TpvOrderDetail? detail;
     try {
       detail = await salesService.fetchOrderDetails(orderId: order.id);
     } catch (_) {}
 
-    final List<CartItem> detailItems = detail?.items.map((TpvOrderDetailItem item) {
+    final List<CartItem> detailItems =
+        detail?.items.map((TpvOrderDetailItem item) {
           return CartItem(
             product: TpvProduct(
               id: item.productId,
@@ -887,7 +1199,8 @@ class _TpvPageState extends State<TpvPage> {
       MaterialPageRoute<void>(
         builder: (_) => PaymentPage(
           title: 'Cobrar encàrrec #${order.pickupNumber ?? order.id}',
-          subtitle: '${order.customerName ?? 'Sense nom'} · ${order.pickupTime ?? '--:--'} · ${worker.name}',
+          subtitle:
+              '${order.customerName ?? 'Sense nom'} · ${order.pickupTime ?? '--:--'} · ${worker.name}',
           confirmLabel: '✅ Confirmar cobrament',
           showDiscount: false,
           workerName: worker.name,
@@ -895,40 +1208,47 @@ class _TpvPageState extends State<TpvPage> {
           initialTotal: order.totalPrice,
           bagUnitPrice: _bagUnitPrice,
           bagMaxCount: _bagMaxCount,
-          onConfirm: ({
-            required String paymentMethod,
-            required int bagCount,
-            required bool discount,
-            required double finalTotal,
-            double? cashGiven,
-          }) async {
-            final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
-            setState(() => _submittingOrder = true);
-            try {
-              await salesService.chargePreorder(
-                orderId: order.id,
-                paymentMethod: paymentMethod,
-                workerId: workerId,
-                bagCount: bagCount,
-                bagProductId: _bagProduct?.id,
-              );
-              if (!mounted) return false;
-              didCharge = true;
-              await _printOrderTicket(
-                orderId: order.id,
-                title: 'Ticket encàrrec cobrat',
-                cashGiven: cashGiven,
-              );
-              messenger.showSnackBar(const SnackBar(content: Text('Encàrrec cobrat')));
-              return true;
-            } catch (error) {
-              if (!mounted) return false;
-              messenger.showSnackBar(SnackBar(content: Text('Error cobrant: $error')));
-              return false;
-            } finally {
-              if (mounted) setState(() => _submittingOrder = false);
-            }
-          },
+          onConfirm:
+              ({
+                required String paymentMethod,
+                required int bagCount,
+                required bool discount,
+                required double finalTotal,
+                double? cashGiven,
+              }) async {
+                final ScaffoldMessengerState messenger = ScaffoldMessenger.of(
+                  context,
+                );
+                setState(() => _submittingOrder = true);
+                try {
+                  await salesService.chargePreorder(
+                    orderId: order.id,
+                    paymentMethod: paymentMethod,
+                    workerId: workerId,
+                    bagCount: bagCount,
+                    bagProductId: _bagProduct?.id,
+                  );
+                  if (!mounted) return false;
+                  didCharge = true;
+                  await _printOrderTicket(
+                    orderId: order.id,
+                    title: 'Ticket encàrrec cobrat',
+                    cashGiven: cashGiven,
+                  );
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('Encàrrec cobrat')),
+                  );
+                  return true;
+                } catch (error) {
+                  if (!mounted) return false;
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('Error cobrant: $error')),
+                  );
+                  return false;
+                } finally {
+                  if (mounted) setState(() => _submittingOrder = false);
+                }
+              },
         ),
       ),
     );
@@ -940,9 +1260,14 @@ class _TpvPageState extends State<TpvPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Anul·lar encàrrec'),
-        content: Text('Segur que vols anul·lar #${preorder.pickupNumber ?? preorder.id}?'),
+        content: Text(
+          'Segur que vols anul·lar #${preorder.pickupNumber ?? preorder.id}?',
+        ),
         actions: <Widget>[
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('No')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('No'),
+          ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: FilledButton.styleFrom(backgroundColor: TpvTheme.danger),
@@ -955,14 +1280,21 @@ class _TpvPageState extends State<TpvPage> {
     if (confirm != true) return false;
     setState(() => _submittingOrder = true);
     try {
-      await TpvSalesService(ApiClient(), widget.authService).cancelPreorder(orderId: preorder.id);
+      await TpvSalesService(
+        ApiClient(),
+        widget.authService,
+      ).cancelPreorder(orderId: preorder.id);
       if (!mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Encàrrec anul·lat')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Encàrrec anul·lat')));
       await _loadCatalog();
       return true;
     } catch (error) {
       if (!mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error anul·lant: $error')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error anul·lant: $error')));
       return false;
     } finally {
       if (mounted) setState(() => _submittingOrder = false);
@@ -973,15 +1305,25 @@ class _TpvPageState extends State<TpvPage> {
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     setState(() => _submittingOrder = true);
     try {
-      final TpvOrderDetail detail = await TpvSalesService(ApiClient(), widget.authService).fetchOrderDetails(orderId: preorder.id);
-      await TpvSalesService(ApiClient(), widget.authService).cancelPreorder(orderId: preorder.id);
+      final TpvOrderDetail detail = await TpvSalesService(
+        ApiClient(),
+        widget.authService,
+      ).fetchOrderDetails(orderId: preorder.id);
+      await TpvSalesService(
+        ApiClient(),
+        widget.authService,
+      ).cancelPreorder(orderId: preorder.id);
       if (!mounted) return false;
 
       final Map<String, CartItem> updated = <String, CartItem>{};
       for (final TpvOrderDetailItem item in detail.items) {
         final TpvProduct? product = _findProductById(item.productId);
         if (product == null) continue;
-        final CartItem cartItem = CartItem(product: product, quantity: item.quantity, notes: item.notes);
+        final CartItem cartItem = CartItem(
+          product: product,
+          quantity: item.quantity,
+          notes: item.notes,
+        );
         updated[cartItem.cartKey] = cartItem;
       }
 
@@ -994,11 +1336,15 @@ class _TpvPageState extends State<TpvPage> {
       _preorderTimeController.text = _normalizePickupTime(detail.pickupTime);
       await _loadPendingPreorders();
       await _loadCatalog();
-      messenger.showSnackBar(const SnackBar(content: Text('Encàrrec carregat per editar')));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Encàrrec carregat per editar')),
+      );
       return true;
     } catch (error) {
       if (!mounted) return false;
-      messenger.showSnackBar(SnackBar(content: Text('Error editant encàrrec: $error')));
+      messenger.showSnackBar(
+        SnackBar(content: Text('Error editant encàrrec: $error')),
+      );
       return false;
     } finally {
       if (mounted) setState(() => _submittingOrder = false);
@@ -1012,6 +1358,7 @@ class _TpvPageState extends State<TpvPage> {
       builder: (_) {
         final FocusNode pinFocusNode = FocusNode();
         const int pinLength = 4;
+        bool verifyingPin = false;
 
         Widget keypadButton({
           required String label,
@@ -1024,182 +1371,287 @@ class _TpvPageState extends State<TpvPage> {
               onPressed: onTap,
               style: ElevatedButton.styleFrom(
                 elevation: 0,
-                backgroundColor: primary ? TpvTheme.primary : const Color(0xFFF6F7FC),
+                backgroundColor: primary
+                    ? TpvTheme.primary
+                    : const Color(0xFFF6F7FC),
                 foregroundColor: primary ? Colors.white : TpvTheme.textMain,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
-                  side: BorderSide(color: primary ? TpvTheme.primary : const Color(0xFFE3E6F1)),
+                  side: BorderSide(
+                    color: primary ? TpvTheme.primary : const Color(0xFFE3E6F1),
+                  ),
                 ),
               ),
-              child: Text(label, style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w800)),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           );
         }
 
         return StatefulBuilder(
-          builder: (BuildContext context, void Function(void Function()) setModalState) {
-            final String currentPin = _adminPinController.text;
-            final bool canSubmit = currentPin.length == pinLength;
+          builder:
+              (
+                BuildContext context,
+                void Function(void Function()) setModalState,
+              ) {
+                final String currentPin = _adminPinController.text;
+                final bool canSubmit = currentPin.length == pinLength;
+                late Future<void> Function() submit;
 
-            void appendDigit(String digit) {
-              if (_adminPinController.text.length >= pinLength) return;
-              _adminPinController.text = '${_adminPinController.text}$digit';
-              _adminPinController.selection = TextSelection.collapsed(offset: _adminPinController.text.length);
-              setModalState(() {});
-            }
+                void appendDigit(String digit) {
+                  if (_adminPinController.text.length >= pinLength) return;
+                  _adminPinController.text =
+                      '${_adminPinController.text}$digit';
+                  _adminPinController.selection = TextSelection.collapsed(
+                    offset: _adminPinController.text.length,
+                  );
+                  setModalState(() {});
+                  if (_adminPinController.text.length == pinLength) {
+                    unawaited(submit());
+                  }
+                }
 
-            void removeLastDigit() {
-              if (_adminPinController.text.isEmpty) return;
-              _adminPinController.text = _adminPinController.text.substring(0, _adminPinController.text.length - 1);
-              _adminPinController.selection = TextSelection.collapsed(offset: _adminPinController.text.length);
-              setModalState(() {});
-            }
+                void removeLastDigit() {
+                  if (_adminPinController.text.isEmpty) return;
+                  _adminPinController.text = _adminPinController.text.substring(
+                    0,
+                    _adminPinController.text.length - 1,
+                  );
+                  _adminPinController.selection = TextSelection.collapsed(
+                    offset: _adminPinController.text.length,
+                  );
+                  setModalState(() {});
+                }
 
-            void clearPin() {
-              _adminPinController.clear();
-              setModalState(() {});
-            }
+                void clearPin() {
+                  _adminPinController.clear();
+                  setModalState(() {});
+                }
 
-            Future<void> submit() async {
-              if (!canSubmit) return;
-              final NavigatorState navigator = Navigator.of(context);
-              final ScaffoldMessengerState messenger = ScaffoldMessenger.of(this.context);
-              try {
-                final AdminService admin = AdminService(ApiClient(), widget.authService);
-                final String adminName = await admin.verifyPin(_adminPinController.text.trim());
-                navigator.pop();
-                if (!mounted) return;
-                await Navigator.of(this.context).push<void>(
-                  MaterialPageRoute<void>(
-                    builder: (_) => AdminPage(
-                      authService: widget.authService,
-                      adminName: adminName,
-                    ),
+                submit = () async {
+                  if (_adminPinController.text.length != pinLength ||
+                      verifyingPin) {
+                    return;
+                  }
+                  setModalState(() => verifyingPin = true);
+                  final NavigatorState navigator = Navigator.of(context);
+                  final ScaffoldMessengerState messenger = ScaffoldMessenger.of(
+                    this.context,
+                  );
+                  try {
+                    final AdminService admin = AdminService(
+                      ApiClient(),
+                      widget.authService,
+                    );
+                    final String adminName = await admin.verifyPin(
+                      _adminPinController.text.trim(),
+                    );
+                    navigator.pop();
+                    if (!mounted) return;
+                    await Navigator.of(this.context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (_) => AdminPage(
+                          authService: widget.authService,
+                          adminName: adminName,
+                        ),
+                      ),
+                    );
+                    if (!mounted) return;
+                    await _loadCatalog();
+                  } catch (error) {
+                    verifyingPin = false;
+                    clearPin();
+                    messenger.showSnackBar(
+                      const SnackBar(content: Text('PIN incorrecte')),
+                    );
+                  }
+                };
+
+                return Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                );
-              } catch (error) {
-                clearPin();
-                messenger.showSnackBar(
-                  const SnackBar(content: Text('PIN incorrecte')),
-                );
-              }
-            }
-
-            return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 680),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 18, 24, 14),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      const Text('Accés Administració', style: TextStyle(fontSize: 46, fontWeight: FontWeight.w900)),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Introdueix el PIN d\'encarregat.',
-                        style: TextStyle(fontSize: 16, color: TpvTheme.textSecondary, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List<Widget>.generate(pinLength, (int index) {
-                          final bool filled = currentPin.length > index;
-                          return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            width: 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: filled ? TpvTheme.primary : Colors.white,
-                              border: Border.all(color: const Color(0xFFCFD4E3), width: 2),
-                            ),
-                          );
-                        }),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: _adminPinController,
-                        focusNode: pinFocusNode,
-                        keyboardType: TextInputType.number,
-                        obscureText: true,
-                        obscuringCharacter: '*',
-                        maxLength: pinLength,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: 10),
-                        decoration: const InputDecoration(
-                          counterText: '',
-                          hintText: '••••',
-                        ),
-                        onChanged: (String value) {
-                          final String digitsOnly = value.replaceAll(RegExp(r'[^0-9]'), '');
-                          if (digitsOnly != value || digitsOnly.length > pinLength) {
-                            _adminPinController.text = digitsOnly.substring(0, min(pinLength, digitsOnly.length));
-                            _adminPinController.selection =
-                                TextSelection.collapsed(offset: _adminPinController.text.length);
-                          }
-                          setModalState(() {});
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      for (final List<String> row in <List<String>>[
-                        <String>['1', '2', '3'],
-                        <String>['4', '5', '6'],
-                        <String>['7', '8', '9'],
-                      ]) ...<Widget>[
-                        Row(
-                          children: row
-                              .map((String digit) => Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(6),
-                                      child: keypadButton(label: digit, onTap: () => appendDigit(digit)),
-                                    ),
-                                  ))
-                              .toList(),
-                        ),
-                      ],
-                      Row(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 680),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 18, 24, 14),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(6),
-                              child: keypadButton(label: 'Netejar', onTap: clearPin),
+                          const Text(
+                            'Accés Administració',
+                            style: TextStyle(
+                              fontSize: 46,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(6),
-                              child: keypadButton(label: '0', onTap: () => appendDigit('0')),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Introdueix el PIN d\'encarregat.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: TpvTheme.textSecondary,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(6),
-                              child: keypadButton(label: '⌫', onTap: removeLastDigit),
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List<Widget>.generate(pinLength, (
+                              int index,
+                            ) {
+                              final bool filled = currentPin.length > index;
+                              return Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                ),
+                                width: 16,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: filled
+                                      ? TpvTheme.primary
+                                      : Colors.white,
+                                  border: Border.all(
+                                    color: const Color(0xFFCFD4E3),
+                                    width: 2,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: _adminPinController,
+                            focusNode: pinFocusNode,
+                            keyboardType: TextInputType.number,
+                            obscureText: true,
+                            obscuringCharacter: '*',
+                            maxLength: pinLength,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 10,
+                            ),
+                            decoration: const InputDecoration(
+                              counterText: '',
+                              hintText: '••••',
+                            ),
+                            onChanged: (String value) {
+                              final String digitsOnly = value.replaceAll(
+                                RegExp(r'[^0-9]'),
+                                '',
+                              );
+                              if (digitsOnly != value ||
+                                  digitsOnly.length > pinLength) {
+                                _adminPinController.text = digitsOnly.substring(
+                                  0,
+                                  min(pinLength, digitsOnly.length),
+                                );
+                                _adminPinController.selection =
+                                    TextSelection.collapsed(
+                                      offset: _adminPinController.text.length,
+                                    );
+                              }
+                              setModalState(() {});
+                              if (_adminPinController.text.length ==
+                                  pinLength) {
+                                unawaited(submit());
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          for (final List<String> row in <List<String>>[
+                            <String>['1', '2', '3'],
+                            <String>['4', '5', '6'],
+                            <String>['7', '8', '9'],
+                          ]) ...<Widget>[
+                            Row(
+                              children: row
+                                  .map(
+                                    (String digit) => Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(6),
+                                        child: keypadButton(
+                                          label: digit,
+                                          onTap: () => appendDigit(digit),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ],
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(6),
+                                  child: keypadButton(
+                                    label: 'Netejar',
+                                    onTap: clearPin,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(6),
+                                  child: keypadButton(
+                                    label: '0',
+                                    onTap: () => appendDigit('0'),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(6),
+                                  child: keypadButton(
+                                    label: '⌫',
+                                    onTap: removeLastDigit,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: canSubmit && !verifyingPin
+                                  ? submit
+                                  : null,
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size.fromHeight(58),
+                              ),
+                              child: Text(
+                                verifyingPin ? 'Verificant...' : 'Accedir',
+                                style: const TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text(
+                              'Cancel·lar',
+                              style: TextStyle(fontSize: 20),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: canSubmit ? submit : null,
-                          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(58)),
-                          child: const Text('Accedir', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Cancel·lar', style: TextStyle(fontSize: 20)),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            );
-          },
+                );
+              },
         );
       },
     );
@@ -1217,123 +1669,179 @@ class _TpvPageState extends State<TpvPage> {
       context: context,
       builder: (_) {
         return StatefulBuilder(
-          builder: (BuildContext context, void Function(void Function()) setModalState) {
-            final List<String> sauceOptions = <String>['Amb suc', 'Sense suc'];
-            final List<String> cookOptions = <String>['Normal', 'Poc cuit', 'Molt cuit'];
-            final List<String> partOptions = <String>['Pit i cuixa', 'Només pit', 'Només cuixa'];
+          builder:
+              (
+                BuildContext context,
+                void Function(void Function()) setModalState,
+              ) {
+                final List<String> sauceOptions = <String>[
+                  'Amb suc',
+                  'Sense suc',
+                ];
+                final List<String> cookOptions = <String>[
+                  'Normal',
+                  'Poc cuit',
+                  'Molt cuit',
+                ];
+                final List<String> partOptions = <String>[
+                  'Pit i cuixa',
+                  'Només pit',
+                  'Només cuixa',
+                ];
 
-            return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 620),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        'Opcions: ${product.name}',
-                        style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w900),
-                      ),
-                      const SizedBox(height: 12),
-                      if (!isWholeChicken) ...<Widget>[
-                        const Text(
-                          'PART',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: TpvTheme.textSecondary),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: partOptions.map((String option) {
-                            return _chickenOptionPill(
-                              label: option,
-                              selected: selectedPart == option,
-                              onTap: () => setModalState(() => selectedPart = option),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      const Text(
-                        'OPCIONS DE SUC',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: TpvTheme.textSecondary),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: sauceOptions.map((String option) {
-                          final bool selected = (option == 'Amb suc' && withSauce) || (option == 'Sense suc' && !withSauce);
-                          return Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: _chickenOptionPill(
-                                label: option,
-                                selected: selected,
-                                onTap: () => setModalState(() => withSauce = option == 'Amb suc'),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'PUNT DE COCCIÓ',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: TpvTheme.textSecondary),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: cookOptions.map((String option) {
-                          return Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: _chickenOptionPill(
-                                label: option,
-                                selected: selectedCook == option,
-                                onTap: () => setModalState(() => selectedCook = option),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: notesController,
-                        style: const TextStyle(fontSize: 16),
-                        decoration: const InputDecoration(hintText: 'Nota extra (opcional)'),
-                      ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: () {
-                            final String custom = notesController.text.trim();
-                            final String sauceText = withSauce ? 'Amb suc' : 'Sense suc';
-                            final List<String> parts = <String>[
-                              if (!isWholeChicken) selectedPart,
-                              selectedCook,
-                              sauceText,
-                              if (custom.isNotEmpty) custom,
-                            ];
-                            result = parts.join(' · ');
-                            Navigator.of(context).pop();
-                          },
-                          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                          child: const Text('Afegir a la comanda', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-                        ),
-                      ),
-                      Center(
-                        child: TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Cancel·lar', style: TextStyle(fontSize: 16)),
-                        ),
-                      ),
-                    ],
+                return Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                ),
-              ),
-            );
-          },
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 620),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Opcions: ${product.name}',
+                            style: const TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          if (!isWholeChicken) ...<Widget>[
+                            const Text(
+                              'PART',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                                color: TpvTheme.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: partOptions.map((String option) {
+                                return _chickenOptionPill(
+                                  label: option,
+                                  selected: selectedPart == option,
+                                  onTap: () => setModalState(
+                                    () => selectedPart = option,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                          const Text(
+                            'OPCIONS DE SUC',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: TpvTheme.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: sauceOptions.map((String option) {
+                              final bool selected =
+                                  (option == 'Amb suc' && withSauce) ||
+                                  (option == 'Sense suc' && !withSauce);
+                              return Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: _chickenOptionPill(
+                                    label: option,
+                                    selected: selected,
+                                    onTap: () => setModalState(
+                                      () => withSauce = option == 'Amb suc',
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'PUNT DE COCCIÓ',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: TpvTheme.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: cookOptions.map((String option) {
+                              return Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: _chickenOptionPill(
+                                    label: option,
+                                    selected: selectedCook == option,
+                                    onTap: () => setModalState(
+                                      () => selectedCook = option,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: notesController,
+                            style: const TextStyle(fontSize: 16),
+                            decoration: const InputDecoration(
+                              hintText: 'Nota extra (opcional)',
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: () {
+                                final String custom = notesController.text
+                                    .trim();
+                                final String sauceText = withSauce
+                                    ? 'Amb suc'
+                                    : 'Sense suc';
+                                final List<String> parts = <String>[
+                                  if (!isWholeChicken) selectedPart,
+                                  selectedCook,
+                                  sauceText,
+                                  if (custom.isNotEmpty) custom,
+                                ];
+                                result = parts.join(' · ');
+                                Navigator.of(context).pop();
+                              },
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size.fromHeight(48),
+                              ),
+                              child: const Text(
+                                'Afegir a la comanda',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Center(
+                            child: TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text(
+                                'Cancel·lar',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
         );
       },
     );
@@ -1383,7 +1891,10 @@ class _TpvPageState extends State<TpvPage> {
   }) async {
     if (orderId == null) return;
     try {
-      final TpvOrderDetail detail = await TpvSalesService(ApiClient(), widget.authService).fetchOrderDetails(orderId: orderId);
+      final TpvOrderDetail detail = await TpvSalesService(
+        ApiClient(),
+        widget.authService,
+      ).fetchOrderDetails(orderId: orderId);
       await Printing.layoutPdf(
         onLayout: (PdfPageFormat format) async {
           final pw.Document doc = pw.Document();
@@ -1391,86 +1902,188 @@ class _TpvPageState extends State<TpvPage> {
           final String dateLabel =
               '${ticketDate.day.toString().padLeft(2, '0')}/${ticketDate.month.toString().padLeft(2, '0')}/${ticketDate.year}';
           final String invoiceLabel =
-              (detail.fiscalFullNumber != null && detail.fiscalFullNumber!.trim().isNotEmpty)
-                  ? detail.fiscalFullNumber!
-                  : orderId.toString().padLeft(8, '0');
-          final bool isCash = detail.paymentMethod.toLowerCase().contains('efectiu');
+              (detail.fiscalFullNumber != null &&
+                  detail.fiscalFullNumber!.trim().isNotEmpty)
+              ? detail.fiscalFullNumber!
+              : orderId.toString().padLeft(8, '0');
+          final bool isCash = detail.paymentMethod.toLowerCase().contains(
+            'efectiu',
+          );
           final double delivered = cashGiven ?? 0;
-          final double change = isCash && delivered > 0 ? max(0, delivered - detail.totalPrice) : 0;
+          final double change = isCash && delivered > 0
+              ? max(0, delivered - detail.totalPrice)
+              : 0;
           final double base10 = detail.totalPrice / 1.10;
           final double iva10 = detail.totalPrice - base10;
 
           doc.addPage(
             pw.Page(
-              pageFormat: format.copyWith(width: 226, marginLeft: 10, marginRight: 10, marginTop: 10, marginBottom: 10),
+              pageFormat: format.copyWith(
+                width: 226,
+                marginLeft: 10,
+                marginRight: 10,
+                marginTop: 10,
+                marginBottom: 10,
+              ),
               build: (_) {
                 return pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: <pw.Widget>[
-                    pw.Center(child: pw.Text('LA CRESTA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 13))),
-                    pw.Center(child: pw.Text('C/ Sant Andreu, 6', style: const pw.TextStyle(fontSize: 9))),
-                    pw.Center(child: pw.Text('17846 - Mata', style: const pw.TextStyle(fontSize: 9))),
-                    pw.Center(child: pw.Text('Tel. 972 57 34 03', style: const pw.TextStyle(fontSize: 9))),
-                    pw.Center(child: pw.Text('NIF: B17880782', style: const pw.TextStyle(fontSize: 9))),
+                    pw.Center(
+                      child: pw.Text(
+                        'LA CRESTA',
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    pw.Center(
+                      child: pw.Text(
+                        'C/ Sant Andreu, 6',
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Center(
+                      child: pw.Text(
+                        '17846 - Mata',
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Center(
+                      child: pw.Text(
+                        'Tel. 972 57 34 03',
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Center(
+                      child: pw.Text(
+                        'NIF: B17880782',
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
                     pw.SizedBox(height: 5),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: <pw.Widget>[
-                        pw.Text('FACTURA: $invoiceLabel', style: const pw.TextStyle(fontSize: 8)),
-                        pw.Text('DATA: $dateLabel', style: const pw.TextStyle(fontSize: 8)),
+                        pw.Text(
+                          'FACTURA: $invoiceLabel',
+                          style: const pw.TextStyle(fontSize: 8),
+                        ),
+                        pw.Text(
+                          'DATA: $dateLabel',
+                          style: const pw.TextStyle(fontSize: 8),
+                        ),
                       ],
                     ),
                     if (title.isNotEmpty) ...<pw.Widget>[
                       pw.SizedBox(height: 2),
-                      pw.Text(title.toUpperCase(), style: const pw.TextStyle(fontSize: 8)),
+                      pw.Text(
+                        title.toUpperCase(),
+                        style: const pw.TextStyle(fontSize: 8),
+                      ),
                     ],
-                    if (detail.customerName != null && detail.customerName!.trim().isNotEmpty)
-                      pw.Text('CLIENT: ${detail.customerName}', style: const pw.TextStyle(fontSize: 8)),
+                    if (detail.customerName != null &&
+                        detail.customerName!.trim().isNotEmpty)
+                      pw.Text(
+                        'CLIENT: ${detail.customerName}',
+                        style: const pw.TextStyle(fontSize: 8),
+                      ),
                     pw.Divider(),
                     pw.Row(
                       children: <pw.Widget>[
-                        pw.Expanded(flex: 2, child: pw.Text('UNIT.', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8))),
-                        pw.Expanded(flex: 6, child: pw.Text('DESCRIPCIÓ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8))),
                         pw.Expanded(
                           flex: 2,
-                          child: pw.Align(
-                            alignment: pw.Alignment.centerRight,
-                            child: pw.Text('PREU', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+                          child: pw.Text(
+                            'UNIT.',
+                            style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 8,
+                            ),
+                          ),
+                        ),
+                        pw.Expanded(
+                          flex: 6,
+                          child: pw.Text(
+                            'DESCRIPCIÓ',
+                            style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 8,
+                            ),
                           ),
                         ),
                         pw.Expanded(
                           flex: 2,
                           child: pw.Align(
                             alignment: pw.Alignment.centerRight,
-                            child: pw.Text('IMPORT', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+                            child: pw.Text(
+                              'PREU',
+                              style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold,
+                                fontSize: 8,
+                              ),
+                            ),
+                          ),
+                        ),
+                        pw.Expanded(
+                          flex: 2,
+                          child: pw.Align(
+                            alignment: pw.Alignment.centerRight,
+                            child: pw.Text(
+                              'IMPORT',
+                              style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold,
+                                fontSize: 8,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
                     pw.SizedBox(height: 4),
                     ...detail.items.map((TpvOrderDetailItem item) {
-                      final String unitLabel = '${item.quantity.toStringAsFixed(0)},000';
+                      final String unitLabel =
+                          '${item.quantity.toStringAsFixed(0)},000';
                       final String price = item.priceAtSale.toStringAsFixed(2);
-                      final String lineImport = (item.priceAtSale * item.quantity).toStringAsFixed(2);
+                      final String lineImport =
+                          (item.priceAtSale * item.quantity).toStringAsFixed(2);
                       return pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: <pw.Widget>[
                           pw.Row(
                             children: <pw.Widget>[
-                              pw.Expanded(flex: 2, child: pw.Text(unitLabel, style: const pw.TextStyle(fontSize: 8))),
-                              pw.Expanded(flex: 6, child: pw.Text(item.productName.toUpperCase(), style: const pw.TextStyle(fontSize: 8))),
                               pw.Expanded(
                                 flex: 2,
-                                child: pw.Align(
-                                  alignment: pw.Alignment.centerRight,
-                                  child: pw.Text(price, style: const pw.TextStyle(fontSize: 8)),
+                                child: pw.Text(
+                                  unitLabel,
+                                  style: const pw.TextStyle(fontSize: 8),
+                                ),
+                              ),
+                              pw.Expanded(
+                                flex: 6,
+                                child: pw.Text(
+                                  item.productName.toUpperCase(),
+                                  style: const pw.TextStyle(fontSize: 8),
                                 ),
                               ),
                               pw.Expanded(
                                 flex: 2,
                                 child: pw.Align(
                                   alignment: pw.Alignment.centerRight,
-                                  child: pw.Text(lineImport, style: const pw.TextStyle(fontSize: 8)),
+                                  child: pw.Text(
+                                    price,
+                                    style: const pw.TextStyle(fontSize: 8),
+                                  ),
+                                ),
+                              ),
+                              pw.Expanded(
+                                flex: 2,
+                                child: pw.Align(
+                                  alignment: pw.Alignment.centerRight,
+                                  child: pw.Text(
+                                    lineImport,
+                                    style: const pw.TextStyle(fontSize: 8),
+                                  ),
                                 ),
                               ),
                             ],
@@ -1478,51 +2091,93 @@ class _TpvPageState extends State<TpvPage> {
                           if (item.notes != null && item.notes!.isNotEmpty)
                             pw.Padding(
                               padding: const pw.EdgeInsets.only(left: 18),
-                              child: pw.Text(item.notes!, style: const pw.TextStyle(fontSize: 7)),
+                              child: pw.Text(
+                                item.notes!,
+                                style: const pw.TextStyle(fontSize: 7),
+                              ),
                             ),
                         ],
                       );
                     }),
                     pw.Divider(),
-                    _ticketTwoCol('TOTAL', detail.totalPrice.toStringAsFixed(2), bold: true, fontSize: 14),
+                    _ticketTwoCol(
+                      'TOTAL',
+                      detail.totalPrice.toStringAsFixed(2),
+                      bold: true,
+                      fontSize: 14,
+                    ),
                     if (isCash && delivered > 0) ...<pw.Widget>[
                       _ticketTwoCol('LLIURAT', delivered.toStringAsFixed(2)),
                       _ticketTwoCol('CANVI', change.toStringAsFixed(2)),
                     ],
-                    _ticketTwoCol(detail.paymentMethod.toUpperCase(), detail.totalPrice.toStringAsFixed(2)),
+                    _ticketTwoCol(
+                      detail.paymentMethod.toUpperCase(),
+                      detail.totalPrice.toStringAsFixed(2),
+                    ),
                     pw.SizedBox(height: 6),
                     pw.Divider(),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: <pw.Widget>[
-                        pw.Expanded(child: pw.Text('BASE', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8))),
+                        pw.Expanded(
+                          child: pw.Text(
+                            'BASE',
+                            style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 8,
+                            ),
+                          ),
+                        ),
                         pw.Expanded(
                           child: pw.Align(
                             alignment: pw.Alignment.center,
-                            child: pw.Text('% IVA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+                            child: pw.Text(
+                              '% IVA',
+                              style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold,
+                                fontSize: 8,
+                              ),
+                            ),
                           ),
                         ),
                         pw.Expanded(
                           child: pw.Align(
                             alignment: pw.Alignment.centerRight,
-                            child: pw.Text('TOTAL IVA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+                            child: pw.Text(
+                              'TOTAL IVA',
+                              style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold,
+                                fontSize: 8,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
                     pw.Row(
                       children: <pw.Widget>[
-                        pw.Expanded(child: pw.Text(base10.toStringAsFixed(2), style: const pw.TextStyle(fontSize: 8))),
+                        pw.Expanded(
+                          child: pw.Text(
+                            base10.toStringAsFixed(2),
+                            style: const pw.TextStyle(fontSize: 8),
+                          ),
+                        ),
                         pw.Expanded(
                           child: pw.Align(
                             alignment: pw.Alignment.center,
-                            child: pw.Text('10,00 %', style: const pw.TextStyle(fontSize: 8)),
+                            child: pw.Text(
+                              '10,00 %',
+                              style: const pw.TextStyle(fontSize: 8),
+                            ),
                           ),
                         ),
                         pw.Expanded(
                           child: pw.Align(
                             alignment: pw.Alignment.centerRight,
-                            child: pw.Text(iva10.toStringAsFixed(2), style: const pw.TextStyle(fontSize: 8)),
+                            child: pw.Text(
+                              iva10.toStringAsFixed(2),
+                              style: const pw.TextStyle(fontSize: 8),
+                            ),
                           ),
                         ),
                       ],
@@ -1531,7 +2186,10 @@ class _TpvPageState extends State<TpvPage> {
                     pw.Center(
                       child: pw.Text(
                         'GRÀCIES PER LA SEVA VISITA',
-                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          fontSize: 9,
+                        ),
                       ),
                     ),
                   ],
@@ -1545,7 +2203,12 @@ class _TpvPageState extends State<TpvPage> {
     } catch (_) {}
   }
 
-  pw.Widget _ticketTwoCol(String left, String right, {bool bold = false, double fontSize = 10}) {
+  pw.Widget _ticketTwoCol(
+    String left,
+    String right, {
+    bool bold = false,
+    double fontSize = 10,
+  }) {
     final pw.TextStyle style = pw.TextStyle(
       fontSize: fontSize,
       fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
@@ -1583,43 +2246,50 @@ class _TpvPageState extends State<TpvPage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: const Color(0xFFE4E8F4)),
                       boxShadow: const <BoxShadow>[
-                        BoxShadow(color: Color(0x10000000), blurRadius: 20, offset: Offset(0, 8)),
+                        BoxShadow(
+                          color: Color(0x10000000),
+                          blurRadius: 20,
+                          offset: Offset(0, 8),
+                        ),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget>[
-                            Expanded(
-                              child: Text(
-                                'Hola, ${widget.userName}',
-                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 30),
-                              ),
-                            ),
+                            Expanded(child: _buildCategories()),
+                            const SizedBox(width: 12),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 7,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF0F3FF),
                                 borderRadius: BorderRadius.circular(999),
-                                border: Border.all(color: const Color(0xFFD9E1FA)),
+                                border: Border.all(
+                                  color: const Color(0xFFD9E1FA),
+                                ),
                               ),
                               child: Text(
                                 '${_filteredProducts.length} productes',
-                                style: const TextStyle(fontWeight: FontWeight.w700, color: TpvTheme.textSecondary),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: TpvTheme.textSecondary,
+                                ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildCategories(),
-                        const SizedBox(height: 14),
                         Expanded(child: _buildProductsBody(compact: compact)),
                       ],
                     ),
@@ -1643,7 +2313,11 @@ class _TpvPageState extends State<TpvPage> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE4E8F4)),
         boxShadow: const <BoxShadow>[
-          BoxShadow(color: Color(0x12000000), blurRadius: 16, offset: Offset(0, 6)),
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
         ],
       ),
       child: Column(
@@ -1657,7 +2331,9 @@ class _TpvPageState extends State<TpvPage> {
           ),
           _sideIcon(
             Icons.pause_circle_outline_rounded,
-            badge: _parkedTickets.isNotEmpty ? '${_parkedTickets.length}' : null,
+            badge: _parkedTickets.isNotEmpty
+                ? '${_parkedTickets.length}'
+                : null,
             onTap: _openParkedTicketsDialog,
           ),
           _sideIcon(Icons.lock_outline_rounded, onTap: _openAdminPinDialog),
@@ -1698,23 +2374,46 @@ class _TpvPageState extends State<TpvPage> {
                     : null,
                 color: active ? null : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: active ? Colors.transparent : const Color(0xFFDDE3F2)),
+                border: Border.all(
+                  color: active ? Colors.transparent : const Color(0xFFDDE3F2),
+                ),
                 boxShadow: active
                     ? const <BoxShadow>[
-                        BoxShadow(color: Color(0x334E73DF), blurRadius: 14, offset: Offset(0, 6)),
+                        BoxShadow(
+                          color: Color(0x334E73DF),
+                          blurRadius: 14,
+                          offset: Offset(0, 6),
+                        ),
                       ]
                     : null,
               ),
-              child: Icon(icon, color: active ? Colors.white : TpvTheme.textSecondary, size: 26),
+              child: Icon(
+                icon,
+                color: active ? Colors.white : TpvTheme.textSecondary,
+                size: 26,
+              ),
             ),
             if (badge != null)
               Positioned(
                 right: -2,
                 top: -2,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(color: TpvTheme.danger, borderRadius: BorderRadius.circular(12)),
-                  child: Text(badge, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: TpvTheme.danger,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    badge,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -1729,10 +2428,12 @@ class _TpvPageState extends State<TpvPage> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _categories.length,
-        separatorBuilder: (BuildContext context, int index) => const SizedBox(width: 10),
+        separatorBuilder: (BuildContext context, int index) =>
+            const SizedBox(width: 10),
         itemBuilder: (_, int i) {
           final TpvCategory c = _categories[i];
           final bool active = c.id == _selectedCategory;
+          final Color accent = _parseCategoryColor(c.color) ?? TpvTheme.primary;
           return InkWell(
             borderRadius: BorderRadius.circular(18),
             onTap: () => setState(() => _selectedCategory = c.id),
@@ -1740,24 +2441,40 @@ class _TpvPageState extends State<TpvPage> {
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
               decoration: BoxDecoration(
                 gradient: active
-                    ? const LinearGradient(
+                    ? LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: <Color>[Color(0xFF5D7FE7), TpvTheme.primary],
+                        colors: <Color>[
+                          Color.lerp(accent, Colors.white, 0.16)!,
+                          Color.lerp(accent, Colors.black, 0.08)!,
+                        ],
                       )
                     : null,
-                color: active ? null : Colors.white,
+                color: active ? null : accent.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: active ? Colors.transparent : const Color(0xFFE0E6F3)),
+                border: Border.all(
+                  color: active
+                      ? Colors.transparent
+                      : accent.withValues(alpha: 0.28),
+                ),
                 boxShadow: active
-                    ? const <BoxShadow>[
-                        BoxShadow(color: Color(0x2C4E73DF), blurRadius: 14, offset: Offset(0, 6)),
+                    ? <BoxShadow>[
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.24),
+                          blurRadius: 14,
+                          offset: Offset(0, 6),
+                        ),
                       ]
                     : null,
               ),
               child: Text(
                 c.name,
-                style: TextStyle(fontWeight: FontWeight.w700, color: active ? Colors.white : TpvTheme.textMain),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: active
+                      ? Colors.white
+                      : Color.lerp(accent, Colors.black, 0.18),
+                ),
               ),
             ),
           );
@@ -1766,8 +2483,22 @@ class _TpvPageState extends State<TpvPage> {
     );
   }
 
+  Color? _parseCategoryColor(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    String value = raw.trim();
+    if (value.toLowerCase() == 'orange') value = '#F59E0B';
+    if (value.startsWith('#')) value = value.substring(1);
+    if (value.length == 6) value = 'FF$value';
+    if (value.length != 8) return null;
+    final int? parsed = int.tryParse(value, radix: 16);
+    if (parsed == null) return null;
+    return Color(parsed);
+  }
+
   Widget _buildProductsBody({required bool compact}) {
-    if (_loadingCatalog) return const Center(child: CircularProgressIndicator());
+    if (_loadingCatalog) {
+      return const Center(child: CircularProgressIndicator());
+    }
     if (_catalogError != null) {
       return Center(
         child: Column(
@@ -1777,14 +2508,22 @@ class _TpvPageState extends State<TpvPage> {
             const SizedBox(height: 6),
             Text(_catalogError!, textAlign: TextAlign.center),
             const SizedBox(height: 8),
-            OutlinedButton(onPressed: _loadCatalog, child: const Text('Reintentar')),
+            OutlinedButton(
+              onPressed: _loadCatalog,
+              child: const Text('Reintentar'),
+            ),
           ],
         ),
       );
     }
-    if (_filteredProducts.isEmpty) return const Center(child: Text('No hi ha productes'));
+    if (_filteredProducts.isEmpty) {
+      return const Center(child: Text('No hi ha productes'));
+    }
 
     return GridView.builder(
+      key: ValueKey<String>(
+        'tpv-products:$_selectedCategory:${compact ? 'compact' : 'wide'}',
+      ),
       itemCount: _filteredProducts.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: compact ? 2 : 4,
@@ -1797,6 +2536,7 @@ class _TpvPageState extends State<TpvPage> {
         final int qty = _qtyForProduct(product);
         final int? stockLeft = _remainingStock(product);
         return Card(
+          key: ValueKey<int>(product.id),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             borderRadius: BorderRadius.circular(18),
@@ -1809,35 +2549,103 @@ class _TpvPageState extends State<TpvPage> {
                   Expanded(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: product.imageUrl != null && product.imageUrl!.isNotEmpty
-                          ? Image.network(product.imageUrl!, fit: BoxFit.cover, width: double.infinity)
+                      child:
+                          product.imageUrl != null &&
+                              product.imageUrl!.isNotEmpty
+                          ? Image.network(
+                              key: ValueKey<String>(
+                                '${product.id}:${product.imageUrl}',
+                              ),
+                              product.imageUrl!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              webHtmlElementStrategy:
+                                  WebHtmlElementStrategy.prefer,
+                              errorBuilder: (_, _, _) => Container(
+                                color: const Color(0xFFF8F9FE),
+                                width: double.infinity,
+                                child: const Icon(
+                                  Icons.fastfood_rounded,
+                                  color: TpvTheme.primary,
+                                  size: 36,
+                                ),
+                              ),
+                              loadingBuilder:
+                                  (
+                                    BuildContext _,
+                                    Widget child,
+                                    ImageChunkEvent? progress,
+                                  ) {
+                                    if (progress == null) return child;
+                                    return Container(
+                                      color: const Color(0xFFF8F9FE),
+                                      width: double.infinity,
+                                      alignment: Alignment.center,
+                                      child: const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                            )
                           : Container(
                               color: const Color(0xFFF8F9FE),
                               width: double.infinity,
-                              child: const Icon(Icons.fastfood_rounded, color: TpvTheme.primary, size: 36),
+                              child: const Icon(
+                                Icons.fastfood_rounded,
+                                color: TpvTheme.primary,
+                                size: 36,
+                              ),
                             ),
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                  Text('${product.price.toStringAsFixed(2)}€', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                  Text(
+                    product.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    '${product.price.toStringAsFixed(2)}€',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
                   if (stockLeft != null)
                     Text(
                       stockLeft <= 0 ? 'Esgotat' : '$stockLeft restants',
-                      style: TextStyle(color: stockLeft <= 0 ? TpvTheme.danger : TpvTheme.textSecondary, fontSize: 12),
+                      style: TextStyle(
+                        color: stockLeft <= 0
+                            ? TpvTheme.danger
+                            : TpvTheme.textSecondary,
+                        fontSize: 12,
+                      ),
                     ),
                   const SizedBox(height: 8),
                   Row(
                     children: <Widget>[
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: qty <= 0 ? null : () => _removeOneFromProduct(product),
+                          onPressed: qty <= 0
+                              ? null
+                              : () => _removeOneFromProduct(product),
                           child: const Text('-'),
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text('$qty', style: const TextStyle(fontWeight: FontWeight.w800)),
+                        child: Text(
+                          '$qty',
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
                       ),
                       Expanded(
                         child: FilledButton(
@@ -1857,10 +2665,10 @@ class _TpvPageState extends State<TpvPage> {
   }
 
   void _removeOneFromProduct(TpvProduct product) {
-    final CartItem? item = _cartItems.where((CartItem i) => i.product.id == product.id).cast<CartItem?>().firstWhere(
-          (CartItem? i) => i != null,
-          orElse: () => null,
-        );
+    final CartItem? item = _cartItems
+        .where((CartItem i) => i.product.id == product.id)
+        .cast<CartItem?>()
+        .firstWhere((CartItem? i) => i != null, orElse: () => null);
     if (item == null) return;
     _changeQty(item.product, -1, notes: item.notes);
   }
@@ -1874,7 +2682,11 @@ class _TpvPageState extends State<TpvPage> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE4E8F4)),
         boxShadow: const <BoxShadow>[
-          BoxShadow(color: Color(0x12000000), blurRadius: 16, offset: Offset(0, 6)),
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
         ],
       ),
       child: Column(
@@ -1883,12 +2695,18 @@ class _TpvPageState extends State<TpvPage> {
           Row(
             children: <Widget>[
               const Expanded(
-                child: Text('Ordre actual', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 28)),
+                child: Text(
+                  'Ordre actual',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 28),
+                ),
               ),
               if (_cart.isNotEmpty)
                 IconButton(
                   onPressed: _clearCart,
-                  icon: const Icon(Icons.delete_outline, color: TpvTheme.danger),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: TpvTheme.danger,
+                  ),
                 ),
             ],
           ),
@@ -1910,33 +2728,75 @@ class _TpvPageState extends State<TpvPage> {
                           children: <Widget>[
                             Row(
                               children: <Widget>[
-                                Expanded(child: Text(item.product.name, style: const TextStyle(fontWeight: FontWeight.w700))),
+                                Expanded(
+                                  child: Text(
+                                    item.product.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
                                 IconButton(
-                                  onPressed: () => _changeQty(item.product, -item.quantity, notes: item.notes),
-                                  icon: const Icon(Icons.delete_outline, color: TpvTheme.danger),
+                                  onPressed: () => _changeQty(
+                                    item.product,
+                                    -item.quantity,
+                                    notes: item.notes,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: TpvTheme.danger,
+                                  ),
                                 ),
                               ],
                             ),
                             if (item.notes != null && item.notes!.isNotEmpty)
-                              Text(item.notes!, style: const TextStyle(color: TpvTheme.textSecondary, fontSize: 12)),
+                              Text(
+                                item.notes!,
+                                style: const TextStyle(
+                                  color: TpvTheme.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Row(
                                   children: <Widget>[
                                     IconButton(
-                                      onPressed: () => _changeQty(item.product, -1, notes: item.notes),
-                                      icon: const Icon(Icons.remove_circle_outline),
+                                      onPressed: () => _changeQty(
+                                        item.product,
+                                        -1,
+                                        notes: item.notes,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.remove_circle_outline,
+                                      ),
                                     ),
-                                    Text('${item.quantity}', style: const TextStyle(fontWeight: FontWeight.w800)),
+                                    Text(
+                                      '${item.quantity}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
                                     IconButton(
-                                      onPressed: () => _changeQty(item.product, 1, notes: item.notes),
-                                      icon: const Icon(Icons.add_circle_outline),
+                                      onPressed: () => _changeQty(
+                                        item.product,
+                                        1,
+                                        notes: item.notes,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.add_circle_outline,
+                                      ),
                                       color: TpvTheme.primary,
                                     ),
                                   ],
                                 ),
-                                Text('${item.lineTotal.toStringAsFixed(2)}€', style: const TextStyle(fontWeight: FontWeight.w800)),
+                                Text(
+                                  '${item.lineTotal.toStringAsFixed(2)}€',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
@@ -1964,7 +2824,9 @@ class _TpvPageState extends State<TpvPage> {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: _cart.isEmpty || _submittingOrder ? null : _openCheckoutDialog,
+              onPressed: _cart.isEmpty || _submittingOrder
+                  ? null
+                  : _openCheckoutDialog,
               icon: const Icon(Icons.paid),
               label: Text(_submittingOrder ? 'Processant...' : 'Venda'),
             ),
@@ -1973,7 +2835,9 @@ class _TpvPageState extends State<TpvPage> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: _cart.isEmpty || _submittingOrder ? null : _openPreorderDialog,
+              onPressed: _cart.isEmpty || _submittingOrder
+                  ? null
+                  : _openPreorderDialog,
               icon: const Icon(Icons.edit_note),
               label: const Text('Encàrrec'),
             ),
@@ -1982,7 +2846,9 @@ class _TpvPageState extends State<TpvPage> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: _cart.isEmpty || _submittingOrder ? null : _parkCurrentTicket,
+              onPressed: _cart.isEmpty || _submittingOrder
+                  ? null
+                  : _parkCurrentTicket,
               icon: const Icon(Icons.pause_circle_outline),
               label: const Text('Aparcar Ticket'),
             ),
@@ -1996,10 +2862,18 @@ class _TpvPageState extends State<TpvPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
-        Text(label, style: TextStyle(fontWeight: total ? FontWeight.w900 : FontWeight.w500)),
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: total ? FontWeight.w900 : FontWeight.w500,
+          ),
+        ),
         Text(
           '${value.toStringAsFixed(2)}€',
-          style: TextStyle(fontWeight: total ? FontWeight.w900 : FontWeight.w600, fontSize: total ? 26 : 16),
+          style: TextStyle(
+            fontWeight: total ? FontWeight.w900 : FontWeight.w600,
+            fontSize: total ? 26 : 16,
+          ),
         ),
       ],
     );
@@ -2022,7 +2896,11 @@ class _TpvPageState extends State<TpvPage> {
           border: Border.all(color: const Color(0xFFD9DCE8)),
           boxShadow: active
               ? const <BoxShadow>[
-                  BoxShadow(color: Color(0x334E73DF), blurRadius: 14, offset: Offset(0, 6)),
+                  BoxShadow(
+                    color: Color(0x334E73DF),
+                    blurRadius: 14,
+                    offset: Offset(0, 6),
+                  ),
                 ]
               : null,
         ),
@@ -2049,7 +2927,10 @@ class _TpvPageState extends State<TpvPage> {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
-      child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+      ),
     );
   }
 
@@ -2065,12 +2946,20 @@ class _TpvPageState extends State<TpvPage> {
       base = DateTime(n.year, n.month, n.day, h, m);
     }
     final DateTime roundedBase = _roundUpToQuarter(base);
-    final DateTime updated = now ? roundedBase : _roundUpToQuarter(roundedBase.add(Duration(minutes: minutesDelta)));
+    final DateTime updated = now
+        ? roundedBase
+        : _roundUpToQuarter(roundedBase.add(Duration(minutes: minutesDelta)));
     _preorderTimeController.text = _formatTime(updated);
   }
 
   DateTime _roundUpToQuarter(DateTime date) {
-    final DateTime clean = DateTime(date.year, date.month, date.day, date.hour, date.minute);
+    final DateTime clean = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      date.hour,
+      date.minute,
+    );
     final int mod = clean.minute % 15;
     if (mod == 0) return clean;
     return clean.add(Duration(minutes: 15 - mod));

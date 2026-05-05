@@ -24,6 +24,13 @@ class _WorkersSectionState extends State<WorkersSection> {
   Object? _error;
   bool _busy = false;
 
+  AdminWorker? get _pinOwner {
+    for (final AdminWorker worker in _workers) {
+      if (worker.hasPin) return worker;
+    }
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -48,11 +55,13 @@ class _WorkersSectionState extends State<WorkersSection> {
   }
 
   Future<void> _openEditor({AdminWorker? current}) async {
+    final AdminWorker? pinOwner = _pinOwner;
     final AdminWorker? saved = await showDialog<AdminWorker>(
       context: context,
       builder: (_) => _WorkerEditorDialog(
         service: _service,
         initial: current,
+        pinOwner: pinOwner,
       ),
     );
     if (saved != null) {
@@ -89,6 +98,7 @@ class _WorkersSectionState extends State<WorkersSection> {
       ),
     );
     if (confirmed != true) return;
+    if (!mounted) return;
 
     setState(() => _busy = true);
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
@@ -306,9 +316,14 @@ class _WorkerCard extends StatelessWidget {
 }
 
 class _WorkerEditorDialog extends StatefulWidget {
-  const _WorkerEditorDialog({required this.service, this.initial});
+  const _WorkerEditorDialog({
+    required this.service,
+    required this.pinOwner,
+    this.initial,
+  });
 
   final AdminService service;
+  final AdminWorker? pinOwner;
   final AdminWorker? initial;
 
   @override
@@ -332,10 +347,20 @@ class _WorkerEditorDialogState extends State<_WorkerEditorDialog> {
   }
 
   bool get _isEdit => widget.initial != null;
+  bool get _canEditPin {
+    final AdminWorker? owner = widget.pinOwner;
+    return owner == null || owner.id == widget.initial?.id;
+  }
+
+  String? get _pinLockedMessage {
+    final AdminWorker? owner = widget.pinOwner;
+    if (_canEditPin || owner == null) return null;
+    return 'El PIN ja està assignat a ${owner.name}. Per seguretat, només un treballador pot tenir PIN.';
+  }
 
   Future<void> _submit() async {
     final String name = _nameController.text.trim();
-    final String pin = _pinController.text.trim();
+    final String pin = _canEditPin ? _pinController.text.trim() : '';
     if (name.isEmpty) {
       setState(() => _errorText = 'El nom és obligatori');
       return;
@@ -383,7 +408,7 @@ class _WorkerEditorDialogState extends State<_WorkerEditorDialog> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Els treballadors amb PIN tenen accés al panell d\'administració.',
+                'Només un treballador pot tenir PIN d\'accés al panell d\'administració.',
                 style: TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w600, fontSize: 13),
               ),
               const SizedBox(height: 14),
@@ -396,15 +421,18 @@ class _WorkerEditorDialogState extends State<_WorkerEditorDialog> {
               const SizedBox(height: 12),
               TextField(
                 controller: _pinController,
+                enabled: _canEditPin,
                 keyboardType: TextInputType.number,
                 maxLength: 4,
                 inputFormatters: <TextInputFormatter>[
                   FilteringTextInputFormatter.digitsOnly,
                 ],
-                decoration: const InputDecoration(
-                  labelText: 'PIN (opcional · 4 dígits)',
-                  prefixIcon: Icon(Icons.lock_outline_rounded),
+                decoration: InputDecoration(
+                  labelText: _canEditPin ? 'PIN (opcional · 4 dígits)' : 'PIN bloquejat',
+                  prefixIcon: const Icon(Icons.lock_outline_rounded),
                   counterText: '',
+                  helperText: _pinLockedMessage,
+                  helperMaxLines: 2,
                 ),
               ),
               const SizedBox(height: 4),

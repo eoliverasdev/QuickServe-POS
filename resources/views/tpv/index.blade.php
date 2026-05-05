@@ -1470,7 +1470,7 @@
                 id,
                 name: card.dataset.name || 'Bossa',
                 price,
-                img: card.dataset.image || '/images/default.jpg'
+                img: card.dataset.image || '/images/plats-sense-foto-1024x724.jpg'
             };
         }
 

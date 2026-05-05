@@ -6,6 +6,31 @@ import '../../../auth/data/auth_service.dart';
 import '../../data/admin_service.dart';
 import '../../domain/admin_models.dart';
 
+const List<_CategoryColorOption> _categoryColorOptions = <_CategoryColorOption>[
+  _CategoryColorOption('Taronja', '#F97316'),
+  _CategoryColorOption('Blau', '#2563EB'),
+  _CategoryColorOption('Verd', '#16A34A'),
+  _CategoryColorOption('Vermell', '#DC2626'),
+  _CategoryColorOption('Lila', '#7C3AED'),
+  _CategoryColorOption('Rosa', '#DB2777'),
+  _CategoryColorOption('Cian', '#0891B2'),
+  _CategoryColorOption('Llima', '#65A30D'),
+  _CategoryColorOption('Ambre', '#D97706'),
+  _CategoryColorOption('Indigo', '#4F46E5'),
+  _CategoryColorOption('Esmeralda', '#059669'),
+  _CategoryColorOption('Fúcsia', '#C026D3'),
+  _CategoryColorOption('Pissarra', '#475569'),
+  _CategoryColorOption('Marró', '#92400E'),
+  _CategoryColorOption('Negre', '#1F2937'),
+];
+
+class _CategoryColorOption {
+  const _CategoryColorOption(this.label, this.value);
+
+  final String label;
+  final String value;
+}
+
 class CategoriesSection extends StatefulWidget {
   const CategoriesSection({super.key, required this.authService});
 
@@ -16,7 +41,10 @@ class CategoriesSection extends StatefulWidget {
 }
 
 class _CategoriesSectionState extends State<CategoriesSection> {
-  late final AdminService _service = AdminService(ApiClient(), widget.authService);
+  late final AdminService _service = AdminService(
+    ApiClient(),
+    widget.authService,
+  );
 
   List<AdminCategory> _categories = <AdminCategory>[];
   bool _loading = true;
@@ -49,20 +77,23 @@ class _CategoriesSectionState extends State<CategoriesSection> {
   Future<void> _openEditor({AdminCategory? current}) async {
     final AdminCategory? saved = await showDialog<AdminCategory>(
       context: context,
-      builder: (_) => _CategoryEditorDialog(
-        service: _service,
-        initial: current,
-      ),
+      builder: (_) =>
+          _CategoryEditorDialog(service: _service, initial: current),
     );
     if (saved != null) {
       setState(() {
-        final int idx = _categories.indexWhere((AdminCategory c) => c.id == saved.id);
+        final int idx = _categories.indexWhere(
+          (AdminCategory c) => c.id == saved.id,
+        );
         if (idx >= 0) {
           _categories[idx] = saved;
         } else {
           _categories.add(saved);
         }
-        _categories.sort((AdminCategory a, AdminCategory b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        _categories.sort(
+          (AdminCategory a, AdminCategory b) =>
+              a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
       });
     }
   }
@@ -87,14 +118,19 @@ class _CategoriesSectionState extends State<CategoriesSection> {
       ),
     );
     if (confirmed != true) return;
+    if (!mounted) return;
 
     setState(() => _busy = true);
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     try {
       await _service.deleteCategory(cat.id);
       if (!mounted) return;
-      setState(() => _categories.removeWhere((AdminCategory c) => c.id == cat.id));
-      messenger.showSnackBar(SnackBar(content: Text('Categoria "${cat.name}" eliminada')));
+      setState(
+        () => _categories.removeWhere((AdminCategory c) => c.id == cat.id),
+      );
+      messenger.showSnackBar(
+        SnackBar(content: Text('Categoria "${cat.name}" eliminada')),
+      );
     } catch (err) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text('$err')));
@@ -113,7 +149,11 @@ class _CategoriesSectionState extends State<CategoriesSection> {
             Expanded(
               child: Text(
                 '${_categories.length} categories',
-                style: const TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w700, fontSize: 14),
+                style: const TextStyle(
+                  color: TpvTheme.textSecondary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
               ),
             ),
             FilledButton.icon(
@@ -152,11 +192,19 @@ class _CategoriesSectionState extends State<CategoriesSection> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Icon(Icons.category_outlined, size: 56, color: Color(0xFFB0B6C9)),
+            const Icon(
+              Icons.category_outlined,
+              size: 56,
+              color: Color(0xFFB0B6C9),
+            ),
             const SizedBox(height: 10),
             const Text(
               'Encara no hi ha categories',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: TpvTheme.textMain),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+                color: TpvTheme.textMain,
+              ),
             ),
             const SizedBox(height: 6),
             FilledButton.icon(
@@ -177,13 +225,22 @@ class _CategoriesSectionState extends State<CategoriesSection> {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFE4E8F4)),
           boxShadow: const <BoxShadow>[
-            BoxShadow(color: Color(0x0F000000), blurRadius: 14, offset: Offset(0, 5)),
+            BoxShadow(
+              color: Color(0x0F000000),
+              blurRadius: 14,
+              offset: Offset(0, 5),
+            ),
           ],
         ),
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(vertical: 6),
           itemCount: _categories.length,
-          separatorBuilder: (_, _) => const Divider(height: 1, indent: 70, endIndent: 16, color: Color(0xFFEDF0F8)),
+          separatorBuilder: (_, _) => const Divider(
+            height: 1,
+            indent: 70,
+            endIndent: 16,
+            color: Color(0xFFEDF0F8),
+          ),
           itemBuilder: (BuildContext context, int index) {
             final AdminCategory cat = _categories[index];
             return _CategoryTile(
@@ -211,7 +268,8 @@ class _CategoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accent = _parseColor(category.color) ?? TpvTheme.primary;
+    final Color accent =
+        _parseCategoryColor(category.color) ?? TpvTheme.primary;
     return InkWell(
       onTap: onEdit,
       child: Padding(
@@ -228,8 +286,14 @@ class _CategoryTile extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: Text(
-                category.name.isNotEmpty ? category.name.characters.first.toUpperCase() : '?',
-                style: TextStyle(fontWeight: FontWeight.w900, color: accent, fontSize: 18),
+                category.name.isNotEmpty
+                    ? category.name.characters.first.toUpperCase()
+                    : '?',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: accent,
+                  fontSize: 18,
+                ),
               ),
             ),
             const SizedBox(width: 14),
@@ -241,13 +305,20 @@ class _CategoryTile extends StatelessWidget {
                     category.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
                   ),
                   Text(
                     category.productsCount == 0
                         ? 'Sense productes'
                         : '${category.productsCount} ${category.productsCount == 1 ? 'producte' : 'productes'}',
-                    style: const TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w600, fontSize: 12),
+                    style: const TextStyle(
+                      color: TpvTheme.textSecondary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -267,17 +338,43 @@ class _CategoryTile extends StatelessWidget {
       ),
     );
   }
+}
 
-  static Color? _parseColor(String? raw) {
-    if (raw == null || raw.trim().isEmpty) return null;
-    String value = raw.trim();
-    if (value.startsWith('#')) value = value.substring(1);
-    if (value.length == 6) value = 'FF$value';
-    if (value.length != 8) return null;
-    final int? parsed = int.tryParse(value, radix: 16);
-    if (parsed == null) return null;
-    return Color(parsed);
+String _normalizeCategoryColor(String? raw) {
+  if (raw == null || raw.trim().isEmpty) {
+    return _categoryColorOptions.first.value;
   }
+  final String value = raw.trim();
+  final String lower = value.toLowerCase();
+  if (lower == 'orange' || lower == 'taronja') {
+    return _categoryColorOptions.first.value;
+  }
+  if (_categoryColorOptions.any(
+    (_CategoryColorOption option) => option.value.toLowerCase() == lower,
+  )) {
+    return _categoryColorOptions
+        .firstWhere(
+          (_CategoryColorOption option) => option.value.toLowerCase() == lower,
+        )
+        .value;
+  }
+  return _parseCategoryColor(value) == null
+      ? _categoryColorOptions.first.value
+      : value;
+}
+
+Color? _parseCategoryColor(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return null;
+  String value = raw.trim();
+  if (value.toLowerCase() == 'orange') {
+    value = _categoryColorOptions.first.value;
+  }
+  if (value.startsWith('#')) value = value.substring(1);
+  if (value.length == 6) value = 'FF$value';
+  if (value.length != 8) return null;
+  final int? parsed = int.tryParse(value, radix: 16);
+  if (parsed == null) return null;
+  return Color(parsed);
 }
 
 class _CategoryEditorDialog extends StatefulWidget {
@@ -291,17 +388,16 @@ class _CategoryEditorDialog extends StatefulWidget {
 }
 
 class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
-  late final TextEditingController _nameController =
-      TextEditingController(text: widget.initial?.name ?? '');
-  late final TextEditingController _colorController =
-      TextEditingController(text: widget.initial?.color ?? '');
+  late final TextEditingController _nameController = TextEditingController(
+    text: widget.initial?.name ?? '',
+  );
+  late String _selectedColor = _normalizeCategoryColor(widget.initial?.color);
   bool _submitting = false;
   String? _errorText;
 
   @override
   void dispose() {
     _nameController.dispose();
-    _colorController.dispose();
     super.dispose();
   }
 
@@ -323,12 +419,12 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
         result = await widget.service.updateCategory(
           id: widget.initial!.id,
           name: name,
-          color: _colorController.text.trim().isEmpty ? null : _colorController.text.trim(),
+          color: _selectedColor,
         );
       } else {
         result = await widget.service.createCategory(
           name: name,
-          color: _colorController.text.trim().isEmpty ? null : _colorController.text.trim(),
+          color: _selectedColor,
         );
       }
       if (!mounted) return;
@@ -355,12 +451,19 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
             children: <Widget>[
               Text(
                 _isEdit ? 'Editar categoria' : 'Nova categoria',
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 22),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 22,
+                ),
               ),
               const SizedBox(height: 4),
               const Text(
                 'Les categories agrupen els productes del catàleg.',
-                style: TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w600, fontSize: 13),
+                style: TextStyle(
+                  color: TpvTheme.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
               ),
               const SizedBox(height: 14),
               TextField(
@@ -374,13 +477,72 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
                 onSubmitted: (_) => _submit(),
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _colorController,
-                decoration: const InputDecoration(
-                  labelText: 'Color (opcional)',
-                  hintText: '#4E73DF',
-                  prefixIcon: Icon(Icons.palette_rounded),
+              Text(
+                'Color de la categoria',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: TpvTheme.textSecondary,
                 ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: _categoryColorOptions.map((
+                  _CategoryColorOption option,
+                ) {
+                  final bool selected = option.value == _selectedColor;
+                  final Color color =
+                      _parseCategoryColor(option.value) ?? TpvTheme.primary;
+                  return InkWell(
+                    onTap: () => setState(() => _selectedColor = option.value),
+                    borderRadius: BorderRadius.circular(14),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 140),
+                      width: 118,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 9,
+                      ),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? color.withValues(alpha: 0.14)
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: selected ? color : const Color(0xFFE0E6F3),
+                          width: selected ? 2 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Container(
+                            width: 18,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              option.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: selected ? color : TpvTheme.textMain,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
               if (_errorText != null) ...<Widget>[
                 const SizedBox(height: 10),
@@ -393,12 +555,20 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
                   ),
                   child: Row(
                     children: <Widget>[
-                      const Icon(Icons.error_outline, color: TpvTheme.danger, size: 18),
+                      const Icon(
+                        Icons.error_outline,
+                        color: TpvTheme.danger,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _errorText!,
-                          style: const TextStyle(color: TpvTheme.danger, fontWeight: FontWeight.w700, fontSize: 13),
+                          style: const TextStyle(
+                            color: TpvTheme.danger,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -410,7 +580,9 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
                 children: <Widget>[
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+                      onPressed: _submitting
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       child: const Text('Cancel·lar'),
                     ),
                   ),
@@ -418,11 +590,13 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
                   Expanded(
                     child: FilledButton(
                       onPressed: _submitting ? null : _submit,
-                      child: Text(_submitting
-                          ? 'Guardant...'
-                          : _isEdit
-                              ? 'Guardar canvis'
-                              : 'Crear'),
+                      child: Text(
+                        _submitting
+                            ? 'Guardant...'
+                            : _isEdit
+                            ? 'Guardar canvis'
+                            : 'Crear',
+                      ),
                     ),
                   ),
                 ],

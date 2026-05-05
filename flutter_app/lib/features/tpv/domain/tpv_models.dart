@@ -1,8 +1,9 @@
 class TpvCategory {
-  TpvCategory({required this.id, required this.name});
+  TpvCategory({required this.id, required this.name, this.color});
 
   final String id;
   final String name;
+  final String? color;
 }
 
 class TpvProduct {
@@ -24,11 +25,7 @@ class TpvProduct {
 }
 
 class CartItem {
-  CartItem({
-    required this.product,
-    required this.quantity,
-    this.notes,
-  });
+  CartItem({required this.product, required this.quantity, this.notes});
 
   final TpvProduct product;
   final int quantity;
@@ -48,20 +45,14 @@ class CartItem {
 }
 
 class TpvCatalogData {
-  TpvCatalogData({
-    required this.categories,
-    required this.products,
-  });
+  TpvCatalogData({required this.categories, required this.products});
 
   final List<TpvCategory> categories;
   final List<TpvProduct> products;
 }
 
 class TpvWorker {
-  TpvWorker({
-    required this.id,
-    required this.name,
-  });
+  TpvWorker({required this.id, required this.name});
 
   final int id;
   final String name;

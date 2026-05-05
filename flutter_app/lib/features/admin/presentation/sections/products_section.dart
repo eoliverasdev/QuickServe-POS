@@ -21,7 +21,10 @@ class ProductsSection extends StatefulWidget {
 }
 
 class _ProductsSectionState extends State<ProductsSection> {
-  late final AdminService _service = AdminService(ApiClient(), widget.authService);
+  late final AdminService _service = AdminService(
+    ApiClient(),
+    widget.authService,
+  );
 
   List<AdminProduct> _products = <AdminProduct>[];
   List<AdminCategory> _categories = <AdminCategory>[];
@@ -76,14 +79,18 @@ class _ProductsSectionState extends State<ProductsSection> {
     );
     if (saved != null) {
       setState(() {
-        final int idx = _products.indexWhere((AdminProduct p) => p.id == saved.id);
+        final int idx = _products.indexWhere(
+          (AdminProduct p) => p.id == saved.id,
+        );
         if (idx >= 0) {
           _products[idx] = saved;
         } else {
           _products.add(saved);
         }
-        _products.sort((AdminProduct a, AdminProduct b) =>
-            a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        _products.sort(
+          (AdminProduct a, AdminProduct b) =>
+              a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
       });
     }
   }
@@ -108,6 +115,7 @@ class _ProductsSectionState extends State<ProductsSection> {
       ),
     );
     if (confirmed != true) return;
+    if (!mounted) return;
 
     setState(() => _busy = true);
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
@@ -115,7 +123,9 @@ class _ProductsSectionState extends State<ProductsSection> {
       await _service.deleteProduct(p.id);
       if (!mounted) return;
       setState(() => _products.removeWhere((AdminProduct x) => x.id == p.id));
-      messenger.showSnackBar(SnackBar(content: Text('Producte "${p.name}" eliminat')));
+      messenger.showSnackBar(
+        SnackBar(content: Text('Producte "${p.name}" eliminat')),
+      );
     } catch (err) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text('$err')));
@@ -126,6 +136,7 @@ class _ProductsSectionState extends State<ProductsSection> {
 
   Future<void> _toggleActive(AdminProduct p) async {
     setState(() => _busy = true);
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     try {
       final AdminProduct updated = await _service.saveProduct(
         id: p.id,
@@ -140,12 +151,23 @@ class _ProductsSectionState extends State<ProductsSection> {
       );
       if (!mounted) return;
       setState(() {
-        final int idx = _products.indexWhere((AdminProduct x) => x.id == updated.id);
+        final int idx = _products.indexWhere(
+          (AdminProduct x) => x.id == updated.id,
+        );
         if (idx >= 0) _products[idx] = updated;
       });
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            updated.active
+                ? '"${updated.name}" tornarà a sortir al TPV'
+                : '"${updated.name}" queda ocult al TPV',
+          ),
+        ),
+      );
     } catch (err) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$err')));
+      messenger.showSnackBar(SnackBar(content: Text('$err')));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -176,62 +198,71 @@ class _ProductsSectionState extends State<ProductsSection> {
   }
 
   Widget _buildToolbar() {
-    return LayoutBuilder(builder: (BuildContext _, BoxConstraints c) {
-      final bool wide = c.maxWidth >= 760;
-      final Widget search = SizedBox(
-        height: 46,
-        width: wide ? 280 : double.infinity,
-        child: TextField(
-          onChanged: (String v) => setState(() => _search = v),
-          decoration: InputDecoration(
-            hintText: 'Buscar producte...',
-            prefixIcon: const Icon(Icons.search_rounded),
-            isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFE4E8F4)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFE4E8F4)),
-            ),
-          ),
-        ),
-      );
-      final Widget add = FilledButton.icon(
-        onPressed: _busy ? null : () => _openEditor(),
-        icon: const Icon(Icons.add_rounded, size: 20),
-        label: const Text('Nou producte'),
-        style: FilledButton.styleFrom(minimumSize: const Size(180, 46)),
-      );
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  '${_filtered.length} de ${_products.length} productes',
-                  style: const TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w700, fontSize: 14),
-                ),
+    return LayoutBuilder(
+      builder: (BuildContext _, BoxConstraints c) {
+        final bool wide = c.maxWidth >= 760;
+        final Widget search = SizedBox(
+          height: 46,
+          width: wide ? 280 : double.infinity,
+          child: TextField(
+            onChanged: (String v) => setState(() => _search = v),
+            decoration: InputDecoration(
+              hintText: 'Buscar producte...',
+              prefixIcon: const Icon(Icons.search_rounded),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 10,
               ),
-              if (wide) ...<Widget>[search, const SizedBox(width: 10), add],
-            ],
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFFE4E8F4)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFFE4E8F4)),
+              ),
+            ),
           ),
-          if (!wide) ...<Widget>[
+        );
+        final Widget add = FilledButton.icon(
+          onPressed: _busy ? null : () => _openEditor(),
+          icon: const Icon(Icons.add_rounded, size: 20),
+          label: const Text('Nou producte'),
+          style: FilledButton.styleFrom(minimumSize: const Size(180, 46)),
+        );
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    '${_filtered.length} de ${_products.length} productes',
+                    style: const TextStyle(
+                      color: TpvTheme.textSecondary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                if (wide) ...<Widget>[search, const SizedBox(width: 10), add],
+              ],
+            ),
+            if (!wide) ...<Widget>[
+              const SizedBox(height: 10),
+              search,
+              const SizedBox(height: 10),
+              add,
+            ],
             const SizedBox(height: 10),
-            search,
-            const SizedBox(height: 10),
-            add,
+            _buildCategoryChips(),
           ],
-          const SizedBox(height: 10),
-          _buildCategoryChips(),
-        ],
-      );
-    });
+        );
+      },
+    );
   }
 
   Widget _buildCategoryChips() {
@@ -286,11 +317,19 @@ class _ProductsSectionState extends State<ProductsSection> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Icon(Icons.inventory_2_outlined, size: 56, color: Color(0xFFB0B6C9)),
+            const Icon(
+              Icons.inventory_2_outlined,
+              size: 56,
+              color: Color(0xFFB0B6C9),
+            ),
             const SizedBox(height: 10),
             const Text(
               'Sense productes que coincideixin',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: TpvTheme.textMain),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+                color: TpvTheme.textMain,
+              ),
             ),
             const SizedBox(height: 6),
             FilledButton.icon(
@@ -304,35 +343,41 @@ class _ProductsSectionState extends State<ProductsSection> {
     }
     return RefreshIndicator(
       onRefresh: _load,
-      child: LayoutBuilder(builder: (BuildContext _, BoxConstraints c) {
-        final int cols = c.maxWidth >= 1400
-            ? 4
-            : c.maxWidth >= 1000
-                ? 3
-                : c.maxWidth >= 640
-                    ? 2
-                    : 1;
-        return GridView.builder(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: cols,
-            mainAxisExtent: 168,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-          ),
-          itemCount: list.length,
-          itemBuilder: (BuildContext _, int i) {
-            final AdminProduct p = list[i];
-            return _ProductCard(
-              product: p,
-              onTap: _busy ? null : () => _openEditor(current: p),
-              onDelete: _busy ? null : () => _confirmDelete(p),
-              onToggle: _busy ? null : () => _toggleActive(p),
-            );
-          },
-        );
-      }),
+      child: LayoutBuilder(
+        builder: (BuildContext _, BoxConstraints c) {
+          final int cols = c.maxWidth >= 1400
+              ? 4
+              : c.maxWidth >= 1000
+              ? 3
+              : c.maxWidth >= 640
+              ? 2
+              : 1;
+          return GridView.builder(
+            key: ValueKey<String>(
+              'products:${_filterCategoryId ?? 'all'}:$_search',
+            ),
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: cols,
+              mainAxisExtent: 168,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: list.length,
+            itemBuilder: (BuildContext _, int i) {
+              final AdminProduct p = list[i];
+              return _ProductCard(
+                key: ValueKey<int>(p.id),
+                product: p,
+                onTap: _busy ? null : () => _openEditor(current: p),
+                onDelete: _busy ? null : () => _confirmDelete(p),
+                onToggle: _busy ? null : () => _toggleActive(p),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
@@ -379,6 +424,7 @@ class _FilterChip extends StatelessWidget {
 
 class _ProductCard extends StatelessWidget {
   const _ProductCard({
+    super.key,
     required this.product,
     required this.onTap,
     required this.onDelete,
@@ -406,7 +452,11 @@ class _ProductCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: const Color(0xFFE4E8F4)),
             boxShadow: const <BoxShadow>[
-              BoxShadow(color: Color(0x0F000000), blurRadius: 14, offset: Offset(0, 5)),
+              BoxShadow(
+                color: Color(0x0F000000),
+                blurRadius: 14,
+                offset: Offset(0, 5),
+              ),
             ],
           ),
           child: Column(
@@ -415,7 +465,10 @@ class _ProductCard extends StatelessWidget {
               Row(
                 children: <Widget>[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(999),
@@ -423,34 +476,52 @@ class _ProductCard extends StatelessWidget {
                     ),
                     child: Text(
                       product.categoryName ?? 'Sense categoria',
-                      style: TextStyle(color: accent, fontWeight: FontWeight.w800, fontSize: 11),
+                      style: TextStyle(
+                        color: accent,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                   const Spacer(),
                   if (!product.active)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFECEC),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: const Text(
                         'Inactiu',
-                        style: TextStyle(color: TpvTheme.danger, fontWeight: FontWeight.w900, fontSize: 10),
+                        style: TextStyle(
+                          color: TpvTheme.danger,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 10,
+                        ),
                       ),
                     ),
                   if (product.isGlutenFree)
                     Padding(
                       padding: const EdgeInsets.only(left: 6),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE8F7EE),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: const Text(
                           'Sense gluten',
-                          style: TextStyle(color: Color(0xFF1C8B43), fontWeight: FontWeight.w900, fontSize: 10),
+                          style: TextStyle(
+                            color: Color(0xFF1C8B43),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 10,
+                          ),
                         ),
                       ),
                     ),
@@ -461,7 +532,11 @@ class _ProductCard extends StatelessWidget {
                 product.name,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: TpvTheme.textMain),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                  color: TpvTheme.textMain,
+                ),
               ),
               const Spacer(),
               Row(
@@ -469,13 +544,19 @@ class _ProductCard extends StatelessWidget {
                 children: <Widget>[
                   Text(
                     '${product.price.toStringAsFixed(2)}€',
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: TpvTheme.primary),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 22,
+                      color: TpvTheme.primary,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
-                      'Stock: ${product.stock}',
+                      product.stock == null
+                          ? 'Sense control estoc'
+                          : 'Stock: ${product.stock}',
                       style: const TextStyle(
                         color: TpvTheme.textSecondary,
                         fontWeight: FontWeight.w700,
@@ -487,21 +568,34 @@ class _ProductCard extends StatelessWidget {
                   IconButton(
                     onPressed: onToggle,
                     icon: Icon(
-                      product.active ? Icons.visibility_rounded : Icons.visibility_off_rounded,
-                      color: product.active ? const Color(0xFF1C8B43) : TpvTheme.textSecondary,
+                      product.active
+                          ? Icons.visibility_rounded
+                          : Icons.visibility_off_rounded,
+                      color: product.active
+                          ? const Color(0xFF1C8B43)
+                          : TpvTheme.textSecondary,
                     ),
                     iconSize: 20,
                     tooltip: product.active ? 'Desactivar' : 'Activar',
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                   IconButton(
                     onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline, color: TpvTheme.danger),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: TpvTheme.danger,
+                    ),
                     iconSize: 20,
                     tooltip: 'Eliminar',
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                 ],
               ),
@@ -529,16 +623,20 @@ class _ProductEditorDialog extends StatefulWidget {
 }
 
 class _ProductEditorDialogState extends State<_ProductEditorDialog> {
-  late final TextEditingController _nameController =
-      TextEditingController(text: widget.initial?.name ?? '');
-  late final TextEditingController _priceController =
-      TextEditingController(text: widget.initial?.price.toStringAsFixed(2) ?? '');
-  late final TextEditingController _stockController =
-      TextEditingController(text: widget.initial?.stock.toString() ?? '0');
+  late final TextEditingController _nameController = TextEditingController(
+    text: widget.initial?.name ?? '',
+  );
+  late final TextEditingController _priceController = TextEditingController(
+    text: widget.initial?.price.toStringAsFixed(2) ?? '',
+  );
+  late final TextEditingController _stockController = TextEditingController(
+    text: widget.initial?.stock?.toString() ?? '',
+  );
   late final TextEditingController _descriptionController =
       TextEditingController(text: widget.initial?.description ?? '');
 
-  late int? _categoryId = widget.initial?.categoryId ?? widget.categories.first.id;
+  late int? _categoryId =
+      widget.initial?.categoryId ?? widget.categories.first.id;
   late bool _isGlutenFree = widget.initial?.isGlutenFree ?? false;
   late bool _active = widget.initial?.active ?? true;
   late String? _imagePath = widget.initial?.imagePath;
@@ -586,9 +684,14 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
     }
   }
 
-  Future<void> _uploadImage({required List<int> bytes, required String filename}) async {
+  Future<void> _uploadImage({
+    required List<int> bytes,
+    required String filename,
+  }) async {
     if (!_isImageFilename(filename)) {
-      setState(() => _errorText = 'Només s\'admeten imatges (JPG, PNG, WEBP, GIF)');
+      setState(
+        () => _errorText = 'Només s\'admeten imatges (JPG, PNG, WEBP, GIF)',
+      );
       return;
     }
     setState(() {
@@ -621,8 +724,12 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
 
   Future<void> _submit() async {
     final String name = _nameController.text.trim();
-    final double? price = double.tryParse(_priceController.text.replaceAll(',', '.').trim());
-    final int stock = int.tryParse(_stockController.text.trim()) ?? 0;
+    final double? price = double.tryParse(
+      _priceController.text.replaceAll(',', '.').trim(),
+    );
+    final int? stock = _stockController.text.trim().isEmpty
+        ? null
+        : int.tryParse(_stockController.text.trim());
     if (name.isEmpty) {
       setState(() => _errorText = 'El nom és obligatori');
       return;
@@ -651,7 +758,9 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
         description: _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
-        imagePath: (_imagePath ?? '').trim().isEmpty ? null : _imagePath!.trim(),
+        imagePath: (_imagePath ?? '').trim().isEmpty
+            ? null
+            : _imagePath!.trim(),
       );
       if (!mounted) return;
       Navigator.of(context).pop(saved);
@@ -676,7 +785,10 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
             children: <Widget>[
               Text(
                 _isEdit ? 'Editar producte' : 'Nou producte',
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 22),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 22,
+                ),
               ),
               const SizedBox(height: 14),
               TextField(
@@ -691,7 +803,9 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
                   Expanded(
                     child: TextField(
                       controller: _priceController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: <TextInputFormatter>[
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                       ],
@@ -716,10 +830,12 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
                 initialValue: _categoryId,
                 decoration: const InputDecoration(labelText: 'Categoria'),
                 items: widget.categories
-                    .map((AdminCategory c) => DropdownMenuItem<int>(
-                          value: c.id,
-                          child: Text(c.name),
-                        ))
+                    .map(
+                      (AdminCategory c) => DropdownMenuItem<int>(
+                        value: c.id,
+                        child: Text(c.name),
+                      ),
+                    )
                     .toList(),
                 onChanged: (int? v) => setState(() => _categoryId = v),
               ),
@@ -744,13 +860,19 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
                 contentPadding: EdgeInsets.zero,
                 value: _isGlutenFree,
                 onChanged: (bool v) => setState(() => _isGlutenFree = v),
-                title: const Text('Sense gluten', style: TextStyle(fontWeight: FontWeight.w700)),
+                title: const Text(
+                  'Sense gluten',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
                 value: _active,
                 onChanged: (bool v) => setState(() => _active = v),
-                title: const Text('Visible al catàleg', style: TextStyle(fontWeight: FontWeight.w700)),
+                title: const Text(
+                  'Visible al catàleg',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
               if (_errorText != null) ...<Widget>[
                 const SizedBox(height: 10),
@@ -763,12 +885,20 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
                   ),
                   child: Row(
                     children: <Widget>[
-                      const Icon(Icons.error_outline, color: TpvTheme.danger, size: 18),
+                      const Icon(
+                        Icons.error_outline,
+                        color: TpvTheme.danger,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _errorText!,
-                          style: const TextStyle(color: TpvTheme.danger, fontWeight: FontWeight.w700, fontSize: 13),
+                          style: const TextStyle(
+                            color: TpvTheme.danger,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -780,7 +910,9 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
                 children: <Widget>[
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+                      onPressed: _submitting
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       child: const Text('Cancel·lar'),
                     ),
                   ),
@@ -788,11 +920,13 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
                   Expanded(
                     child: FilledButton(
                       onPressed: _submitting ? null : _submit,
-                      child: Text(_submitting
-                          ? 'Guardant...'
-                          : _isEdit
-                              ? 'Guardar canvis'
-                              : 'Crear'),
+                      child: Text(
+                        _submitting
+                            ? 'Guardant...'
+                            : _isEdit
+                            ? 'Guardar canvis'
+                            : 'Crear',
+                      ),
                     ),
                   ),
                 ],
@@ -808,6 +942,7 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
 Color? _parseColor(String? raw) {
   if (raw == null || raw.trim().isEmpty) return null;
   String value = raw.trim();
+  if (value.toLowerCase() == 'orange') value = '#F59E0B';
   if (value.startsWith('#')) value = value.substring(1);
   if (value.length == 6) value = 'FF$value';
   if (value.length != 8) return null;
@@ -854,14 +989,16 @@ class _ImageDropzoneState extends State<_ImageDropzone> {
         duration: const Duration(milliseconds: 160),
         height: hasImage ? 200 : 160,
         decoration: BoxDecoration(
-          color: _dragging ? TpvTheme.primary.withValues(alpha: 0.08) : const Color(0xFFF6F8FD),
+          color: _dragging
+              ? TpvTheme.primary.withValues(alpha: 0.08)
+              : const Color(0xFFF6F8FD),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _dragging
                 ? TpvTheme.primary
                 : hasImage
-                    ? const Color(0xFFCBD2E4)
-                    : const Color(0xFFD7DCE8),
+                ? const Color(0xFFCBD2E4)
+                : const Color(0xFFD7DCE8),
             width: _dragging ? 2 : 1.2,
             style: hasImage ? BorderStyle.solid : BorderStyle.solid,
           ),
@@ -881,29 +1018,38 @@ class _ImageDropzoneState extends State<_ImageDropzone> {
           Image.network(
             url,
             fit: BoxFit.cover,
+            webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
             errorBuilder: (_, _, _) => Container(
               color: const Color(0xFFF0F2F8),
               alignment: Alignment.center,
               child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Icon(Icons.broken_image_outlined, size: 36, color: Color(0xFFB0B6C9)),
+                  Icon(
+                    Icons.broken_image_outlined,
+                    size: 36,
+                    color: Color(0xFFB0B6C9),
+                  ),
                   SizedBox(height: 4),
                   Text(
                     'No s\'ha pogut carregar la imatge',
-                    style: TextStyle(color: TpvTheme.textSecondary, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: TpvTheme.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
             ),
-            loadingBuilder: (BuildContext _, Widget child, ImageChunkEvent? progress) {
-              if (progress == null) return child;
-              return Container(
-                color: const Color(0xFFF0F2F8),
-                alignment: Alignment.center,
-                child: const CircularProgressIndicator(strokeWidth: 2),
-              );
-            },
+            loadingBuilder:
+                (BuildContext _, Widget child, ImageChunkEvent? progress) {
+                  if (progress == null) return child;
+                  return Container(
+                    color: const Color(0xFFF0F2F8),
+                    alignment: Alignment.center,
+                    child: const CircularProgressIndicator(strokeWidth: 2),
+                  );
+                },
           ),
           if (widget.uploading)
             Container(
@@ -943,7 +1089,11 @@ class _ImageDropzoneState extends State<_ImageDropzone> {
               ),
               child: Text(
                 widget.path!.split('/').last,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                ),
               ),
             ),
           ),
@@ -991,7 +1141,9 @@ class _ImageDropzoneState extends State<_ImageDropzone> {
               )
             else
               Icon(
-                _dragging ? Icons.file_download_outlined : Icons.cloud_upload_outlined,
+                _dragging
+                    ? Icons.file_download_outlined
+                    : Icons.cloud_upload_outlined,
                 size: 34,
                 color: _dragging ? TpvTheme.primary : const Color(0xFF8C93A8),
               ),
@@ -1000,8 +1152,8 @@ class _ImageDropzoneState extends State<_ImageDropzone> {
               widget.uploading
                   ? 'Pujant imatge...'
                   : _dragging
-                      ? 'Deixa anar per pujar'
-                      : 'Arrossega una imatge o fes clic per triar-la',
+                  ? 'Deixa anar per pujar'
+                  : 'Arrossega una imatge o fes clic per triar-la',
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 14,

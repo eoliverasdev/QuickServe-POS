@@ -145,6 +145,7 @@ class _HistorySectionState extends State<HistorySection> {
       ),
     );
     if (confirmed != true) return;
+    if (!mounted) return;
     setState(() => _busy = true);
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     try {
