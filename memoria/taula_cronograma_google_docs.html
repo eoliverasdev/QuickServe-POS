@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Taula de cronograma</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 24px;
+      color: #1f2937;
+      background: #ffffff;
+    }
+    .table-wrap {
+      max-width: 980px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+    }
+    thead th {
+      background: #111827;
+      color: #ffffff;
+      text-align: left;
+      padding: 12px 14px;
+      letter-spacing: 0.2px;
+    }
+    tbody td {
+      border-top: 1px solid #e5e7eb;
+      padding: 11px 14px;
+      vertical-align: top;
+    }
+    tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+    .col-fase { width: 30%; font-weight: 600; }
+    .col-estimat { width: 18%; }
+    .col-real { width: 18%; }
+    .col-resultat { width: 34%; }
+  </style>
+</head>
+<body>
+  <div class="table-wrap">
+    <table aria-label="Cronograma del projecte">
+      <thead>
+        <tr>
+          <th class="col-fase">Fase</th>
+          <th class="col-estimat">Període estimat</th>
+          <th class="col-real">Període real</th>
+          <th class="col-resultat">Resultat</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="col-fase">Ideació i planificació</td>
+          <td class="col-estimat">Desembre</td>
+          <td class="col-real">Desembre</td>
+          <td class="col-resultat">Definició problema/abast inicial</td>
+        </tr>
+        <tr>
+          <td class="col-fase">Desenvolupament base</td>
+          <td class="col-estimat">Gener</td>
+          <td class="col-real">Gener</td>
+          <td class="col-resultat">Primera versió operativa</td>
+        </tr>
+        <tr>
+          <td class="col-fase">Validació i proves</td>
+          <td class="col-estimat">Gener-Abril</td>
+          <td class="col-real">Gener-Abril</td>
+          <td class="col-resultat">Correccions contínues</td>
+        </tr>
+        <tr>
+          <td class="col-fase">Consolidació i ampliació</td>
+          <td class="col-estimat">Febrer-Abril</td>
+          <td class="col-real">Febrer-Abril</td>
+          <td class="col-resultat">Solució de gestió integral</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
