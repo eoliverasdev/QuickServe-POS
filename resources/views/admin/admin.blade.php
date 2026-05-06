@@ -997,8 +997,6 @@
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 0 0 20px 0;">
 
-        <a href="{{ url('/') }}" class="nav-link" style="color: var(--primary-dark)">⬅ Anar al TPV</a>
-
         <form method="POST" action="{{ route('logout') }}" style="margin-top: auto;">
             @csrf
             <button type="submit" class="btn btn-logout">TANCAR SESSIÓ</button>
