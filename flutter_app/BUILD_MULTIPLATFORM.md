@@ -7,7 +7,7 @@ Esta app debe compilarse apuntando a una API Laravel remota accesible por todos 
 Define siempre la URL con `--dart-define`:
 
 ```sh
---dart-define=API_BASE_URL=https://tu-dominio.com/api
+--dart-define=API_BASE_URL=https://edolver.alwaysdata.net/api
 ```
 
 `AppConfig.assetBaseUrl` deriva las URLs públicas de imágenes quitando el sufijo `/api`, por lo que una API como:
@@ -25,7 +25,7 @@ https://tu-dominio.com/images/...
 ## Android APK interno
 
 ```sh
-flutter build apk --release --dart-define=API_BASE_URL=https://tu-dominio.com/api
+flutter build apk --release --dart-define=API_BASE_URL=https://edolver.alwaysdata.net/api
 ```
 
 Artefacto:
@@ -37,7 +37,7 @@ build/app/outputs/flutter-apk/app-release.apk
 ## iPadOS interno
 
 ```sh
-flutter build ios --release --dart-define=API_BASE_URL=https://tu-dominio.com/api
+flutter build ios --release --dart-define=API_BASE_URL=https://edolver.alwaysdata.net/api
 ```
 
 Aunque Flutter usa el target `ios`, el proyecto está configurado como iPad-only (`TARGETED_DEVICE_FAMILY = 2`) y full screen horizontal. Después abre `ios/Runner.xcworkspace` en Xcode para firmar e instalar en iPad o subir a TestFlight.
@@ -45,7 +45,7 @@ Aunque Flutter usa el target `ios`, el proyecto está configurado como iPad-only
 ## Windows interno
 
 ```sh
-flutter build windows --release --dart-define=API_BASE_URL=https://tu-dominio.com/api
+flutter build windows --release --dart-define=API_BASE_URL=https://edolver.alwaysdata.net/api
 ```
 
 Carpeta a comprimir/distribuir:
@@ -57,13 +57,13 @@ build/windows/x64/runner/Release/
 ## macOS interno
 
 ```sh
-flutter build macos --release --dart-define=API_BASE_URL=https://tu-dominio.com/api
+flutter build macos --release --dart-define=API_BASE_URL=https://edolver.alwaysdata.net/api
 ```
 
 ## Linux interno
 
 ```sh
-flutter build linux --release --dart-define=API_BASE_URL=https://tu-dominio.com/api
+flutter build linux --release --dart-define=API_BASE_URL=https://edolver.alwaysdata.net/api
 ```
 
 ## Checklist rápido
