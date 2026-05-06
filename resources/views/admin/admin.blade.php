@@ -1395,7 +1395,7 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th>Hora</th>
+                            <th>Data i hora</th>
                             <th>Treballador</th>
                             <th>Total</th>
                             <th>Mètode</th>
@@ -1407,7 +1407,10 @@
                             {{-- Fila principal clicable --}}
                             <tr class="venda-row" data-payment="{{ $venda->payment_method }}" onclick="toggleVenda({{ $venda->id }}, this)">
                                 <td style="width:24px; color:#bbb;"><span class="chevron-icon">▼</span></td>
-                                <td>{{ $venda->created_at->format('H:i') }}h</td>
+                                <td>
+                                    <strong>{{ $venda->created_at->format('d/m/Y') }}</strong><br>
+                                    <small style="color:#666;">{{ $venda->created_at->format('H:i') }}h</small>
+                                </td>
                                 <td><strong>{{ $venda->worker->name ?? 'Sistema' }}</strong></td>
                                 <td><strong style="color:var(--success)">{{ number_format($venda->total_price, 2) }}€</strong></td>
                                 <td>
