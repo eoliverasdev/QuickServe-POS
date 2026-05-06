@@ -123,6 +123,17 @@
             font-family: inherit;
         }
 
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            color: #8a94ae;
+            flex-shrink: 0;
+        }
+
+        .nav-link.active .nav-icon {
+            color: #fff;
+        }
+
         .nav-link:hover {
             background: #fafafa;
             color: #000;
@@ -804,28 +815,46 @@
         </div>
 
         <div class="sidebar-links">
-            <button class="nav-link active" onclick="showSection('resum', this)">📊 Resum</button>
+            <button class="nav-link active" onclick="showSection('resum', this)">
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7H4a1 1 0 0 1-1-1v-6Zm7-8a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v15h-4V5Zm6 4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v11h-5V9Z"/></svg>
+                Resum
+            </button>
 
             <div
                 style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">
                 Categories</div>
-            <button class="nav-link" onclick="showSection('categories-list', this)">📂 Categories</button>
+            <button class="nav-link" onclick="showSection('categories-list', this)">
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4a1 1 0 0 1 .8.4l1.2 1.6H20a1 1 0 0 1 1 1v2H3V5a1 1 0 0 1 1-1h6Zm11 7v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8h18Z"/></svg>
+                Categories
+            </button>
 
             <div
                 style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">
                 Productes</div>
-            <button class="nav-link" onclick="showSection('productes-list', this)">🍔 Productes</button>
+            <button class="nav-link" onclick="showSection('productes-list', this)">
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4a1 1 0 0 0 0 2h14a1 1 0 1 0 0-2H5Zm-1 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1H4V9Zm0 3h16v2H4v-2Zm0 4h16v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1Z"/></svg>
+                Productes
+            </button>
 
             <div
                 style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">
                 Treballadors</div>
-            <button class="nav-link" onclick="showSection('treballadors-list', this)">👥 Treballadors</button>
+            <button class="nav-link" onclick="showSection('treballadors-list', this)">
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm8 1a3 3 0 1 1 0-6 3 3 0 0 1 0 6ZM2 19a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1H2v-1Zm15.5-5c2.5 0 4.5 2 4.5 4.5V20h-4v-1c0-1.6-.6-3-1.6-4 .3 0 .7-1 1.1-1Z"/></svg>
+                Treballadors
+            </button>
 
             <div
                 style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">
                 Caixa i Vendes</div>
-            <button class="nav-link" onclick="showSection('caixa', this)">💵 Tancament de Caixa</button>
-            <button class="nav-link" onclick="showSection('comandes', this)">🧾 Historial de Vendes</button>
+            <button class="nav-link" onclick="showSection('caixa', this)">
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2H4V5Zm16 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9h16Zm-3 3h-4a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h4v-4Z"/></svg>
+                Tancament de Caixa
+            </button>
+            <button class="nav-link" onclick="showSection('comandes', this)">
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2a1 1 0 0 0-1 1v2H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1h4a2 2 0 0 0 2-2V9.4a2 2 0 0 0-.6-1.4l-3.4-3.4A2 2 0 0 0 16.6 4H16V3a1 1 0 0 0-1-1H6Zm1 7h4a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2Zm0 4h8a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2Zm9-6.6 2.6 2.6H16V6.4Z"/></svg>
+                Historial de Vendes
+            </button>
         </div>
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 0 0 20px 0;">
