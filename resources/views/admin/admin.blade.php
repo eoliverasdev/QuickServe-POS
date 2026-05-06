@@ -130,8 +130,9 @@
             flex-shrink: 0;
         }
 
+        .nav-link:hover .nav-icon,
         .nav-link.active .nav-icon {
-            color: #fff;
+            color: #000;
         }
 
         .nav-link:hover {
