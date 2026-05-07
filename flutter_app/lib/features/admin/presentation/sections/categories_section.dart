@@ -439,12 +439,18 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final MediaQueryData media = MediaQuery.of(context);
+    final double maxDialogHeight = (media.size.height - media.viewInsets.bottom - 32)
+        .clamp(240.0, media.size.height);
+
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460),
-        child: Padding(
+        constraints: BoxConstraints(maxWidth: 460, maxHeight: maxDialogHeight),
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(22, 18, 22, 14),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
