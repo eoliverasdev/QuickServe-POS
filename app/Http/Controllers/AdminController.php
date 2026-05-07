@@ -238,6 +238,12 @@ class AdminController extends Controller
         ]);
 
         $data = $request->only(['name', 'price', 'stock']);
+        // Estoc 0 / buit / casella "Stock il·limitat" → null (sense control).
+        if (! array_key_exists('stock', $data) || $data['stock'] === '' || $data['stock'] === null
+            || (float) $data['stock'] <= 0
+            || $request->boolean('unlimited_stock')) {
+            $data['stock'] = null;
+        }
         $data['image_path'] = null;
 
         if ($request->hasFile('image_file')) {
@@ -274,6 +280,12 @@ class AdminController extends Controller
         ]);
 
         $data = $request->only(['name', 'price', 'stock']);
+        // Estoc 0 / buit / casella "Stock il·limitat" → null (sense control).
+        if (! array_key_exists('stock', $data) || $data['stock'] === '' || $data['stock'] === null
+            || (float) $data['stock'] <= 0
+            || $request->boolean('unlimited_stock')) {
+            $data['stock'] = null;
+        }
 
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');

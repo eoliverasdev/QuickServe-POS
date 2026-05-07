@@ -28,6 +28,7 @@ class OrderController extends Controller
             'pickup_time' => 'nullable|string',
             'customer_name'=> 'nullable|string',
             'pickup_number' => 'nullable|integer|min:1',
+            'pickup_date' => 'nullable|date_format:Y-m-d',
         ]);
 
         try {
@@ -36,14 +37,20 @@ class OrderController extends Controller
                 
                 $isPreorder = $request->input('is_preorder', false);
                 $pickupNumber = null;
+                $pickupDate = null;
 
                 if ($isPreorder) {
-                    // If the client provides an explicit pickup_number (e.g. when modifying
-                    // an existing preorder we just cancelled), try to keep that number so
-                    // the user-facing identifier is preserved.
+                    // Si no s'envia pickup_date, per defecte avui (manté la
+                    // compatibilitat amb el flux antic).
+                    $pickupDate = $request->input('pickup_date')
+                        ?: \Carbon\Carbon::today()->toDateString();
+
+                    // El pickup_number és únic per dia de recollida: així es
+                    // pot tenir #1 demà i #1 avui sense col·lisions, i en
+                    // canviar de dia (reset) la numeració torna a començar.
                     $requestedPickup = $request->input('pickup_number');
                     if ($requestedPickup !== null) {
-                        $alreadyUsed = \App\Models\Order::whereDate('created_at', \Carbon\Carbon::today())
+                        $alreadyUsed = \App\Models\Order::where('pickup_date', $pickupDate)
                             ->where('is_preorder', true)
                             ->where('pickup_number', $requestedPickup)
                             ->exists();
@@ -53,7 +60,7 @@ class OrderController extends Controller
                     }
 
                     if ($pickupNumber === null) {
-                        $maxOrder = \App\Models\Order::whereDate('created_at', \Carbon\Carbon::today())
+                        $maxOrder = \App\Models\Order::where('pickup_date', $pickupDate)
                             ->where('is_preorder', true)
                             ->max('pickup_number');
                         $pickupNumber = $maxOrder ? $maxOrder + 1 : 1;
@@ -69,6 +76,7 @@ class OrderController extends Controller
                     'is_preorder'    => $isPreorder,
                     'pickup_number'  => $pickupNumber,
                     'pickup_time'    => $request->pickup_time,
+                    'pickup_date'    => $pickupDate,
                     'customer_name'  => $request->customer_name
                 ]);
 
@@ -122,10 +130,14 @@ class OrderController extends Controller
     }
 
     public function getPendingPreorders() {
+        // Ara els encàrrecs poden ser per a dies futurs, així que retornem
+        // tots els pendents (independentment de la data de creació) ordenats
+        // per dia de recollida i hora. Si algun encàrrec antic no té
+        // pickup_date, fem servir la data de creació com a fallback.
         $orders = Order::with('items.product')
-                       ->whereDate('created_at', \Carbon\Carbon::today())
                        ->where('is_preorder', true)
                        ->where('status', 'Pendent')
+                       ->orderByRaw('COALESCE(pickup_date, DATE(created_at)) ASC')
                        ->orderBy('pickup_time', 'asc')
                        ->get();
         return response()->json(['orders' => $orders]);

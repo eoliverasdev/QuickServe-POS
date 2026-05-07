@@ -278,7 +278,7 @@ class AdminController extends Controller
         $product = Product::create([
             'name' => $data['name'],
             'price' => $data['price'],
-            'stock' => $data['stock'] ?? null,
+            'stock' => $this->normalizeStock($data['stock'] ?? null),
             'is_gluten_free' => (bool) ($data['is_gluten_free'] ?? false),
             'description' => $data['description'] ?? null,
             'image_path' => $data['image_path'] ?? null,
@@ -298,10 +298,17 @@ class AdminController extends Controller
         $product = Product::findOrFail($id);
         $data = $this->validateProduct($request, $product->id);
 
+        // Si el client envia explícitament la clau "stock" (encara que sigui
+        // null o 0), respectem la decisió de l'admin: 0/null/casella marcada
+        // → estoc il·limitat.
+        $stockValue = array_key_exists('stock', $data)
+            ? $this->normalizeStock($data['stock'])
+            : $product->stock;
+
         $product->update([
             'name' => $data['name'],
             'price' => $data['price'],
-            'stock' => $data['stock'] ?? $product->stock,
+            'stock' => $stockValue,
             'is_gluten_free' => array_key_exists('is_gluten_free', $data)
                 ? (bool) $data['is_gluten_free']
                 : $product->is_gluten_free,
@@ -318,6 +325,21 @@ class AdminController extends Controller
             'ok' => true,
             'product' => $this->mapProduct($product),
         ]);
+    }
+
+    /**
+     * Estoc <= 0 o nul → es considera estoc il·limitat (null a la BD).
+     */
+    protected function normalizeStock(mixed $value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        $float = (float) $value;
+        if ($float <= 0) {
+            return null;
+        }
+        return $float;
     }
 
     public function destroyProduct(int $id): JsonResponse
@@ -357,7 +379,7 @@ class AdminController extends Controller
         return $request->validate([
             'name' => $nameRule,
             'price' => 'required|numeric|min:0',
-            'stock' => 'nullable|integer|min:0',
+            'stock' => 'nullable|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
             'is_gluten_free' => 'nullable|boolean',
             'description' => 'nullable|string|max:2000',
@@ -584,7 +606,7 @@ class AdminController extends Controller
             'id' => $p->id,
             'name' => $p->name,
             'price' => (float) $p->price,
-            'stock' => $p->stock === null ? null : (int) $p->stock,
+            'stock' => $p->stock === null ? null : (float) $p->stock,
             'is_gluten_free' => (bool) $p->is_gluten_free,
             'description' => $p->description,
             'image_path' => $p->image_path,

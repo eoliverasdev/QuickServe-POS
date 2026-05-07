@@ -42,6 +42,7 @@ class TpvSalesService {
     String? pickupTime,
     String? customerName,
     int? pickupNumber,
+    String? pickupDate,
   }) async {
     final String token = await _requireToken();
 
@@ -65,6 +66,7 @@ class TpvSalesService {
         'pickup_time': pickupTime,
         'customer_name': customerName,
         if (pickupNumber != null) 'pickup_number': pickupNumber,
+        if (pickupDate != null) 'pickup_date': pickupDate,
       },
       options: Options(headers: <String, dynamic>{'Authorization': 'Bearer $token'}),
     );
@@ -98,6 +100,7 @@ class TpvSalesService {
         pickupTime: o['pickup_time']?.toString(),
         totalPrice: _parseDouble(o['total_price']),
         itemsCount: items.length,
+        pickupDate: _normalizeIsoDate(o['pickup_date']),
       );
     }).toList();
   }
@@ -167,6 +170,7 @@ class TpvSalesService {
       paymentMethod: order['payment_method']?.toString() ?? '',
       createdAt: DateTime.tryParse(order['created_at']?.toString() ?? ''),
       fiscalFullNumber: order['fiscal_full_number']?.toString(),
+      pickupDate: _normalizeIsoDate(order['pickup_date']),
     );
   }
 
@@ -180,6 +184,22 @@ class TpvSalesService {
     }
 
     throw Exception('Respuesta de encarrecs invalida');
+  }
+
+  String? _normalizeIsoDate(dynamic value) {
+    if (value == null) return null;
+    final String raw = value.toString().trim();
+    if (raw.isEmpty) return null;
+    // Accepta tant "2026-05-08" com "2026-05-08T00:00:00.000000Z".
+    if (raw.length >= 10) {
+      final String head = raw.substring(0, 10);
+      if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(head)) return head;
+    }
+    final DateTime? parsed = DateTime.tryParse(raw);
+    if (parsed == null) return null;
+    return '${parsed.year.toString().padLeft(4, '0')}-'
+        '${parsed.month.toString().padLeft(2, '0')}-'
+        '${parsed.day.toString().padLeft(2, '0')}';
   }
 
   double _parseDouble(dynamic value) {

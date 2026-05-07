@@ -175,7 +175,10 @@ class AdminService {
       'category_id': categoryId,
       'is_gluten_free': isGlutenFree,
       'active': active,
-      if (stock != null) 'stock': stock,
+      // Sempre enviem la clau "stock" (encara que sigui null) perquè el
+      // backend pugui distingir entre "no canviar" i "marcar com a
+      // il·limitat" (null) quan editem un producte existent.
+      'stock': stock,
       if (descriptionValue != null) 'description': descriptionValue,
       if (imagePathValue != null) 'image_path': imagePathValue,
     };

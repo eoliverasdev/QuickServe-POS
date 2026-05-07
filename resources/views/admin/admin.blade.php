@@ -1278,7 +1278,13 @@
                         </div>
                         <div class="product-field">
                             <label>Stock (Opcional)</label>
-                            <input type="number" name="stock" min="0" step="0.5" placeholder="∞ (Lliure)">
+                            <input type="number" id="create-stock-input" name="stock" min="0" step="0.5" placeholder="∞ (Lliure)">
+                            <label style="display:flex; align-items:center; gap:8px; margin-top:8px; font-weight:600; font-size:0.85rem; color:#374151;">
+                                <input type="checkbox" id="create-unlimited-checkbox" name="unlimited_stock" value="1"
+                                    onchange="toggleStockField('create-stock-input','create-unlimited-checkbox')">
+                                Stock il·limitat
+                            </label>
+                            <small style="color:#6b7280; font-size:0.78rem;">Si està marcada, no es controlen unitats. Posar 0 unitats també es considera il·limitat.</small>
                         </div>
                     </div>
                     <div class="product-field">
@@ -1383,9 +1389,18 @@
                                         </div>
                                         <div class="product-edit-field">
                                             <label>Stock</label>
-                                            <input type="number" name="stock" value="{{ $product->stock }}" min="0" step="0.5"
+                                            <input type="number" id="edit-stock-{{ $product->id }}"
+                                                name="stock" value="{{ $product->stock }}" min="0" step="0.5"
                                                 placeholder="Lliure"
-                                                style="width:100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                                                {{ is_null($product->stock) ? 'readonly' : '' }}
+                                                style="width:100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd; {{ is_null($product->stock) ? 'background:#f3f4f6; color:#9ca3af;' : '' }}">
+                                            <label style="display:flex; align-items:center; gap:8px; margin-top:8px; font-weight:600; font-size:0.85rem; color:#374151;">
+                                                <input type="checkbox" id="edit-unlimited-{{ $product->id }}" name="unlimited_stock" value="1"
+                                                    {{ is_null($product->stock) ? 'checked' : '' }}
+                                                    onchange="toggleStockField('edit-stock-{{ $product->id }}','edit-unlimited-{{ $product->id }}')">
+                                                Stock il·limitat
+                                            </label>
+                                            <small style="color:#6b7280; font-size:0.78rem;">Si està marcada, no es controlen unitats. Posar 0 unitats també es considera il·limitat.</small>
                                         </div>
                                         <div class="product-edit-field">
                                             <label>Categoria</label>
@@ -1702,6 +1717,25 @@
         function toggleEdit(id) {
             let editRow = document.getElementById('edit-' + id);
             editRow.classList.toggle('active');
+        }
+
+        // Estoc il·limitat: bloqueja el camp i el deixa visualment apagat.
+        // Si la casella no està marcada però el valor és 0/buit, el backend
+        // també ho interpreta com a il·limitat (veure AdminController).
+        function toggleStockField(stockId, checkboxId) {
+            const stock = document.getElementById(stockId);
+            const cb = document.getElementById(checkboxId);
+            if (!stock || !cb) return;
+            if (cb.checked) {
+                stock.value = '';
+                stock.readOnly = true;
+                stock.style.background = '#f3f4f6';
+                stock.style.color = '#9ca3af';
+            } else {
+                stock.readOnly = false;
+                stock.style.background = '';
+                stock.style.color = '';
+            }
         }
 
         function toggleWorkerEdit(id) {

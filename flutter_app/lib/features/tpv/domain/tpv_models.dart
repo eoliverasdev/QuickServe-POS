@@ -66,6 +66,7 @@ class TpvPreorder {
     required this.pickupTime,
     required this.totalPrice,
     required this.itemsCount,
+    this.pickupDate,
   });
 
   final int id;
@@ -74,6 +75,8 @@ class TpvPreorder {
   final String? pickupTime;
   final double totalPrice;
   final int itemsCount;
+  /// ISO date `yyyy-MM-dd` indicant el dia de recollida.
+  final String? pickupDate;
 }
 
 class TpvOrderDetail {
@@ -87,6 +90,7 @@ class TpvOrderDetail {
     required this.paymentMethod,
     required this.createdAt,
     this.fiscalFullNumber,
+    this.pickupDate,
   });
 
   final int id;
@@ -98,6 +102,8 @@ class TpvOrderDetail {
   final String paymentMethod;
   final DateTime? createdAt;
   final String? fiscalFullNumber;
+  /// ISO date `yyyy-MM-dd` indicant el dia de recollida.
+  final String? pickupDate;
 }
 
 class TpvOrderDetailItem {

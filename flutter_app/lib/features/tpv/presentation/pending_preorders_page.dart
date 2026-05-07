@@ -360,14 +360,36 @@ class _PreorderCardState extends State<_PreorderCard> {
   }
 
   Widget _buildSubtitle(TpvPreorder p) {
+    final String dateLabel = _shortDateLabel(p.pickupDate);
+    final String prefix = dateLabel.isEmpty ? '' : '$dateLabel · ';
     return Text(
-      '${p.pickupTime ?? '--:--'} · ${p.customerName ?? 'Sense nom'}',
+      '$prefix${p.pickupTime ?? '--:--'} · ${p.customerName ?? 'Sense nom'}',
       style: const TextStyle(
         color: TpvTheme.textSecondary,
         fontWeight: FontWeight.w700,
         fontSize: 13,
       ),
     );
+  }
+
+  /// Etiqueta curta tipus "Avui", "Demà", "Ahir" o "DD/MM" per al subtítol.
+  String _shortDateLabel(String? iso) {
+    if (iso == null || iso.isEmpty) return '';
+    final DateTime? parsed = DateTime.tryParse(iso);
+    if (parsed == null) return '';
+    final DateTime today = DateTime.now();
+    final DateTime todayDate = DateTime(today.year, today.month, today.day);
+    final DateTime targetDate = DateTime(
+      parsed.year,
+      parsed.month,
+      parsed.day,
+    );
+    final int diff = targetDate.difference(todayDate).inDays;
+    if (diff == 0) return 'Avui';
+    if (diff == 1) return 'Demà';
+    if (diff == -1) return 'Ahir';
+    return '${targetDate.day.toString().padLeft(2, '0')}/'
+        '${targetDate.month.toString().padLeft(2, '0')}';
   }
 
   Widget _buildCollapsedHint(TpvPreorder p) {

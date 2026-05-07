@@ -18,10 +18,16 @@ class Order extends Model
         'is_preorder',
         'pickup_number',
         'pickup_time',
+        'pickup_date',
         'customer_name',
         'fiscal_series',
         'fiscal_sequence',
         'fiscal_full_number',
+    ];
+
+    protected $casts = [
+        'is_preorder' => 'boolean',
+        'pickup_date' => 'date:Y-m-d',
     ];
 
     /**
