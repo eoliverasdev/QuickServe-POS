@@ -177,40 +177,59 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
       builder: (BuildContext _, BoxConstraints constraints) {
         final int columns = _gridColumns(constraints.maxWidth);
         const double spacing = 12;
-        final double available =
-            constraints.maxWidth - spacing * (columns - 1);
-        final double cardWidth = available / columns;
+
+        // Repartim els encàrrecs en columnes independents (estil masonry):
+        // així expandir una targeta només desplaça les que té a sota dins
+        // de la seva pròpia columna i no afecta la resta.
+        final List<List<TpvPreorder>> buckets = List<List<TpvPreorder>>.generate(
+          columns,
+          (_) => <TpvPreorder>[],
+        );
+        for (int i = 0; i < _preorders.length; i++) {
+          buckets[i % columns].add(_preorders[i]);
+        }
+
+        final List<Widget> rowChildren = <Widget>[];
+        for (int c = 0; c < columns; c++) {
+          if (c > 0) {
+            rowChildren.add(const SizedBox(width: spacing));
+          }
+          rowChildren.add(
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  for (int i = 0; i < buckets[c].length; i++) ...<Widget>[
+                    if (i > 0) const SizedBox(height: spacing),
+                    _PreorderCard(
+                      key: ValueKey<int>(buckets[c][i].id),
+                      preorder: buckets[c][i],
+                      detailLoader: () => _detailFor(buckets[c][i].id),
+                      onCharge: () async {
+                        await widget.onCharge(buckets[c][i]);
+                        await _refreshAfterAction(buckets[c][i].id);
+                      },
+                      onModify: () async {
+                        await widget.onModify(buckets[c][i]);
+                        await _refreshAfterAction(buckets[c][i].id);
+                      },
+                      onCancel: () async {
+                        await widget.onCancel(buckets[c][i]);
+                        await _refreshAfterAction(buckets[c][i].id);
+                      },
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }
 
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Wrap(
-            spacing: spacing,
-            runSpacing: spacing,
-            alignment: WrapAlignment.start,
-            children: _preorders
-                .map(
-                  (TpvPreorder p) => SizedBox(
-                    width: cardWidth,
-                    child: _PreorderCard(
-                      key: ValueKey<int>(p.id),
-                      preorder: p,
-                      detailLoader: () => _detailFor(p.id),
-                      onCharge: () async {
-                        await widget.onCharge(p);
-                        await _refreshAfterAction(p.id);
-                      },
-                      onModify: () async {
-                        await widget.onModify(p);
-                        await _refreshAfterAction(p.id);
-                      },
-                      onCancel: () async {
-                        await widget.onCancel(p);
-                        await _refreshAfterAction(p.id);
-                      },
-                    ),
-                  ),
-                )
-                .toList(),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: rowChildren,
           ),
         );
       },
