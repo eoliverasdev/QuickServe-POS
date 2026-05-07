@@ -65,7 +65,7 @@ class _TpvPageState extends State<TpvPage> {
   // mantenir el mateix identificador visible al re-guardar.
   int? _modifyingPickupNumber;
   // Dia de recollida triat per al pròxim encàrrec. Per defecte avui.
-  DateTime _preorderPickupDate = _onlyDate(DateTime.now());
+  late DateTime _preorderPickupDate;
 
   static const double _dialogMaxWidth = 760;
   static const double _dialogVerticalMargin = 24;
@@ -86,6 +86,7 @@ class _TpvPageState extends State<TpvPage> {
   @override
   void initState() {
     super.initState();
+    _preorderPickupDate = _onlyDate(DateTime.now());
     _loadInitialData();
     _pendingRefreshTimer = Timer.periodic(
       const Duration(seconds: 30),
@@ -755,15 +756,23 @@ class _TpvPageState extends State<TpvPage> {
                                         ),
                                         OutlinedButton.icon(
                                           onPressed: () async {
+                                            final DateTime lastDay =
+                                                today.add(
+                                              const Duration(days: 365),
+                                            );
+                                            final DateTime initialPicker =
+                                                _clampDay(
+                                              _preorderPickupDate,
+                                              today,
+                                              lastDay,
+                                            );
                                             final DateTime? picked =
                                                 await showDatePicker(
                                                   context: context,
-                                                  initialDate:
-                                                      _preorderPickupDate,
+                                                  initialDate: initialPicker,
                                                   firstDate: today,
-                                                  lastDate: today.add(
-                                                    const Duration(days: 365),
-                                                  ),
+                                                  lastDate: lastDay,
+                                                  locale: const Locale('ca'),
                                                 );
                                             if (picked != null) {
                                               setModalState(
@@ -1371,13 +1380,24 @@ class _TpvPageState extends State<TpvPage> {
                   );
                   if (!mounted) return false;
                   didCharge = true;
-                  await _printOrderTicket(
-                    orderId: order.id,
-                    title: 'Ticket encàrrec cobrat',
-                    cashGiven: cashGiven,
-                  );
+                  String? printWarning;
+                  try {
+                    await _printOrderTicket(
+                      orderId: order.id,
+                      title: 'Ticket encàrrec cobrat',
+                      cashGiven: cashGiven,
+                    );
+                  } catch (printError) {
+                    printWarning = printError.toString();
+                  }
                   messenger.showSnackBar(
-                    const SnackBar(content: Text('Encàrrec cobrat')),
+                    SnackBar(
+                      content: Text(
+                        printWarning == null
+                            ? 'Encàrrec cobrat'
+                            : 'Encàrrec cobrat (sense ticket)',
+                      ),
+                    ),
                   );
                   return true;
                 } catch (error) {
@@ -3154,6 +3174,16 @@ class _TpvPageState extends State<TpvPage> {
 
   static DateTime _onlyDate(DateTime d) =>
       DateTime(d.year, d.month, d.day);
+
+  static DateTime _clampDay(DateTime d, DateTime min, DateTime max) {
+    if (d.isBefore(min)) {
+      return min;
+    }
+    if (d.isAfter(max)) {
+      return max;
+    }
+    return d;
+  }
 
   String _formatPickupDateIso(DateTime d) {
     final DateTime only = _onlyDate(d);
