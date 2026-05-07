@@ -966,10 +966,10 @@
     <div class="main-content">
 
         @if(session('success'))
-            <div class="alert alert-success" style="background:#d1fae5; color:#065f46; padding:15px; border-radius:10px; margin-bottom:20px; font-weight:bold;">{{ session('success') }}</div>
+            <div class="alert alert-success js-flash-alert" style="background:#d1fae5; color:#065f46; padding:15px; border-radius:10px; margin-bottom:20px; font-weight:bold;">{{ session('success') }}</div>
         @endif
         @if($errors->any())
-            <div class="alert alert-danger" style="background:#fee2e2; color:#991b1b; padding:15px; border-radius:10px; margin-bottom:20px; font-weight:bold;">
+            <div class="alert alert-danger js-flash-alert" style="background:#fee2e2; color:#991b1b; padding:15px; border-radius:10px; margin-bottom:20px; font-weight:bold;">
                 <ul style="margin:0; padding-left:20px;">
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -1758,6 +1758,12 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.js-flash-alert').forEach((alert) => {
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 5000);
+            });
+
             initImageDropzone(
                 document.getElementById('product-image-dropzone'),
                 document.getElementById('product-image-input'),
