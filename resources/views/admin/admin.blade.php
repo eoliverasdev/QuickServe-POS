@@ -367,6 +367,45 @@
             font-family: inherit;
         }
 
+        .image-dropzone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            background: #f8fafc;
+            min-height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 12px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .image-dropzone.dragover {
+            border-color: #4e73df;
+            background: #eef2ff;
+        }
+
+        .image-dropzone small {
+            display: block;
+            color: #64748b;
+            margin-top: 4px;
+            font-size: 0.75rem;
+            text-transform: none;
+            letter-spacing: normal;
+            font-weight: 600;
+        }
+
+        .image-preview {
+            margin-top: 8px;
+            max-width: 160px;
+            max-height: 120px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            display: none;
+            object-fit: cover;
+        }
+
         .edit-row {
             background: #fffbeb !important;
             display: none;
@@ -1163,7 +1202,7 @@
                 <button class="btn btn-edit" style="margin-bottom: 20px;"
                     onclick="showSection('productes-list', null)">⬅ Tornar a la llista</button>
                 <label style="font-weight: 900; margin-bottom: 10px; display: block;">AFEGIR PRODUCTE</label>
-                <form action="{{ route('products.store') }}" method="POST" class="admin-form">
+                <form action="{{ route('products.store') }}" method="POST" class="admin-form" enctype="multipart/form-data">
                     @csrf
                     <div>
                         <label>Nom</label>
@@ -1186,6 +1225,17 @@
                             @endforeach
                         </select>
                     </div>
+                    <div>
+                        <label>Imatge</label>
+                        <input id="product-image-input" type="file" name="image_file" accept="image/*" style="display:none;">
+                        <div id="product-image-dropzone" class="image-dropzone">
+                            <div>
+                                Arrossega una imatge aquí o fes clic
+                                <small>JPG, PNG, WEBP o GIF · màxim 4MB</small>
+                            </div>
+                        </div>
+                        <img id="product-image-preview" class="image-preview" alt="Vista previa de la imatge">
+                    </div>
                     <button type="submit" class="btn btn-add">AFEGIR</button>
                 </form>
             </div>
@@ -1202,6 +1252,7 @@
                 <table id="productsTable">
                     <thead>
                         <tr>
+                            <th>Imatge</th>
                             <th>Producte</th>
                             <th>Categoria</th>
                             <th>Preu</th>
@@ -1212,6 +1263,14 @@
                     <tbody>
                         @foreach($productes as $product)
                             <tr class="product-row">
+                                <td style="width:72px;">
+                                    @if($product->image_path)
+                                        <img src="{{ asset($product->image_path) }}" alt="{{ $product->name }}"
+                                            style="width:56px; height:56px; object-fit:cover; border-radius:8px; border:1px solid #eee;">
+                                    @else
+                                        <div style="width:56px; height:56px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:0.7rem; font-weight:700;">—</div>
+                                    @endif
+                                </td>
                                 <td class="prod-name"><strong>{{ $product->name }}</strong></td>
                                 <td>
                                     @if($product->categories->count() > 0)
@@ -1240,26 +1299,65 @@
                                 </td>
                             </tr>
                             <tr id="edit-{{ $product->id }}" class="edit-row">
-                                <td colspan="5">
+                                <td colspan="6">
                                     <form action="{{ route('products.update', $product->id) }}" method="POST"
-                                        style="display: flex; gap: 10px; padding: 10px;">
+                                        enctype="multipart/form-data"
+                                        style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; align-items: flex-end;">
                                         @csrf @method('PUT')
-                                        <input type="text" name="name" value="{{ $product->name }}" required
-                                            style="flex: 2; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
-                                        <input type="number" name="price" value="{{ $product->price }}" step="0.01" required
-                                            style="width: 80px; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
-                                        <input type="number" name="stock" value="{{ $product->stock }}" min="0" step="0.5"
-                                            placeholder="Lliure"
-                                            style="width: 80px; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
-                                        <select name="category_id" required
-                                            style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
-                                            @foreach($categories as $cat)
-                                                <option value="{{ $cat->id }}" {{ $product->categories->contains($cat->id) ? 'selected' : '' }}>{{ $cat->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <button type="submit" class="btn btn-add" style="padding: 5px 15px;">OK</button>
-                                        <button type="button" class="btn btn-delete"
-                                            onclick="toggleEdit('{{ $product->id }}')" style="padding: 5px 15px;">X</button>
+                                        <div style="flex: 2; min-width: 180px;">
+                                            <label style="font-size:0.7rem; font-weight:bold; color:#888; display:block; margin-bottom:4px;">Nom</label>
+                                            <input type="text" name="name" value="{{ $product->name }}" required
+                                                style="width:100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                                        </div>
+                                        <div style="width: 90px;">
+                                            <label style="font-size:0.7rem; font-weight:bold; color:#888; display:block; margin-bottom:4px;">Preu (€)</label>
+                                            <input type="number" name="price" value="{{ $product->price }}" step="0.01" required
+                                                style="width:100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                                        </div>
+                                        <div style="width: 90px;">
+                                            <label style="font-size:0.7rem; font-weight:bold; color:#888; display:block; margin-bottom:4px;">Stock</label>
+                                            <input type="number" name="stock" value="{{ $product->stock }}" min="0" step="0.5"
+                                                placeholder="Lliure"
+                                                style="width:100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                                        </div>
+                                        <div style="min-width: 160px;">
+                                            <label style="font-size:0.7rem; font-weight:bold; color:#888; display:block; margin-bottom:4px;">Categoria</label>
+                                            <select name="category_id" required
+                                                style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                                                @foreach($categories as $cat)
+                                                    <option value="{{ $cat->id }}" {{ $product->categories->contains($cat->id) ? 'selected' : '' }}>{{ $cat->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div style="flex: 1 1 220px; min-width: 200px;">
+                                            <label style="font-size:0.7rem; font-weight:bold; color:#888; display:block; margin-bottom:4px;">Imatge</label>
+                                            <input id="edit-image-input-{{ $product->id }}" type="file" name="image_file" accept="image/*" style="display:none;">
+                                            <input type="hidden" id="edit-image-remove-{{ $product->id }}" name="remove_image" value="0">
+                                            <div id="edit-image-dropzone-{{ $product->id }}" class="image-dropzone" style="min-height: 70px;">
+                                                <div>
+                                                    Arrossega aquí o fes clic
+                                                    <small>JPG, PNG, WEBP o GIF · 4MB màx.</small>
+                                                </div>
+                                            </div>
+                                            <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+                                                @if($product->image_path)
+                                                    <img id="edit-image-preview-{{ $product->id }}" class="image-preview"
+                                                        src="{{ asset($product->image_path) }}"
+                                                        style="display:block; max-width:90px; max-height:70px;">
+                                                    <button type="button" class="btn btn-delete"
+                                                        style="padding:6px 10px; font-size:0.7rem;"
+                                                        onclick="removeProductImage({{ $product->id }})">Treure imatge</button>
+                                                @else
+                                                    <img id="edit-image-preview-{{ $product->id }}" class="image-preview"
+                                                        style="max-width:90px; max-height:70px;">
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div style="display:flex; gap:6px; align-items:flex-end;">
+                                            <button type="submit" class="btn btn-add" style="padding: 9px 15px;">OK</button>
+                                            <button type="button" class="btn btn-delete"
+                                                onclick="toggleEdit('{{ $product->id }}')" style="padding: 9px 15px;">X</button>
+                                        </div>
                                     </form>
                                 </td>
                             </tr>
@@ -1543,6 +1641,80 @@
             let editRow = document.getElementById('edit-worker-' + id);
             editRow.classList.toggle('active');
         }
+
+        // ── Productes: drag & drop reutilitzable per qualsevol formulari ──
+        function initImageDropzone(dropzone, fileInput, preview, removeFlagInput) {
+            if (!fileInput || !dropzone) return;
+
+            const renderPreview = (file) => {
+                if (!preview) return;
+                if (!file || !file.type.startsWith('image/')) {
+                    preview.style.display = 'none';
+                    preview.removeAttribute('src');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = String(e.target?.result || '');
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            };
+
+            const handleFile = (file) => {
+                if (!file) return;
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                if (removeFlagInput) removeFlagInput.value = '0';
+                renderPreview(file);
+            };
+
+            dropzone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', () => handleFile(fileInput.files?.[0]));
+
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+            dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                handleFile(e.dataTransfer?.files?.[0]);
+            });
+        }
+
+        function removeProductImage(productId) {
+            const fileInput = document.getElementById('edit-image-input-' + productId);
+            const removeFlag = document.getElementById('edit-image-remove-' + productId);
+            const preview = document.getElementById('edit-image-preview-' + productId);
+            if (fileInput) fileInput.value = '';
+            if (removeFlag) removeFlag.value = '1';
+            if (preview) {
+                preview.removeAttribute('src');
+                preview.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initImageDropzone(
+                document.getElementById('product-image-dropzone'),
+                document.getElementById('product-image-input'),
+                document.getElementById('product-image-preview'),
+                null
+            );
+
+            document.querySelectorAll('[id^="edit-image-dropzone-"]').forEach((dz) => {
+                const id = dz.id.replace('edit-image-dropzone-', '');
+                initImageDropzone(
+                    dz,
+                    document.getElementById('edit-image-input-' + id),
+                    document.getElementById('edit-image-preview-' + id),
+                    document.getElementById('edit-image-remove-' + id)
+                );
+            });
+        });
 
         // El filtre ara navega per backend mitjançant enllaços de query string.
 

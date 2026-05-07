@@ -233,11 +233,28 @@ class AdminController extends Controller
             'price' => 'required|numeric|min:0',
             'stock' => 'nullable|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
-            'image' => 'nullable|string',
+            'image_file' => 'nullable|file|image|mimes:jpg,jpeg,png,webp,gif|max:4096',
             'active' => 'true'
         ]);
 
-        $product = Product::create($request->only(['name', 'price', 'stock', 'image']));
+        $data = $request->only(['name', 'price', 'stock']);
+        $data['image_path'] = null;
+
+        if ($request->hasFile('image_file')) {
+            $file = $request->file('image_file');
+            $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'jpg');
+            $filename = 'prod_' . now()->format('YmdHis') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+
+            $targetDir = public_path('images/productes');
+            if (!is_dir($targetDir)) {
+                @mkdir($targetDir, 0755, true);
+            }
+
+            $file->move($targetDir, $filename);
+            $data['image_path'] = 'images/productes/' . $filename;
+        }
+
+        $product = Product::create($data);
         $product->categories()->attach($request->category_id);
 
         return back()->with('success', 'Producte creat amb la seva categoria!')->withFragment('productes-list');
@@ -251,10 +268,44 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'stock' => 'nullable|numeric|min:0',
-            'category_id' => 'required|exists:categories,id'
+            'category_id' => 'required|exists:categories,id',
+            'image_file' => 'nullable|file|image|mimes:jpg,jpeg,png,webp,gif|max:4096',
+            'remove_image' => 'nullable|boolean',
         ]);
 
-        $product->update($request->only(['name', 'price', 'stock']));
+        $data = $request->only(['name', 'price', 'stock']);
+
+        if ($request->hasFile('image_file')) {
+            $file = $request->file('image_file');
+            $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'jpg');
+            $filename = 'prod_' . now()->format('YmdHis') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+
+            $targetDir = public_path('images/productes');
+            if (!is_dir($targetDir)) {
+                @mkdir($targetDir, 0755, true);
+            }
+
+            $file->move($targetDir, $filename);
+
+            if ($product->image_path && str_starts_with($product->image_path, 'images/productes/')) {
+                $oldPath = public_path($product->image_path);
+                if (is_file($oldPath)) {
+                    @unlink($oldPath);
+                }
+            }
+
+            $data['image_path'] = 'images/productes/' . $filename;
+        } elseif ($request->boolean('remove_image')) {
+            if ($product->image_path && str_starts_with($product->image_path, 'images/productes/')) {
+                $oldPath = public_path($product->image_path);
+                if (is_file($oldPath)) {
+                    @unlink($oldPath);
+                }
+            }
+            $data['image_path'] = null;
+        }
+
+        $product->update($data);
         $product->categories()->sync([$request->category_id]);
 
         // Redirigim a l'àncora #productes
