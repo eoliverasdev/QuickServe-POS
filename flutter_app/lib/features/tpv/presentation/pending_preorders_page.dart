@@ -510,12 +510,32 @@ class _PreorderCardState extends State<_PreorderCard> {
     return Row(
       children: <Widget>[
         Expanded(
-          child: Text(
-            'Encarrec #${p.pickupNumber ?? p.id}',
-            style: const TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 24,
-            ),
+          child: Row(
+            children: <Widget>[
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8EDFF),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: const Icon(
+                  Icons.receipt_long_rounded,
+                  size: 18,
+                  color: TpvTheme.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '#${p.pickupNumber ?? p.id}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 30,
+                  color: TpvTheme.textMain,
+                  letterSpacing: -0.4,
+                ),
+              ),
+            ],
           ),
         ),
         Text(
@@ -542,14 +562,68 @@ class _PreorderCardState extends State<_PreorderCard> {
 
   Widget _buildSubtitle(TpvPreorder p) {
     final String dateLabel = _shortDateLabel(p.pickupDate);
-    final String prefix = dateLabel.isEmpty ? '' : '$dateLabel · ';
-    return Text(
-      '$prefix${p.pickupTime ?? '--:--'} · ${p.customerName ?? 'Sense nom'}',
-      style: const TextStyle(
-        color: TpvTheme.textSecondary,
-        fontWeight: FontWeight.w700,
-        fontSize: 13,
-      ),
+    final String timeValue = p.pickupTime ?? '--:--';
+    final String customerValue = p.customerName ?? 'Sense nom';
+    return Wrap(
+      spacing: 14,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: <Widget>[
+        if (dateLabel.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF3FF),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              dateLabel,
+              style: const TextStyle(
+                color: TpvTheme.primary,
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Icon(
+              Icons.schedule_rounded,
+              size: 17,
+              color: TpvTheme.textSecondary,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              timeValue,
+              style: const TextStyle(
+                color: TpvTheme.textMain,
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Icon(
+              Icons.person_outline_rounded,
+              size: 17,
+              color: TpvTheme.textSecondary,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              customerValue,
+              style: const TextStyle(
+                color: TpvTheme.textMain,
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
