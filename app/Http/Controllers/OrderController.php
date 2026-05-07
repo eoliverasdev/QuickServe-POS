@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Services\FiscalInvoiceNumberAssigner;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class OrderController extends Controller
 {
@@ -32,37 +33,42 @@ class OrderController extends Controller
         ]);
 
         try {
+            $hasPickupDateColumn = Schema::hasColumn('orders', 'pickup_date');
             // Utilitzem una Transaction per assegurar la integritat de les dades
-            return DB::transaction(function () use ($request) {
+            return DB::transaction(function () use ($request, $hasPickupDateColumn) {
                 
                 $isPreorder = $request->input('is_preorder', false);
                 $pickupNumber = null;
                 $pickupDate = null;
 
                 if ($isPreorder) {
-                    // Si no s'envia pickup_date, per defecte avui (manté la
-                    // compatibilitat amb el flux antic).
+                    // Si no hi ha columna pickup_date (entorn sense migrar),
+                    // mantenim la lògica antiga per evitar 500.
                     $pickupDate = $request->input('pickup_date')
                         ?: \Carbon\Carbon::today()->toDateString();
-
-                    // El pickup_number és únic per dia de recollida: així es
-                    // pot tenir #1 demà i #1 avui sense col·lisions, i en
-                    // canviar de dia (reset) la numeració torna a començar.
                     $requestedPickup = $request->input('pickup_number');
                     if ($requestedPickup !== null) {
-                        $alreadyUsed = \App\Models\Order::where('pickup_date', $pickupDate)
-                            ->where('is_preorder', true)
-                            ->where('pickup_number', $requestedPickup)
-                            ->exists();
+                        $alreadyUsedQuery = \App\Models\Order::where('is_preorder', true)
+                            ->where('pickup_number', $requestedPickup);
+                        if ($hasPickupDateColumn) {
+                            $alreadyUsedQuery->where('pickup_date', $pickupDate);
+                        } else {
+                            $alreadyUsedQuery->whereDate('created_at', \Carbon\Carbon::today());
+                        }
+                        $alreadyUsed = $alreadyUsedQuery->exists();
                         if (! $alreadyUsed) {
                             $pickupNumber = (int) $requestedPickup;
                         }
                     }
 
                     if ($pickupNumber === null) {
-                        $maxOrder = \App\Models\Order::where('pickup_date', $pickupDate)
-                            ->where('is_preorder', true)
-                            ->max('pickup_number');
+                        $maxQuery = \App\Models\Order::where('is_preorder', true);
+                        if ($hasPickupDateColumn) {
+                            $maxQuery->where('pickup_date', $pickupDate);
+                        } else {
+                            $maxQuery->whereDate('created_at', \Carbon\Carbon::today());
+                        }
+                        $maxOrder = $maxQuery->max('pickup_number');
                         $pickupNumber = $maxOrder ? $maxOrder + 1 : 1;
                     }
                 }
@@ -81,7 +87,7 @@ class OrderController extends Controller
                     'pickup_time'    => $request->pickup_time,
                     'customer_name'  => $request->customer_name,
                 ];
-                if ($isPreorder) {
+                if ($isPreorder && $hasPickupDateColumn) {
                     $orderData['pickup_date'] = $pickupDate;
                 }
                 $order = Order::create($orderData);
@@ -136,16 +142,21 @@ class OrderController extends Controller
     }
 
     public function getPendingPreorders() {
-        // Ara els encàrrecs poden ser per a dies futurs, així que retornem
-        // tots els pendents (independentment de la data de creació) ordenats
-        // per dia de recollida i hora. Si algun encàrrec antic no té
-        // pickup_date, fem servir la data de creació com a fallback.
-        $orders = Order::with('items.product')
-                       ->where('is_preorder', true)
-                       ->where('status', 'Pendent')
-                       ->orderByRaw('COALESCE(pickup_date, DATE(created_at)) ASC')
-                       ->orderBy('pickup_time', 'asc')
-                       ->get();
+        $query = Order::with('items.product')
+            ->where('is_preorder', true)
+            ->where('status', 'Pendent');
+
+        if (Schema::hasColumn('orders', 'pickup_date')) {
+            // Encàrrecs multi-dia: ordenem per dia de recollida i hora.
+            $query->orderByRaw('COALESCE(pickup_date, DATE(created_at)) ASC');
+        } else {
+            // Compatibilitat amb entorns sense migrar.
+            $query->whereDate('created_at', \Carbon\Carbon::today());
+        }
+
+        $orders = $query
+            ->orderBy('pickup_time', 'asc')
+            ->get();
         return response()->json(['orders' => $orders]);
     }
 
