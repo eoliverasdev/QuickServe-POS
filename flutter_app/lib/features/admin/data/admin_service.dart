@@ -159,7 +159,7 @@ class AdminService {
     int? id,
     required String name,
     required double price,
-    int? stock,
+    double? stock,
     required int categoryId,
     bool isGlutenFree = false,
     bool active = true,
@@ -175,9 +175,9 @@ class AdminService {
       'category_id': categoryId,
       'is_gluten_free': isGlutenFree,
       'active': active,
-      'stock': ?stock,
-      'description': ?descriptionValue,
-      'image_path': ?imagePathValue,
+      if (stock != null) 'stock': stock,
+      if (descriptionValue != null) 'description': descriptionValue,
+      if (imagePathValue != null) 'image_path': imagePathValue,
     };
     try {
       final Response<dynamic> response = id == null
@@ -312,7 +312,7 @@ class AdminService {
       if (paymentMethod != null && paymentMethod.isNotEmpty) 'payment_method': paymentMethod,
       if (from != null) 'from': _formatDate(from),
       if (to != null) 'to': _formatDate(to),
-      'worker_id': ?workerId,
+      if (workerId != null) 'worker_id': workerId,
       if (search != null && search.isNotEmpty) 'search': search,
     };
     final Response<dynamic> response = await _apiClient.dio.get(

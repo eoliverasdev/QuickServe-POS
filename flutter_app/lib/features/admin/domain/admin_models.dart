@@ -238,7 +238,7 @@ class AdminProduct {
   final int id;
   final String name;
   final double price;
-  final int? stock;
+  final double? stock;
   final bool isGlutenFree;
   final bool active;
   final String? description;
@@ -252,7 +252,7 @@ class AdminProduct {
       id: (json['id'] as num?)?.toInt() ?? 0,
       name: json['name']?.toString() ?? '',
       price: _asDouble(json['price']),
-      stock: (json['stock'] as num?)?.toInt(),
+      stock: (json['stock'] as num?)?.toDouble(),
       isGlutenFree: (json['is_gluten_free'] as bool?) ?? false,
       active: (json['active'] as bool?) ?? true,
       description: json['description']?.toString(),

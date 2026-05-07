@@ -20,7 +20,7 @@ class TpvProduct {
   final String name;
   final double price;
   final List<String> categoryIds;
-  final int? stock;
+  final double? stock;
   final String? imageUrl;
 }
 

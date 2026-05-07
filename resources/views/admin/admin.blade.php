@@ -130,20 +130,35 @@
             flex-shrink: 0;
         }
 
-        .nav-link:hover .nav-icon,
-        .nav-link.active .nav-icon {
-            color: #000;
+        .nav-link:hover .nav-icon {
+            color: #1f2f66;
         }
 
         .nav-link:hover {
-            background: #fafafa;
-            color: #000;
+            background: #eef2ff;
+            color: #1f2f66;
         }
 
         .nav-link.active {
-            background: rgba(255, 237, 5, 0.15);
-            color: #000;
+            background: linear-gradient(135deg, #5f85eb 0%, #4768d6 100%);
+            color: #fff;
             font-weight: 700;
+            box-shadow: 0 8px 20px rgba(71, 104, 214, 0.25);
+        }
+
+        .nav-link.active .nav-icon {
+            color: #fff;
+        }
+
+        .menu-group-title {
+            margin-top: 20px;
+            margin-bottom: 8px;
+            font-size: 0.75rem;
+            color: #8d97b2;
+            font-weight: 800;
+            padding-left: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
 
         /* Main Content */
@@ -911,38 +926,30 @@
         </div>
 
         <div class="sidebar-links">
+            <div class="menu-group-title">Panell</div>
             <button class="nav-link active" onclick="showSection('resum', this)">
                 <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7H4a1 1 0 0 1-1-1v-6Zm7-8a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v15h-4V5Zm6 4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v11h-5V9Z"/></svg>
                 Resum
             </button>
 
-            <div
-                style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">
-                Categories</div>
+            <div class="menu-group-title">Catàleg</div>
             <button class="nav-link" onclick="showSection('categories-list', this)">
                 <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4a1 1 0 0 1 .8.4l1.2 1.6H20a1 1 0 0 1 1 1v2H3V5a1 1 0 0 1 1-1h6Zm11 7v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8h18Z"/></svg>
                 Categories
             </button>
 
-            <div
-                style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">
-                Productes</div>
             <button class="nav-link" onclick="showSection('productes-list', this)">
                 <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4a1 1 0 0 0 0 2h14a1 1 0 1 0 0-2H5Zm-1 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1H4V9Zm0 3h16v2H4v-2Zm0 4h16v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1Z"/></svg>
                 Productes
             </button>
 
-            <div
-                style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">
-                Treballadors</div>
+            <div class="menu-group-title">Equip</div>
             <button class="nav-link" onclick="showSection('treballadors-list', this)">
                 <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm8 1a3 3 0 1 1 0-6 3 3 0 0 1 0 6ZM2 19a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1H2v-1Zm15.5-5c2.5 0 4.5 2 4.5 4.5V20h-4v-1c0-1.6-.6-3-1.6-4 .3 0 .7-1 1.1-1Z"/></svg>
                 Treballadors
             </button>
 
-            <div
-                style="margin-top: 15px; margin-bottom: 5px; font-size: 0.75rem; color: #999; font-weight: 800; padding-left: 18px; text-transform: uppercase;">
-                Caixa i Vendes</div>
+            <div class="menu-group-title">Caixa i vendes</div>
             <button class="nav-link" onclick="showSection('caixa', this)">
                 <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2H4V5Zm16 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9h16Zm-3 3h-4a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h4v-4Z"/></svg>
                 Tancament de Caixa
