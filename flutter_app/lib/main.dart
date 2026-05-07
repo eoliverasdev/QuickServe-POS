@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'core/network/api_client.dart';
 import 'core/theme/tpv_theme.dart';
@@ -22,6 +23,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Quickserve Flutter',
       theme: TpvTheme.build(),
+      localizationsDelegates: <LocalizationsDelegate<dynamic>>[
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const <Locale>[
+        Locale('ca'),
+        Locale('es'),
+        Locale('en'),
+      ],
       home: AuthGate(enableSessionRestore: enableSessionRestore),
     );
   }
