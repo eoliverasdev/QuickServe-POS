@@ -61,6 +61,9 @@ class _TpvPageState extends State<TpvPage> {
   bool _loggingOut = false;
   String? _catalogError;
   Timer? _pendingRefreshTimer;
+  // Número d'encàrrec que estem reutilitzant durant una modificació, per
+  // mantenir el mateix identificador visible al re-guardar.
+  int? _modifyingPickupNumber;
 
   static const double _dialogMaxWidth = 760;
   static const double _dialogVerticalMargin = 24;
@@ -817,6 +820,7 @@ class _TpvPageState extends State<TpvPage> {
 
   Future<void> _submitPreorder(int workerId) async {
     setState(() => _submittingOrder = true);
+    final int? reusedPickupNumber = _modifyingPickupNumber;
     try {
       await TpvSalesService(ApiClient(), widget.authService).createOrder(
         workerId: workerId,
@@ -830,14 +834,24 @@ class _TpvPageState extends State<TpvPage> {
         customerName: _preorderCustomerController.text.trim().isEmpty
             ? null
             : _preorderCustomerController.text.trim(),
+        pickupNumber: reusedPickupNumber,
       );
       if (!mounted) return;
-      setState(() => _cart.clear());
+      setState(() {
+        _cart.clear();
+        _modifyingPickupNumber = null;
+      });
       _preorderTimeController.clear();
       _preorderCustomerController.clear();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Encàrrec guardat')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            reusedPickupNumber != null
+                ? 'Encàrrec #$reusedPickupNumber actualitzat'
+                : 'Encàrrec guardat',
+          ),
+        ),
+      );
       await _loadPendingPreorders();
       await _loadCatalog();
     } catch (error) {
@@ -1334,6 +1348,7 @@ class _TpvPageState extends State<TpvPage> {
       });
       _preorderCustomerController.text = detail.customerName ?? '';
       _preorderTimeController.text = _normalizePickupTime(detail.pickupTime);
+      _modifyingPickupNumber = preorder.pickupNumber;
       await _loadPendingPreorders();
       await _loadCatalog();
       messenger.showSnackBar(
