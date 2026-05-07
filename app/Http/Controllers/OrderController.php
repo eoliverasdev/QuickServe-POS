@@ -26,7 +26,8 @@ class OrderController extends Controller
             'cart.*.id'   => 'required|exists:products,id',
             'is_preorder' => 'nullable|boolean',
             'pickup_time' => 'nullable|string',
-            'customer_name'=> 'nullable|string'
+            'customer_name'=> 'nullable|string',
+            'pickup_number' => 'nullable|integer|min:1',
         ]);
 
         try {
@@ -37,8 +38,26 @@ class OrderController extends Controller
                 $pickupNumber = null;
 
                 if ($isPreorder) {
-                    $maxOrder = \App\Models\Order::whereDate('created_at', \Carbon\Carbon::today())->where('is_preorder', true)->max('pickup_number');
-                    $pickupNumber = $maxOrder ? $maxOrder + 1 : 1;
+                    // If the client provides an explicit pickup_number (e.g. when modifying
+                    // an existing preorder we just cancelled), try to keep that number so
+                    // the user-facing identifier is preserved.
+                    $requestedPickup = $request->input('pickup_number');
+                    if ($requestedPickup !== null) {
+                        $alreadyUsed = \App\Models\Order::whereDate('created_at', \Carbon\Carbon::today())
+                            ->where('is_preorder', true)
+                            ->where('pickup_number', $requestedPickup)
+                            ->exists();
+                        if (! $alreadyUsed) {
+                            $pickupNumber = (int) $requestedPickup;
+                        }
+                    }
+
+                    if ($pickupNumber === null) {
+                        $maxOrder = \App\Models\Order::whereDate('created_at', \Carbon\Carbon::today())
+                            ->where('is_preorder', true)
+                            ->max('pickup_number');
+                        $pickupNumber = $maxOrder ? $maxOrder + 1 : 1;
+                    }
                 }
 
                 // 2. Creem la capçalera de la comanda

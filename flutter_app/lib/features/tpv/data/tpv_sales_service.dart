@@ -41,6 +41,7 @@ class TpvSalesService {
     bool isPreorder = false,
     String? pickupTime,
     String? customerName,
+    int? pickupNumber,
   }) async {
     final String token = await _requireToken();
 
@@ -63,6 +64,7 @@ class TpvSalesService {
         'is_preorder': isPreorder,
         'pickup_time': pickupTime,
         'customer_name': customerName,
+        if (pickupNumber != null) 'pickup_number': pickupNumber,
       },
       options: Options(headers: <String, dynamic>{'Authorization': 'Bearer $token'}),
     );
