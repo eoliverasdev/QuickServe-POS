@@ -64,6 +64,8 @@ class _TpvPageState extends State<TpvPage> {
   // Número d'encàrrec que estem reutilitzant durant una modificació, per
   // mantenir el mateix identificador visible al re-guardar.
   int? _modifyingPickupNumber;
+  // Dia de recollida triat per al pròxim encàrrec. Per defecte avui.
+  DateTime _preorderPickupDate = _onlyDate(DateTime.now());
 
   static const double _dialogMaxWidth = 760;
   static const double _dialogVerticalMargin = 24;
@@ -635,6 +637,12 @@ class _TpvPageState extends State<TpvPage> {
         _roundUpToQuarter(DateTime.now()),
       );
     }
+    // Si la data triada quedés enrere (per exemple, l'app porta oberta des
+    // d'ahir), la pugem a avui automàticament.
+    final DateTime today = _onlyDate(DateTime.now());
+    if (_preorderPickupDate.isBefore(today)) {
+      _preorderPickupDate = today;
+    }
     int? workerId = _workers.first.id;
 
     await showDialog<void>(
@@ -681,6 +689,122 @@ class _TpvPageState extends State<TpvPage> {
                                       setModalState(() => workerId = worker.id),
                                 );
                               }).toList(),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Dia de recollida:',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Builder(
+                              builder: (BuildContext _) {
+                                final DateTime today = _onlyDate(
+                                  DateTime.now(),
+                                );
+                                final DateTime tomorrow = today.add(
+                                  const Duration(days: 1),
+                                );
+                                final DateTime afterTomorrow = today.add(
+                                  const Duration(days: 2),
+                                );
+                                bool isSame(DateTime a, DateTime b) =>
+                                    a.year == b.year &&
+                                    a.month == b.month &&
+                                    a.day == b.day;
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: <Widget>[
+                                        _datePillButton(
+                                          label: 'Avui',
+                                          active: isSame(
+                                            _preorderPickupDate,
+                                            today,
+                                          ),
+                                          onTap: () => setModalState(
+                                            () => _preorderPickupDate = today,
+                                          ),
+                                        ),
+                                        _datePillButton(
+                                          label: 'Demà',
+                                          active: isSame(
+                                            _preorderPickupDate,
+                                            tomorrow,
+                                          ),
+                                          onTap: () => setModalState(
+                                            () =>
+                                                _preorderPickupDate = tomorrow,
+                                          ),
+                                        ),
+                                        _datePillButton(
+                                          label: 'Passat',
+                                          active: isSame(
+                                            _preorderPickupDate,
+                                            afterTomorrow,
+                                          ),
+                                          onTap: () => setModalState(
+                                            () => _preorderPickupDate =
+                                                afterTomorrow,
+                                          ),
+                                        ),
+                                        OutlinedButton.icon(
+                                          onPressed: () async {
+                                            final DateTime? picked =
+                                                await showDatePicker(
+                                                  context: context,
+                                                  initialDate:
+                                                      _preorderPickupDate,
+                                                  firstDate: today,
+                                                  lastDate: today.add(
+                                                    const Duration(days: 365),
+                                                  ),
+                                                );
+                                            if (picked != null) {
+                                              setModalState(
+                                                () => _preorderPickupDate =
+                                                    _onlyDate(picked),
+                                              );
+                                            }
+                                          },
+                                          icon: const Icon(
+                                            Icons.calendar_month,
+                                            size: 18,
+                                          ),
+                                          label: const Text('Triar data'),
+                                          style: OutlinedButton.styleFrom(
+                                            minimumSize: const Size(120, 40),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                            ),
+                                            textStyle: const TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      _formatPickupDateLong(
+                                        _preorderPickupDate,
+                                      ),
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                        color: TpvTheme.primary,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                             const SizedBox(height: 16),
                             const Text(
@@ -821,6 +945,7 @@ class _TpvPageState extends State<TpvPage> {
   Future<void> _submitPreorder(int workerId) async {
     setState(() => _submittingOrder = true);
     final int? reusedPickupNumber = _modifyingPickupNumber;
+    final String pickupDateIso = _formatPickupDateIso(_preorderPickupDate);
     try {
       await TpvSalesService(ApiClient(), widget.authService).createOrder(
         workerId: workerId,
@@ -835,11 +960,13 @@ class _TpvPageState extends State<TpvPage> {
             ? null
             : _preorderCustomerController.text.trim(),
         pickupNumber: reusedPickupNumber,
+        pickupDate: pickupDateIso,
       );
       if (!mounted) return;
       setState(() {
         _cart.clear();
         _modifyingPickupNumber = null;
+        _preorderPickupDate = _onlyDate(DateTime.now());
       });
       _preorderTimeController.clear();
       _preorderCustomerController.clear();
@@ -1349,6 +1476,14 @@ class _TpvPageState extends State<TpvPage> {
       _preorderCustomerController.text = detail.customerName ?? '';
       _preorderTimeController.text = _normalizePickupTime(detail.pickupTime);
       _modifyingPickupNumber = preorder.pickupNumber;
+      final DateTime? loadedDate = detail.pickupDate != null
+          ? DateTime.tryParse(detail.pickupDate!)
+          : null;
+      if (loadedDate != null) {
+        _preorderPickupDate = _onlyDate(loadedDate);
+      } else {
+        _preorderPickupDate = _onlyDate(DateTime.now());
+      }
       await _loadPendingPreorders();
       await _loadCatalog();
       messenger.showSnackBar(
@@ -2949,6 +3084,39 @@ class _TpvPageState extends State<TpvPage> {
     );
   }
 
+  Widget _datePillButton({
+    required String label,
+    required bool active,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 40, minWidth: 96),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: active ? TpvTheme.primary : Colors.white,
+          border: Border.all(
+            color: active ? TpvTheme.primary : const Color(0xFFD9DCE8),
+            width: 1.5,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: active ? Colors.white : Colors.black87,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _adjustPreorderTime({int minutesDelta = 0, bool now = false}) {
     DateTime base;
     if (now || _preorderTimeController.text.trim().isEmpty) {
@@ -2982,6 +3150,43 @@ class _TpvPageState extends State<TpvPage> {
 
   String _formatTime(DateTime date) {
     return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  static DateTime _onlyDate(DateTime d) =>
+      DateTime(d.year, d.month, d.day);
+
+  String _formatPickupDateIso(DateTime d) {
+    final DateTime only = _onlyDate(d);
+    return '${only.year.toString().padLeft(4, '0')}-'
+        '${only.month.toString().padLeft(2, '0')}-'
+        '${only.day.toString().padLeft(2, '0')}';
+  }
+
+  /// Etiqueta curta tipus "Avui", "Demà" o "DD/MM" per mostrar a la targeta.
+  String _formatPickupDateShort(String? iso) {
+    if (iso == null || iso.isEmpty) return '';
+    final DateTime? d = DateTime.tryParse(iso);
+    if (d == null) return '';
+    final DateTime today = _onlyDate(DateTime.now());
+    final DateTime target = _onlyDate(d);
+    final int diff = target.difference(today).inDays;
+    if (diff == 0) return 'Avui';
+    if (diff == 1) return 'Demà';
+    if (diff == -1) return 'Ahir';
+    return '${target.day.toString().padLeft(2, '0')}/${target.month.toString().padLeft(2, '0')}';
+  }
+
+  /// Etiqueta llarga ("Avui · 07/05/2026") per mostrar al diàleg.
+  String _formatPickupDateLong(DateTime d) {
+    final DateTime today = _onlyDate(DateTime.now());
+    final DateTime target = _onlyDate(d);
+    final int diff = target.difference(today).inDays;
+    final String numeric =
+        '${target.day.toString().padLeft(2, '0')}/${target.month.toString().padLeft(2, '0')}/${target.year}';
+    if (diff == 0) return 'Avui · $numeric';
+    if (diff == 1) return 'Demà · $numeric';
+    if (diff == -1) return 'Ahir · $numeric';
+    return numeric;
   }
 
   String _normalizePickupTime(String? raw) {

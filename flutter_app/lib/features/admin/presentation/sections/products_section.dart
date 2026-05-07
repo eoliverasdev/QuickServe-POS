@@ -645,6 +645,10 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
   late bool _isGlutenFree = widget.initial?.isGlutenFree ?? false;
   late bool _active = widget.initial?.active ?? true;
   late String? _imagePath = widget.initial?.imagePath;
+  // Quan està actiu, el camp de "Estoc" queda inhabilitat i es desa null
+  // (estoc il·limitat). Si el producte ja venia amb stock null, marquem el
+  // checkbox automàticament perquè reflecteixi l'estat real.
+  late bool _unlimitedStock = widget.initial?.stock == null;
   bool _submitting = false;
   bool _uploading = false;
   String? _errorText;
@@ -732,9 +736,14 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
     final double? price = double.tryParse(
       _priceController.text.replaceAll(',', '.').trim(),
     );
-    final double? stock = _stockController.text.trim().isEmpty
+    final double? rawStock = _stockController.text.trim().isEmpty
         ? null
         : double.tryParse(_stockController.text.replaceAll(',', '.').trim());
+    // Estoc <= 0 / null / casella marcada → estoc il·limitat (null a la BD).
+    final double? stock =
+        (_unlimitedStock || rawStock == null || rawStock <= 0)
+        ? null
+        : rawStock;
     if (name.isEmpty) {
       setState(() => _errorText = 'El nom és obligatori');
       return;
@@ -821,16 +830,39 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
                   Expanded(
                     child: TextField(
                       controller: _stockController,
+                      enabled: !_unlimitedStock,
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
                       inputFormatters: <TextInputFormatter>[
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                       ],
-                      decoration: const InputDecoration(labelText: 'Estoc'),
+                      decoration: InputDecoration(
+                        labelText: 'Estoc',
+                        hintText: _unlimitedStock ? '∞ il·limitat' : null,
+                      ),
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 4),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                value: _unlimitedStock,
+                onChanged: (bool v) => setState(() {
+                  _unlimitedStock = v;
+                  if (v) _stockController.clear();
+                }),
+                title: const Text(
+                  'Stock il·limitat',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                subtitle: const Text(
+                  'Si està activat, el producte no controla unitats. Si '
+                  'el deixes desactivat però poses 0, també es considerarà '
+                  'il·limitat.',
+                  style: TextStyle(fontSize: 11.5),
+                ),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
