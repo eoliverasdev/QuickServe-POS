@@ -436,6 +436,11 @@ class _ProductCard extends StatelessWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onToggle;
 
+  String _formatStock(double value) {
+    if (value == value.truncateToDouble()) return value.toStringAsFixed(0);
+    return value.toStringAsFixed(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     final Color accent = _parseColor(product.categoryColor) ?? TpvTheme.primary;
@@ -556,7 +561,7 @@ class _ProductCard extends StatelessWidget {
                     child: Text(
                       product.stock == null
                           ? 'Sense control estoc'
-                          : 'Stock: ${product.stock}',
+                          : 'Stock: ${_formatStock(product.stock!)}',
                       style: const TextStyle(
                         color: TpvTheme.textSecondary,
                         fontWeight: FontWeight.w700,
@@ -727,9 +732,9 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
     final double? price = double.tryParse(
       _priceController.text.replaceAll(',', '.').trim(),
     );
-    final int? stock = _stockController.text.trim().isEmpty
+    final double? stock = _stockController.text.trim().isEmpty
         ? null
-        : int.tryParse(_stockController.text.trim());
+        : double.tryParse(_stockController.text.replaceAll(',', '.').trim());
     if (name.isEmpty) {
       setState(() => _errorText = 'El nom és obligatori');
       return;
@@ -816,9 +821,11 @@ class _ProductEditorDialogState extends State<_ProductEditorDialog> {
                   Expanded(
                     child: TextField(
                       controller: _stockController,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: <TextInputFormatter>[
-                        FilteringTextInputFormatter.digitsOnly,
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                       ],
                       decoration: const InputDecoration(labelText: 'Estoc'),
                     ),

@@ -60,7 +60,7 @@ class TpvCatalogService {
             id: (p['id'] as num?)?.toInt() ?? 0,
             name: (p['name'] ?? '').toString(),
             price: (p['price'] as num?)?.toDouble() ?? 0,
-            stock: (p['stock'] as num?)?.toInt(),
+            stock: (p['stock'] as num?)?.toDouble(),
             imageUrl: rawImage == null || rawImage.isEmpty
                 ? null
                 : AppConfig.resolveAsset(rawImage),
