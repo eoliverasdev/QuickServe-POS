@@ -406,6 +406,62 @@
             object-fit: cover;
         }
 
+        .product-create-form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-width: 760px;
+        }
+
+        .product-create-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .product-field label,
+        .product-edit-field label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .product-create-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .product-edit-form {
+            display: grid;
+            grid-template-columns: 1.4fr 0.7fr 0.7fr 1fr;
+            gap: 12px;
+            padding: 10px;
+            align-items: end;
+        }
+
+        .product-edit-image-wrap {
+            grid-column: 1 / -1;
+            border-top: 1px solid #eceff3;
+            padding-top: 12px;
+        }
+
+        .product-edit-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        @media (max-width: 1100px) {
+            .product-create-row,
+            .product-edit-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .edit-row {
             background: #fffbeb !important;
             display: none;
@@ -1202,21 +1258,23 @@
                 <button class="btn btn-edit" style="margin-bottom: 20px;"
                     onclick="showSection('productes-list', null)">⬅ Tornar a la llista</button>
                 <label style="font-weight: 900; margin-bottom: 10px; display: block;">AFEGIR PRODUCTE</label>
-                <form action="{{ route('products.store') }}" method="POST" class="admin-form" enctype="multipart/form-data">
+                <form action="{{ route('products.store') }}" method="POST" class="product-create-form" enctype="multipart/form-data">
                     @csrf
-                    <div>
+                    <div class="product-field">
                         <label>Nom</label>
                         <input type="text" name="name" required>
                     </div>
-                    <div>
-                        <label>Preu (€)</label>
-                        <input type="number" name="price" step="0.01" required>
+                    <div class="product-create-row">
+                        <div class="product-field">
+                            <label>Preu (€)</label>
+                            <input type="number" name="price" step="0.01" required>
+                        </div>
+                        <div class="product-field">
+                            <label>Stock (Opcional)</label>
+                            <input type="number" name="stock" min="0" step="0.5" placeholder="∞ (Lliure)">
+                        </div>
                     </div>
-                    <div>
-                        <label>Stock (Opcional)</label>
-                        <input type="number" name="stock" min="0" step="0.5" placeholder="∞ (Lliure)">
-                    </div>
-                    <div>
+                    <div class="product-field">
                         <label>Categoria</label>
                         <select name="category_id" required>
                             <option value="">Tria una...</option>
@@ -1225,7 +1283,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div>
+                    <div class="product-field">
                         <label>Imatge</label>
                         <input id="product-image-input" type="file" name="image_file" accept="image/*" style="display:none;">
                         <div id="product-image-dropzone" class="image-dropzone">
@@ -1236,7 +1294,9 @@
                         </div>
                         <img id="product-image-preview" class="image-preview" alt="Vista previa de la imatge">
                     </div>
-                    <button type="submit" class="btn btn-add">AFEGIR</button>
+                    <div class="product-create-actions">
+                        <button type="submit" class="btn btn-add">AFEGIR</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -1302,26 +1362,26 @@
                                 <td colspan="6">
                                     <form action="{{ route('products.update', $product->id) }}" method="POST"
                                         enctype="multipart/form-data"
-                                        style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; align-items: flex-end;">
+                                        class="product-edit-form">
                                         @csrf @method('PUT')
-                                        <div style="flex: 2; min-width: 180px;">
-                                            <label style="font-size:0.7rem; font-weight:bold; color:#888; display:block; margin-bottom:4px;">Nom</label>
+                                        <div class="product-edit-field">
+                                            <label>Nom</label>
                                             <input type="text" name="name" value="{{ $product->name }}" required
                                                 style="width:100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
                                         </div>
-                                        <div style="width: 90px;">
-                                            <label style="font-size:0.7rem; font-weight:bold; color:#888; display:block; margin-bottom:4px;">Preu (€)</label>
+                                        <div class="product-edit-field">
+                                            <label>Preu (€)</label>
                                             <input type="number" name="price" value="{{ $product->price }}" step="0.01" required
                                                 style="width:100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
                                         </div>
-                                        <div style="width: 90px;">
-                                            <label style="font-size:0.7rem; font-weight:bold; color:#888; display:block; margin-bottom:4px;">Stock</label>
+                                        <div class="product-edit-field">
+                                            <label>Stock</label>
                                             <input type="number" name="stock" value="{{ $product->stock }}" min="0" step="0.5"
                                                 placeholder="Lliure"
                                                 style="width:100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
                                         </div>
-                                        <div style="min-width: 160px;">
-                                            <label style="font-size:0.7rem; font-weight:bold; color:#888; display:block; margin-bottom:4px;">Categoria</label>
+                                        <div class="product-edit-field">
+                                            <label>Categoria</label>
                                             <select name="category_id" required
                                                 style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
                                                 @foreach($categories as $cat)
@@ -1329,8 +1389,8 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div style="flex: 1 1 220px; min-width: 200px;">
-                                            <label style="font-size:0.7rem; font-weight:bold; color:#888; display:block; margin-bottom:4px;">Imatge</label>
+                                        <div class="product-edit-image-wrap">
+                                            <label style="font-size:0.75rem; font-weight:800; color:#999; display:block; margin-bottom:6px; text-transform:uppercase;">Imatge</label>
                                             <input id="edit-image-input-{{ $product->id }}" type="file" name="image_file" accept="image/*" style="display:none;">
                                             <input type="hidden" id="edit-image-remove-{{ $product->id }}" name="remove_image" value="0">
                                             <div id="edit-image-dropzone-{{ $product->id }}" class="image-dropzone" style="min-height: 70px;">
@@ -1353,10 +1413,10 @@
                                                 @endif
                                             </div>
                                         </div>
-                                        <div style="display:flex; gap:6px; align-items:flex-end;">
-                                            <button type="submit" class="btn btn-add" style="padding: 9px 15px;">OK</button>
+                                        <div class="product-edit-actions">
+                                            <button type="submit" class="btn btn-add" style="padding: 9px 15px;">Guardar</button>
                                             <button type="button" class="btn btn-delete"
-                                                onclick="toggleEdit('{{ $product->id }}')" style="padding: 9px 15px;">X</button>
+                                                onclick="toggleEdit('{{ $product->id }}')" style="padding: 9px 15px;">Cancelar</button>
                                         </div>
                                     </form>
                                 </td>
