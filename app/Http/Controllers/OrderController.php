@@ -68,7 +68,10 @@ class OrderController extends Controller
                 }
 
                 // 2. Creem la capçalera de la comanda
-                $order = Order::create([
+                // IMPORTANT: pickup_date només s'envia en encàrrecs. Això
+                // manté compatibilitat amb entorns on encara no s'ha executat
+                // la migració que afegeix aquesta columna.
+                $orderData = [
                     'total_price'    => $request->total_price,
                     'payment_method' => $isPreorder ? 'Pendent' : ($request->payment_method ?? 'Efectiu'), 
                     'status'         => $isPreorder ? 'Pendent' : 'Pagat',
@@ -76,9 +79,12 @@ class OrderController extends Controller
                     'is_preorder'    => $isPreorder,
                     'pickup_number'  => $pickupNumber,
                     'pickup_time'    => $request->pickup_time,
-                    'pickup_date'    => $pickupDate,
-                    'customer_name'  => $request->customer_name
-                ]);
+                    'customer_name'  => $request->customer_name,
+                ];
+                if ($isPreorder) {
+                    $orderData['pickup_date'] = $pickupDate;
+                }
+                $order = Order::create($orderData);
 
                 // 3. Creem cada línia del tiquet (OrderItems) i regulem lestoc
                 foreach ($request->cart as $item) {
