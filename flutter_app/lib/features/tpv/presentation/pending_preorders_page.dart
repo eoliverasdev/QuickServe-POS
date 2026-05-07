@@ -35,6 +35,8 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
   );
   bool _loading = true;
   List<TpvPreorder> _preorders = <TpvPreorder>[];
+  /// Dia de recollida seleccionat al filtre (per defecte avui).
+  late DateTime _filterPickupDay;
   final Map<int, Future<TpvOrderDetail>> _detailsFutures =
       <int, Future<TpvOrderDetail>>{};
 
@@ -55,6 +57,7 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
   @override
   void initState() {
     super.initState();
+    _filterPickupDay = _onlyDate(DateTime.now());
     _load();
   }
 
@@ -73,6 +76,110 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
   Future<void> _refreshAfterAction(int orderId) async {
     _detailsFutures.remove(orderId);
     await _load();
+  }
+
+  static DateTime _onlyDate(DateTime d) =>
+      DateTime(d.year, d.month, d.day);
+
+  String _formatDayIso(DateTime d) {
+    final DateTime o = _onlyDate(d);
+    return '${o.year.toString().padLeft(4, '0')}-'
+        '${o.month.toString().padLeft(2, '0')}-'
+        '${o.day.toString().padLeft(2, '0')}';
+  }
+
+  /// Data efectiva de recollida per al filtre (encàrrecs antics sense `pickup_date`).
+  String _effectivePickupDayIso(TpvPreorder p) {
+    if (p.pickupDate != null && p.pickupDate!.isNotEmpty) {
+      return p.pickupDate!;
+    }
+    if (p.createdAt != null) {
+      return _formatDayIso(p.createdAt!);
+    }
+    return _formatDayIso(DateTime.now());
+  }
+
+  String _filterDayLabel() {
+    final DateTime today = _onlyDate(DateTime.now());
+    final DateTime d = _filterPickupDay;
+    if (d.year == today.year &&
+        d.month == today.month &&
+        d.day == today.day) {
+      return 'Avui';
+    }
+    final DateTime tomorrow = today.add(const Duration(days: 1));
+    if (d.year == tomorrow.year &&
+        d.month == tomorrow.month &&
+        d.day == tomorrow.day) {
+      return 'Demà';
+    }
+    return '${d.day.toString().padLeft(2, '0')}/'
+        '${d.month.toString().padLeft(2, '0')}/${d.year}';
+  }
+
+  int _pickupMinutes(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return 24 * 60 + 1;
+    final List<String> parts = raw.trim().split(':');
+    if (parts.length < 2) return 24 * 60 + 1;
+    final int h = int.tryParse(parts[0]) ?? 99;
+    final int m = int.tryParse(parts[1]) ?? 99;
+    return h * 60 + m;
+  }
+
+  List<TpvPreorder> _filteredAndSortedForDay() {
+    final String target = _formatDayIso(_filterPickupDay);
+    final List<TpvPreorder> list = _preorders
+        .where((TpvPreorder p) => _effectivePickupDayIso(p) == target)
+        .toList();
+    list.sort((TpvPreorder a, TpvPreorder b) {
+      final int t = _pickupMinutes(a.pickupTime).compareTo(
+        _pickupMinutes(b.pickupTime),
+      );
+      if (t != 0) {
+        return t;
+      }
+      final int? na = a.pickupNumber;
+      final int? nb = b.pickupNumber;
+      if (na != null && nb != null && na != nb) {
+        return na.compareTo(nb);
+      }
+      return a.id.compareTo(b.id);
+    });
+    return list;
+  }
+
+  static DateTime _clampDay(DateTime d, DateTime min, DateTime max) {
+    if (d.isBefore(min)) {
+      return min;
+    }
+    if (d.isAfter(max)) {
+      return max;
+    }
+    return d;
+  }
+
+  Future<void> _pickFilterDate(BuildContext context) async {
+    final DateTime today = _onlyDate(DateTime.now());
+    final DateTime firstDate = today.subtract(const Duration(days: 730));
+    final DateTime lastDate = today.add(const Duration(days: 365));
+    final DateTime initialDate = _clampDay(
+      _filterPickupDay,
+      firstDate,
+      lastDate,
+    );
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      locale: const Locale('ca'),
+      helpText: 'Dia de recollida',
+      cancelText: 'Cancel·lar',
+      confirmText: 'D\'acord',
+    );
+    if (picked != null && mounted) {
+      setState(() => _filterPickupDay = _onlyDate(picked));
+    }
   }
 
   @override
@@ -118,18 +225,53 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
   }
 
   Widget _buildHeader() {
+    final List<TpvPreorder> filtered = _filteredAndSortedForDay();
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              const Text(
-                'Encarrecs Pendents',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 10,
+                runSpacing: 8,
+                children: <Widget>[
+                  const Text(
+                    'Encarrecs Pendents',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => _pickFilterDate(context),
+                    icon: const Icon(Icons.calendar_month_rounded, size: 20),
+                    label: Text(_filterDayLabel()),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: TpvTheme.primary,
+                      side: const BorderSide(
+                        color: Color(0xFFBFC8E4),
+                        width: 1.5,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               Text(
-                '${_preorders.length} encarregs pendents',
+                filtered.isEmpty && _preorders.isNotEmpty
+                    ? '0 encàrrecs per a ${_filterDayLabel()} · '
+                        '${_preorders.length} pendents en total (altres dies)'
+                    : '${filtered.length} encarregs pendents · ${_filterDayLabel()}',
                 style: const TextStyle(color: TpvTheme.textSecondary),
               ),
             ],
@@ -173,6 +315,45 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
       return const Center(child: Text('Cap encarrec pendent'));
     }
 
+    final List<TpvPreorder> visible = _filteredAndSortedForDay();
+    if (visible.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(
+                Icons.event_busy_outlined,
+                size: 48,
+                color: TpvTheme.textSecondary.withValues(alpha: 0.7),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'No hi ha encàrrecs per a ${_filterDayLabel()}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                  color: TpvTheme.textMain,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tria un altre dia al calendari o comprova si els encàrrecs '
+                'estan programats per a un altre data de recollida.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: TpvTheme.textSecondary.withValues(alpha: 0.95),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (BuildContext _, BoxConstraints constraints) {
         final int columns = _gridColumns(constraints.maxWidth);
@@ -185,8 +366,8 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
           columns,
           (_) => <TpvPreorder>[],
         );
-        for (int i = 0; i < _preorders.length; i++) {
-          buckets[i % columns].add(_preorders[i]);
+        for (int i = 0; i < visible.length; i++) {
+          buckets[i % columns].add(visible[i]);
         }
 
         final List<Widget> rowChildren = <Widget>[];

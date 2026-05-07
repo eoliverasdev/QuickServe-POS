@@ -101,6 +101,7 @@ class TpvSalesService {
         totalPrice: _parseDouble(o['total_price']),
         itemsCount: items.length,
         pickupDate: _normalizeIsoDate(o['pickup_date']),
+        createdAt: DateTime.tryParse(o['created_at']?.toString() ?? ''),
       );
     }).toList();
   }

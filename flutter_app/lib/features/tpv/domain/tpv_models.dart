@@ -67,6 +67,7 @@ class TpvPreorder {
     required this.totalPrice,
     required this.itemsCount,
     this.pickupDate,
+    this.createdAt,
   });
 
   final int id;
@@ -77,6 +78,8 @@ class TpvPreorder {
   final int itemsCount;
   /// ISO date `yyyy-MM-dd` indicant el dia de recollida.
   final String? pickupDate;
+  /// Data de creació de la comanda (fallback si `pickup_date` és null).
+  final DateTime? createdAt;
 }
 
 class TpvOrderDetail {
