@@ -19,7 +19,7 @@ class PendingPreordersPage extends StatefulWidget {
 
   final AuthService authService;
   final VoidCallback onBack;
-  final VoidCallback onOpenProductsSummary;
+  final void Function(DateTime selectedDay) onOpenProductsSummary;
   final Future<bool> Function(TpvPreorder preorder) onCharge;
   final Future<bool> Function(TpvPreorder preorder) onModify;
   final Future<bool> Function(TpvPreorder preorder) onCancel;
@@ -278,7 +278,7 @@ class _PendingPreordersPageState extends State<PendingPreordersPage> {
           ),
         ),
         OutlinedButton.icon(
-          onPressed: widget.onOpenProductsSummary,
+          onPressed: () => widget.onOpenProductsSummary(_filterPickupDay),
           icon: const Icon(Icons.inventory_2_outlined, size: 18),
           label: const Text('Productes encarregats'),
         ),
