@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -194,6 +195,13 @@ class AdminController extends Controller
 
     public function closeDay(Request $request): JsonResponse
     {
+        if (!Schema::hasTable('daily_closures')) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'Falta la migració de tancament diari (daily_closures). Executa php artisan migrate.',
+            ], 500);
+        }
+
         $ivaPercentatge = 21;
         $today = Carbon::today();
         $now = Carbon::now();
@@ -689,6 +697,10 @@ class AdminController extends Controller
 
     protected function dailyPeriodStart(Carbon $today): Carbon
     {
+        if (!Schema::hasTable('daily_closures')) {
+            return $today->copy()->startOfDay();
+        }
+
         $lastClosure = DailyClosure::whereDate('business_date', $today)
             ->orderByDesc('period_end')
             ->first();

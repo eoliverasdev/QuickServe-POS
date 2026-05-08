@@ -94,22 +94,58 @@ class _CaixaSectionState extends State<CaixaSection> {
   }
 
   Future<String?> _askAndVerifyPinForCloseDay() async {
-    final TextEditingController pinController = TextEditingController();
-    String? errorText;
-    bool verifying = false;
     String? verifiedWorker;
+    const int pinLength = 4;
 
     await showDialog<void>(
       context: context,
       builder: (BuildContext dialogContext) {
+        String currentPin = '';
+        String? errorText;
+        bool verifying = false;
+
         return StatefulBuilder(
           builder: (
             BuildContext context,
             void Function(void Function()) setModalState,
           ) {
+            Widget keypadButton({
+              required String label,
+              required VoidCallback onTap,
+              bool primary = false,
+            }) {
+              return SizedBox(
+                height: 64,
+                child: ElevatedButton(
+                  onPressed: verifying ? null : onTap,
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: primary
+                        ? TpvTheme.primary
+                        : const Color(0xFFF6F7FC),
+                    foregroundColor: primary ? Colors.white : TpvTheme.textMain,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: primary
+                            ? TpvTheme.primary
+                            : const Color(0xFFE3E6F1),
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              );
+            }
+
             Future<void> submit() async {
-              final String pin = pinController.text.trim();
-              if (pin.isEmpty) {
+              if (currentPin.length != pinLength) {
                 setModalState(() => errorText = 'Introdueix un PIN');
                 return;
               }
@@ -118,13 +154,16 @@ class _CaixaSectionState extends State<CaixaSection> {
                 errorText = null;
               });
               try {
-                final String workerName = await _service.verifyPin(pin);
+                final String workerName = await _service.verifyPin(currentPin);
                 if (!dialogContext.mounted) return;
                 verifiedWorker = workerName;
                 Navigator.of(dialogContext).pop();
               } catch (err) {
                 if (!dialogContext.mounted) return;
-                setModalState(() => errorText = err.toString().replaceFirst('Exception: ', ''));
+                setModalState(() {
+                  currentPin = '';
+                  errorText = err.toString().replaceFirst('Exception: ', '');
+                });
               } finally {
                 if (dialogContext.mounted) {
                   setModalState(() => verifying = false);
@@ -138,21 +177,106 @@ class _CaixaSectionState extends State<CaixaSection> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  const Text('Introdueix el PIN d\'encarregat per tancar el dia.'),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: pinController,
-                    obscureText: true,
-                    keyboardType: TextInputType.number,
-                    maxLength: 10,
-                    enabled: !verifying,
-                    decoration: InputDecoration(
-                      labelText: 'PIN',
-                      counterText: '',
-                      errorText: errorText,
-                    ),
-                    onSubmitted: (_) => submit(),
+                  const Text(
+                    'Introdueix el PIN d\'encarregat per tancar el dia.',
                   ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List<Widget>.generate(pinLength, (int index) {
+                      final bool filled = currentPin.length > index;
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: filled ? TpvTheme.primary : Colors.white,
+                          border: Border.all(
+                            color: const Color(0xFFCFD4E3),
+                            width: 2,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  GridView.count(
+                    shrinkWrap: true,
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: <Widget>[
+                      for (final String d in <String>[
+                        '1',
+                        '2',
+                        '3',
+                        '4',
+                        '5',
+                        '6',
+                        '7',
+                        '8',
+                        '9',
+                      ])
+                        keypadButton(
+                          label: d,
+                          onTap: () {
+                            if (currentPin.length >= pinLength) return;
+                            setModalState(() {
+                              errorText = null;
+                              currentPin = '$currentPin$d';
+                            });
+                            if (currentPin.length == pinLength) {
+                              submit();
+                            }
+                          },
+                        ),
+                      keypadButton(
+                        label: 'C',
+                        onTap: () => setModalState(() {
+                          currentPin = '';
+                          errorText = null;
+                        }),
+                      ),
+                      keypadButton(
+                        label: '0',
+                        onTap: () {
+                          if (currentPin.length >= pinLength) return;
+                          setModalState(() {
+                            errorText = null;
+                            currentPin = '${currentPin}0';
+                          });
+                          if (currentPin.length == pinLength) {
+                            submit();
+                          }
+                        },
+                      ),
+                      keypadButton(
+                        label: '⌫',
+                        onTap: () {
+                          if (currentPin.isEmpty) return;
+                          setModalState(() {
+                            currentPin = currentPin.substring(
+                              0,
+                              currentPin.length - 1,
+                            );
+                            errorText = null;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  if (errorText != null) ...<Widget>[
+                    const SizedBox(height: 8),
+                    Text(
+                      errorText!,
+                      style: const TextStyle(
+                        color: TpvTheme.danger,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ],
               ),
               actions: <Widget>[
@@ -161,7 +285,9 @@ class _CaixaSectionState extends State<CaixaSection> {
                   child: const Text('Cancel·lar'),
                 ),
                 FilledButton(
-                  onPressed: verifying ? null : submit,
+                  onPressed: verifying || currentPin.length != pinLength
+                      ? null
+                      : submit,
                   child: verifying
                       ? const SizedBox(
                           width: 16,
@@ -177,7 +303,6 @@ class _CaixaSectionState extends State<CaixaSection> {
       },
     );
 
-    pinController.dispose();
     return verifiedWorker;
   }
 
