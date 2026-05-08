@@ -16,7 +16,8 @@ abstract final class TpvResponsive {
     double gridInnerWidth, {
     double? screenWidth,
   }) {
-    if (screenWidth != null && screenWidth >= 1300 && gridInnerWidth >= 860) {
+    // Keep 4 columns on large iPad layouts even if side panels reduce grid width.
+    if (screenWidth != null && screenWidth >= 1200 && gridInnerWidth >= 760) {
       return 4;
     }
     if (gridInnerWidth >= 1400) return 5;
