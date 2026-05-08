@@ -1107,7 +1107,8 @@ class _TpvPageState extends State<TpvPage> {
         builder: (_) => PendingPreordersPage(
           authService: widget.authService,
           onBack: () => Navigator.of(context).pop(),
-          onOpenProductsSummary: _openPendingProductsSummaryDialog,
+          onOpenProductsSummary: (DateTime selectedDay) =>
+              _openPendingProductsSummaryDialog(selectedDay: selectedDay),
           onCharge: (TpvPreorder preorder) =>
               _openChargePreorderPaymentPage(preorder),
           onModify: (TpvPreorder preorder) async {
@@ -1134,9 +1135,36 @@ class _TpvPageState extends State<TpvPage> {
     return diff <= 15 && diff >= -120;
   }
 
-  Future<void> _openPendingProductsSummaryDialog() async {
+  String _formatDayIso(DateTime d) {
+    final DateTime only = _onlyDate(d);
+    return '${only.year.toString().padLeft(4, '0')}-'
+        '${only.month.toString().padLeft(2, '0')}-'
+        '${only.day.toString().padLeft(2, '0')}';
+  }
+
+  String _effectivePickupDayIso(TpvPreorder preorder) {
+    final String? pickupDate = preorder.pickupDate?.trim();
+    if (pickupDate != null && pickupDate.isNotEmpty) {
+      return pickupDate.substring(0, min(10, pickupDate.length));
+    }
+    if (preorder.createdAt != null) {
+      return _formatDayIso(preorder.createdAt!);
+    }
+    return _formatDayIso(DateTime.now());
+  }
+
+  Future<void> _openPendingProductsSummaryDialog({DateTime? selectedDay}) async {
+    final String? targetDayIso = selectedDay == null
+        ? null
+        : _formatDayIso(selectedDay);
+    final Iterable<TpvPreorder> source = targetDayIso == null
+        ? _pendingPreorders
+        : _pendingPreorders.where(
+            (TpvPreorder preorder) =>
+                _effectivePickupDayIso(preorder) == targetDayIso,
+          );
     final Map<String, int> totals = <String, int>{};
-    for (final TpvPreorder preorder in _pendingPreorders) {
+    for (final TpvPreorder preorder in source) {
       try {
         final TpvOrderDetail detail = await TpvSalesService(
           ApiClient(),
@@ -1190,7 +1218,8 @@ class _TpvPageState extends State<TpvPage> {
                   Text(
                     sorted.isEmpty
                         ? 'Sense productes pendents'
-                        : '${sorted.length} productes amb encàrrecs pendents',
+                        : '${sorted.length} productes amb encàrrecs pendents'
+                            '${targetDayIso == null ? '' : ' · $targetDayIso'}',
                     style: const TextStyle(
                       color: TpvTheme.textSecondary,
                       fontWeight: FontWeight.w600,
