@@ -20,6 +20,7 @@ class _CaixaSectionState extends State<CaixaSection> {
   AdminDashboardData? _data;
   Object? _error;
   bool _loading = true;
+  bool _closingDay = false;
 
   @override
   void initState() {
@@ -42,6 +43,142 @@ class _CaixaSectionState extends State<CaixaSection> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _confirmAndCloseDay() async {
+    if (_closingDay) return;
+    final String? workerName = await _askAndVerifyPinForCloseDay();
+    if (workerName == null || !mounted) return;
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Tancar el dia'),
+          content: const Text(
+            'Segur que vols tancar la jornada?\n\n'
+            'Es guardaran les estadístiques diàries a la base de dades i es '
+            'reiniciaran els comptadors diaris de caixa.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel·lar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Sí, tancar dia'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _closingDay = true);
+    try {
+      await _service.closeDay();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Dia tancat correctament per $workerName')),
+      );
+      await _load();
+    } catch (err) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error en tancar el dia: $err')),
+      );
+    } finally {
+      if (mounted) setState(() => _closingDay = false);
+    }
+  }
+
+  Future<String?> _askAndVerifyPinForCloseDay() async {
+    final TextEditingController pinController = TextEditingController();
+    String? errorText;
+    bool verifying = false;
+    String? verifiedWorker;
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (
+            BuildContext context,
+            void Function(void Function()) setModalState,
+          ) {
+            Future<void> submit() async {
+              final String pin = pinController.text.trim();
+              if (pin.isEmpty) {
+                setModalState(() => errorText = 'Introdueix un PIN');
+                return;
+              }
+              setModalState(() {
+                verifying = true;
+                errorText = null;
+              });
+              try {
+                final String workerName = await _service.verifyPin(pin);
+                if (!dialogContext.mounted) return;
+                verifiedWorker = workerName;
+                Navigator.of(dialogContext).pop();
+              } catch (err) {
+                if (!dialogContext.mounted) return;
+                setModalState(() => errorText = err.toString().replaceFirst('Exception: ', ''));
+              } finally {
+                if (dialogContext.mounted) {
+                  setModalState(() => verifying = false);
+                }
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('Autorització requerida'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text('Introdueix el PIN d\'encarregat per tancar el dia.'),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: pinController,
+                    obscureText: true,
+                    keyboardType: TextInputType.number,
+                    maxLength: 10,
+                    enabled: !verifying,
+                    decoration: InputDecoration(
+                      labelText: 'PIN',
+                      counterText: '',
+                      errorText: errorText,
+                    ),
+                    onSubmitted: (_) => submit(),
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: verifying ? null : () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel·lar'),
+                ),
+                FilledButton(
+                  onPressed: verifying ? null : submit,
+                  child: verifying
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Validar PIN'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    pinController.dispose();
+    return verifiedWorker;
   }
 
   @override
@@ -124,6 +261,28 @@ class _CaixaSectionState extends State<CaixaSection> {
             }),
             const SizedBox(height: 14),
             _IvaBreakdownCard(caixa: caixa),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _closingDay ? null : _confirmAndCloseDay,
+                style: FilledButton.styleFrom(
+                  backgroundColor: TpvTheme.danger,
+                  minimumSize: const Size.fromHeight(52),
+                ),
+                icon: _closingDay
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.lock_clock_rounded),
+                label: Text(_closingDay ? 'Tancant dia...' : 'Tancar el dia'),
+              ),
+            ),
             const SizedBox(height: 14),
           ],
         ),

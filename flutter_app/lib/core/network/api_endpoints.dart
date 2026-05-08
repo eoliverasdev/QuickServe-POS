@@ -20,6 +20,7 @@ class ApiEndpoints {
   // Admin
   static const String adminVerifyPin = '/admin/verify-pin';
   static const String adminDashboard = '/admin/dashboard';
+  static const String adminCloseDay = '/admin/close-day';
   static const String adminCategories = '/admin/categories';
   static const String adminProducts = '/admin/products';
   static const String adminProductsUpload = '/admin/products/upload-image';

@@ -61,6 +61,22 @@ class AdminService {
     return AdminDashboardData.fromJson(data);
   }
 
+  Future<void> closeDay() async {
+    final String token = await _requireToken();
+    try {
+      await _apiClient.dio.post(
+        ApiEndpoints.adminCloseDay,
+        options: _auth(token),
+      );
+    } on DioException catch (err) {
+      final dynamic data = err.response?.data;
+      if (data is Map<String, dynamic> && data['error'] is String) {
+        throw Exception(data['error'] as String);
+      }
+      throw Exception('No s\'ha pogut tancar el dia');
+    }
+  }
+
   // ── Categories ─────────────────────────────────────────────────────────
 
   Future<List<AdminCategory>> fetchCategories() async {

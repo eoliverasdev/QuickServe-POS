@@ -42,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->group(function () {
         Route::post('/verify-pin', [AdminController::class, 'verifyPin']);
         Route::get('/dashboard', [AdminController::class, 'dashboard']);
+        Route::post('/close-day', [AdminController::class, 'closeDay']);
 
         Route::get('/categories', [AdminController::class, 'listCategories']);
         Route::post('/categories', [AdminController::class, 'storeCategory']);

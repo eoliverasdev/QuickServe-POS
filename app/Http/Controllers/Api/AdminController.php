@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\DailyClosure;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -43,17 +44,20 @@ class AdminController extends Controller
     public function dashboard(): JsonResponse
     {
         $ivaPercentatge = 21;
+        $today = Carbon::today();
+        $periodStart = $this->dailyPeriodStart($today);
+        $periodEnd = Carbon::now();
 
-        $totalAvui = (float) Order::whereDate('created_at', Carbon::today())
+        $dailyPaid = Order::whereBetween('created_at', [$periodStart, $periodEnd])
             ->where('status', 'Pagat')
-            ->sum('total_price');
-        $comandesComptador = (int) Order::whereDate('created_at', Carbon::today())
-            ->where('status', 'Pagat')
-            ->count();
-        $efectiuAvui = (float) Order::whereDate('created_at', Carbon::today())
+            ->get(['id', 'total_price', 'payment_method']);
+
+        $totalAvui = (float) $dailyPaid->sum('total_price');
+        $comandesComptador = (int) $dailyPaid->count();
+        $efectiuAvui = (float) $dailyPaid
             ->where('payment_method', 'Efectiu')
             ->sum('total_price');
-        $targetaAvui = (float) Order::whereDate('created_at', Carbon::today())
+        $targetaAvui = (float) $dailyPaid
             ->where('payment_method', 'Targeta')
             ->sum('total_price');
 
@@ -66,8 +70,8 @@ class AdminController extends Controller
             ->sum('total_price');
 
         $millorWorker = Worker::withCount([
-            'orders' => function ($q) {
-                $q->whereDate('created_at', Carbon::today())->where('status', 'Pagat');
+            'orders' => function ($q) use ($periodStart, $periodEnd) {
+                $q->whereBetween('created_at', [$periodStart, $periodEnd])->where('status', 'Pagat');
             },
         ])->orderBy('orders_count', 'desc')->first();
 
@@ -185,6 +189,72 @@ class AdminController extends Controller
             ],
             'top_per_day' => $topPerDia,
             'current_dow' => (int) Carbon::now()->format('w'),
+        ]);
+    }
+
+    public function closeDay(Request $request): JsonResponse
+    {
+        $ivaPercentatge = 21;
+        $today = Carbon::today();
+        $now = Carbon::now();
+
+        $alreadyClosed = DailyClosure::whereDate('business_date', $today)->exists();
+        if ($alreadyClosed) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'El dia d\'avui ja està tancat.',
+            ], 409);
+        }
+
+        $periodStart = $this->dailyPeriodStart($today);
+        $dailyPaid = Order::whereBetween('created_at', [$periodStart, $now])
+            ->where('status', 'Pagat')
+            ->get(['total_price', 'payment_method']);
+
+        $totalAvui = (float) $dailyPaid->sum('total_price');
+        $comandesComptador = (int) $dailyPaid->count();
+        $efectiuAvui = (float) $dailyPaid
+            ->where('payment_method', 'Efectiu')
+            ->sum('total_price');
+        $targetaAvui = (float) $dailyPaid
+            ->where('payment_method', 'Targeta')
+            ->sum('total_price');
+
+        $baseImposable = $totalAvui / (1 + ($ivaPercentatge / 100));
+        $quotaIva = $totalAvui - $baseImposable;
+        $tiquetMig = $comandesComptador > 0 ? round($totalAvui / $comandesComptador, 2) : 0.0;
+
+        $closure = DailyClosure::create([
+            'business_date' => $today->toDateString(),
+            'period_start' => $periodStart,
+            'period_end' => $now,
+            'iva_percent' => $ivaPercentatge,
+            'orders_count' => $comandesComptador,
+            'total_brut' => round($totalAvui, 2),
+            'cash_total' => round($efectiuAvui, 2),
+            'card_total' => round($targetaAvui, 2),
+            'base_imposable' => round($baseImposable, 2),
+            'iva_quota' => round($quotaIva, 2),
+            'ticket_avg' => $tiquetMig,
+            'closed_by_user_id' => $request->user()?->id,
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Jornada tancada correctament.',
+            'closure' => [
+                'id' => $closure->id,
+                'business_date' => $closure->business_date?->format('Y-m-d'),
+                'period_start' => $closure->period_start?->toIso8601String(),
+                'period_end' => $closure->period_end?->toIso8601String(),
+                'orders_count' => $closure->orders_count,
+                'total_brut' => round((float) $closure->total_brut, 2),
+                'cash_total' => round((float) $closure->cash_total, 2),
+                'card_total' => round((float) $closure->card_total, 2),
+                'base_imposable' => round((float) $closure->base_imposable, 2),
+                'iva_quota' => round((float) $closure->iva_quota, 2),
+                'ticket_avg' => round((float) $closure->ticket_avg, 2),
+            ],
         ]);
     }
 
@@ -615,5 +685,18 @@ class AdminController extends Controller
             'category_name' => $category?->name,
             'category_color' => $category?->color,
         ];
+    }
+
+    protected function dailyPeriodStart(Carbon $today): Carbon
+    {
+        $lastClosure = DailyClosure::whereDate('business_date', $today)
+            ->orderByDesc('period_end')
+            ->first();
+
+        if ($lastClosure?->period_end) {
+            return Carbon::parse($lastClosure->period_end);
+        }
+
+        return $today->copy()->startOfDay();
     }
 }
