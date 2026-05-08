@@ -17,6 +17,7 @@ import '../data/tpv_sales_service.dart';
 import '../domain/tpv_models.dart';
 import 'payment_page.dart';
 import 'pending_preorders_page.dart';
+import 'tpv_responsive.dart';
 
 class TpvPage extends StatefulWidget {
   const TpvPage({
@@ -2394,10 +2395,6 @@ class _TpvPageState extends State<TpvPage> {
 
   @override
   Widget build(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
-    final bool compact = width < 1200;
-    final double ticketWidth = compact ? 340 : 410;
-
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -2408,76 +2405,104 @@ class _TpvPageState extends State<TpvPage> {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: <Widget>[
-                _buildSideBar(),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFE4E8F4)),
-                      boxShadow: const <BoxShadow>[
-                        BoxShadow(
-                          color: Color(0x10000000),
-                          blurRadius: 20,
-                          offset: Offset(0, 8),
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final double fullW = constraints.maxWidth;
+              final double sidebarW = TpvResponsive.sideBarWidth(fullW);
+              final double gap = TpvResponsive.horizontalGap(fullW);
+              final double ticketW = TpvResponsive.ticketPanelWidth(fullW);
+              final double edgePad = TpvResponsive.screenEdgePadding(fullW);
+              final double panelPad = TpvResponsive.cardPanelPadding(fullW);
+              final double gridAreaW = max(
+                320,
+                fullW - edgePad * 2 - sidebarW - gap * 2 - ticketW,
+              );
+              final double layoutScale = TpvResponsive.contentScale(gridAreaW);
+
+              return Padding(
+                padding: EdgeInsets.all(edgePad),
+                child: Row(
+                  children: <Widget>[
+                    _buildSideBar(width: sidebarW),
+                    SizedBox(width: gap),
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.fromLTRB(
+                          panelPad + 4,
+                          max(8, panelPad - 4),
+                          panelPad + 4,
+                          panelPad,
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: <Widget>[
-                            Expanded(child: _buildCategories()),
-                            const SizedBox(width: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 7,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF0F3FF),
-                                borderRadius: BorderRadius.circular(999),
-                                border: Border.all(
-                                  color: const Color(0xFFD9E1FA),
-                                ),
-                              ),
-                              child: Text(
-                                '${_filteredProducts.length} productes',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: TpvTheme.textSecondary,
-                                ),
-                              ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: const Color(0xFFE4E8F4)),
+                          boxShadow: const <BoxShadow>[
+                            BoxShadow(
+                              color: Color(0x10000000),
+                              blurRadius: 20,
+                              offset: Offset(0, 8),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        Expanded(child: _buildProductsBody(compact: compact)),
-                      ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: <Widget>[
+                                Expanded(
+                                  child: _buildCategories(
+                                    layoutScale: layoutScale,
+                                  ),
+                                ),
+                                SizedBox(width: gap),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12 * layoutScale,
+                                    vertical: 7 * layoutScale,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF0F3FF),
+                                    borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(
+                                      color: const Color(0xFFD9E1FA),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '${_filteredProducts.length} productes',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: TpvTheme.textSecondary,
+                                      fontSize: 14 * layoutScale,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12 * layoutScale),
+                            Expanded(child: _buildProductsBody()),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                    SizedBox(width: gap),
+                    _buildTicket(width: ticketW, scale: layoutScale),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                _buildTicket(width: ticketWidth),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSideBar() {
+  Widget _buildSideBar({required double width}) {
+    final double iconBox = (width * 0.62).clamp(46.0, 56.0);
+    final double iconSize = (width * 0.29).clamp(22.0, 26.0);
     return Container(
-      width: 90,
+      width: width,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.86),
         borderRadius: BorderRadius.circular(24),
@@ -2493,11 +2518,19 @@ class _TpvPageState extends State<TpvPage> {
       child: Column(
         children: <Widget>[
           const SizedBox(height: 16),
-          _sideIcon(Icons.grid_view_rounded, active: true, onTap: () {}),
+          _sideIcon(
+            Icons.grid_view_rounded,
+            active: true,
+            onTap: () {},
+            iconBox: iconBox,
+            iconSize: iconSize,
+          ),
           _sideIcon(
             Icons.shopping_bag_rounded,
             badge: _pendingUrgentCount > 0 ? '$_pendingUrgentCount' : null,
             onTap: _openPendingPreordersPage,
+            iconBox: iconBox,
+            iconSize: iconSize,
           ),
           _sideIcon(
             Icons.pause_circle_outline_rounded,
@@ -2505,8 +2538,15 @@ class _TpvPageState extends State<TpvPage> {
                 ? '${_parkedTickets.length}'
                 : null,
             onTap: _openParkedTicketsDialog,
+            iconBox: iconBox,
+            iconSize: iconSize,
           ),
-          _sideIcon(Icons.lock_outline_rounded, onTap: _openAdminPinDialog),
+          _sideIcon(
+            Icons.lock_outline_rounded,
+            onTap: _openAdminPinDialog,
+            iconBox: iconBox,
+            iconSize: iconSize,
+          ),
           const Spacer(),
           IconButton(
             onPressed: _loggingOut ? null : _logout,
@@ -2523,6 +2563,8 @@ class _TpvPageState extends State<TpvPage> {
     required VoidCallback onTap,
     bool active = false,
     String? badge,
+    double iconBox = 56,
+    double iconSize = 26,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -2532,8 +2574,8 @@ class _TpvPageState extends State<TpvPage> {
         child: Stack(
           children: <Widget>[
             Container(
-              width: 56,
-              height: 56,
+              width: iconBox,
+              height: iconBox,
               decoration: BoxDecoration(
                 gradient: active
                     ? const LinearGradient(
@@ -2560,7 +2602,7 @@ class _TpvPageState extends State<TpvPage> {
               child: Icon(
                 icon,
                 color: active ? Colors.white : TpvTheme.textSecondary,
-                size: 26,
+                size: iconSize,
               ),
             ),
             if (badge != null)
@@ -2592,14 +2634,14 @@ class _TpvPageState extends State<TpvPage> {
     );
   }
 
-  Widget _buildCategories() {
+  Widget _buildCategories({double layoutScale = 1.0}) {
     return SizedBox(
-      height: 56,
+      height: (56 * layoutScale).clamp(44.0, 56.0),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _categories.length,
         separatorBuilder: (BuildContext context, int index) =>
-            const SizedBox(width: 10),
+            SizedBox(width: 10 * layoutScale),
         itemBuilder: (_, int i) {
           final TpvCategory c = _categories[i];
           final bool active = c.id == _selectedCategory;
@@ -2608,7 +2650,10 @@ class _TpvPageState extends State<TpvPage> {
             borderRadius: BorderRadius.circular(18),
             onTap: () => setState(() => _selectedCategory = c.id),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+              padding: EdgeInsets.symmetric(
+                horizontal: 22 * layoutScale,
+                vertical: 14 * layoutScale,
+              ),
               decoration: BoxDecoration(
                 gradient: active
                     ? LinearGradient(
@@ -2641,6 +2686,7 @@ class _TpvPageState extends State<TpvPage> {
                 c.name,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
+                  fontSize: 15 * layoutScale,
                   color: active
                       ? Colors.white
                       : Color.lerp(accent, Colors.black, 0.18),
@@ -2665,7 +2711,7 @@ class _TpvPageState extends State<TpvPage> {
     return Color(parsed);
   }
 
-  Widget _buildProductsBody({required bool compact}) {
+  Widget _buildProductsBody() {
     if (_loadingCatalog) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -2690,145 +2736,159 @@ class _TpvPageState extends State<TpvPage> {
       return const Center(child: Text('No hi ha productes'));
     }
 
-    return GridView.builder(
-      key: ValueKey<String>(
-        'tpv-products:$_selectedCategory:${compact ? 'compact' : 'wide'}',
-      ),
-      itemCount: _filteredProducts.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: compact ? 2 : 4,
-        childAspectRatio: compact ? 0.78 : 0.88,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemBuilder: (_, int index) {
-        final TpvProduct product = _filteredProducts[index];
-        final int qty = _qtyForProduct(product);
-        final int? stockLeft = _remainingStock(product);
-        return Card(
-          key: ValueKey<int>(product.id),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: () => _handleAddProduct(product),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child:
-                          product.imageUrl != null &&
-                              product.imageUrl!.isNotEmpty
-                          ? Image.network(
-                              key: ValueKey<String>(
-                                '${product.id}:${product.imageUrl}',
-                              ),
-                              product.imageUrl!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              webHtmlElementStrategy:
-                                  WebHtmlElementStrategy.prefer,
-                              errorBuilder: (_, _, _) => Container(
-                                color: const Color(0xFFF8F9FE),
-                                width: double.infinity,
-                                child: const Icon(
-                                  Icons.fastfood_rounded,
-                                  color: TpvTheme.primary,
-                                  size: 36,
-                                ),
-                              ),
-                              loadingBuilder:
-                                  (
-                                    BuildContext _,
-                                    Widget child,
-                                    ImageChunkEvent? progress,
-                                  ) {
-                                    if (progress == null) return child;
-                                    return Container(
-                                      color: const Color(0xFFF8F9FE),
-                                      width: double.infinity,
-                                      alignment: Alignment.center,
-                                      child: const SizedBox(
-                                        width: 22,
-                                        height: 22,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                            )
-                          : Container(
-                              color: const Color(0xFFF8F9FE),
-                              width: double.infinity,
-                              child: const Icon(
-                                Icons.fastfood_rounded,
-                                color: TpvTheme.primary,
-                                size: 36,
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    product.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    '${product.price.toStringAsFixed(2)}€',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                    ),
-                  ),
-                  if (stockLeft != null)
-                    Text(
-                      stockLeft <= 0 ? 'Esgotat' : '$stockLeft restants',
-                      style: TextStyle(
-                        color: stockLeft <= 0
-                            ? TpvTheme.danger
-                            : TpvTheme.textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  const SizedBox(height: 8),
-                  Row(
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double w = constraints.maxWidth;
+        final double scale = TpvResponsive.contentScale(w);
+        final int cols = TpvResponsive.productGridCrossAxisCount(w);
+        final double aspect = TpvResponsive.productGridAspectRatio(w, cols);
+        final double spacing = TpvResponsive.gridSpacing(w);
+        final EdgeInsets cardPadding = EdgeInsets.all(12 * scale);
+
+        return GridView.builder(
+          key: ValueKey<String>('tpv-products:$_selectedCategory:$cols'),
+          itemCount: _filteredProducts.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: cols,
+            childAspectRatio: aspect,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: spacing,
+          ),
+          itemBuilder: (_, int index) {
+            final TpvProduct product = _filteredProducts[index];
+            final int qty = _qtyForProduct(product);
+            final int? stockLeft = _remainingStock(product);
+            return Card(
+              key: ValueKey<int>(product.id),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: () => _handleAddProduct(product),
+                child: Padding(
+                  padding: cardPadding,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: qty <= 0
-                              ? null
-                              : () => _removeOneFromProduct(product),
-                          child: const Text('-'),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child:
+                              product.imageUrl != null &&
+                                  product.imageUrl!.isNotEmpty
+                              ? Image.network(
+                                  key: ValueKey<String>(
+                                    '${product.id}:${product.imageUrl}',
+                                  ),
+                                  product.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  webHtmlElementStrategy:
+                                      WebHtmlElementStrategy.prefer,
+                                  errorBuilder: (_, _, _) => Container(
+                                    color: const Color(0xFFF8F9FE),
+                                    width: double.infinity,
+                                    child: Icon(
+                                      Icons.fastfood_rounded,
+                                      color: TpvTheme.primary,
+                                      size: 36 * scale,
+                                    ),
+                                  ),
+                                  loadingBuilder:
+                                      (
+                                        BuildContext _,
+                                        Widget child,
+                                        ImageChunkEvent? progress,
+                                      ) {
+                                        if (progress == null) return child;
+                                        return Container(
+                                          color: const Color(0xFFF8F9FE),
+                                          width: double.infinity,
+                                          alignment: Alignment.center,
+                                          child: SizedBox(
+                                            width: 22 * scale,
+                                            height: 22 * scale,
+                                            child: const CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                )
+                              : Container(
+                                  color: const Color(0xFFF8F9FE),
+                                  width: double.infinity,
+                                  child: Icon(
+                                    Icons.fastfood_rounded,
+                                    color: TpvTheme.primary,
+                                    size: 36 * scale,
+                                  ),
+                                ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(
-                          '$qty',
-                          style: const TextStyle(fontWeight: FontWeight.w800),
+                      SizedBox(height: 10 * scale),
+                      Text(
+                        product.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16 * scale,
                         ),
                       ),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () => _handleAddProduct(product),
-                          child: const Text('+'),
+                      Text(
+                        '${product.price.toStringAsFixed(2)}€',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16 * scale,
                         ),
+                      ),
+                      if (stockLeft != null)
+                        Text(
+                          stockLeft <= 0 ? 'Esgotat' : '$stockLeft restants',
+                          style: TextStyle(
+                            color: stockLeft <= 0
+                                ? TpvTheme.danger
+                                : TpvTheme.textSecondary,
+                            fontSize: 12 * scale,
+                          ),
+                        ),
+                      SizedBox(height: 8 * scale),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: qty <= 0
+                                  ? null
+                                  : () => _removeOneFromProduct(product),
+                              child: const Text('-'),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10 * scale,
+                            ),
+                            child: Text(
+                              '$qty',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15 * scale,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () => _handleAddProduct(product),
+                              child: const Text('+'),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -2843,10 +2903,11 @@ class _TpvPageState extends State<TpvPage> {
     _changeQty(item.product, -1, notes: item.notes);
   }
 
-  Widget _buildTicket({required double width}) {
+  Widget _buildTicket({required double width, double scale = 1.0}) {
+    final double pad = (20 * scale).clamp(12.0, 22.0);
     return Container(
       width: width,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(pad),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(24),
@@ -2864,23 +2925,32 @@ class _TpvPageState extends State<TpvPage> {
         children: <Widget>[
           Row(
             children: <Widget>[
-              const Expanded(
-                child: Text(
-                  'Ordre actual',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 28),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Ordre actual',
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: (28 * scale).clamp(18.0, 28.0),
+                    ),
+                  ),
                 ),
               ),
               if (_cart.isNotEmpty)
                 IconButton(
                   onPressed: _clearCart,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.delete_outline,
                     color: TpvTheme.danger,
+                    size: 22 * scale,
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8 * scale),
           Expanded(
             child: _cart.isEmpty
                 ? const Center(child: Text('No hi ha productes al ticket'))
@@ -2976,21 +3046,21 @@ class _TpvPageState extends State<TpvPage> {
                   ),
           ),
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all((14 * scale).clamp(10.0, 14.0)),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               color: const Color(0xFFF8F9FE),
             ),
             child: Column(
               children: <Widget>[
-                _summaryRow('Base imposable', _subTotal),
-                _summaryRow('IVA (21%)', _iva),
-                const Divider(height: 16),
-                _summaryRow('Total', _total, total: true),
+                _summaryRow('Base imposable', _subTotal, scale: scale),
+                _summaryRow('IVA (21%)', _iva, scale: scale),
+                Divider(height: (16 * scale).clamp(12.0, 16.0)),
+                _summaryRow('Total', _total, total: true, scale: scale),
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10 * scale),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
@@ -3001,7 +3071,7 @@ class _TpvPageState extends State<TpvPage> {
               label: Text(_submittingOrder ? 'Processant...' : 'Venda'),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8 * scale),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -3012,7 +3082,7 @@ class _TpvPageState extends State<TpvPage> {
               label: const Text('Encàrrec'),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8 * scale),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -3028,21 +3098,33 @@ class _TpvPageState extends State<TpvPage> {
     );
   }
 
-  Widget _summaryRow(String label, double value, {bool total = false}) {
+  Widget _summaryRow(
+    String label,
+    double value, {
+    bool total = false,
+    double scale = 1.0,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: total ? FontWeight.w900 : FontWeight.w500,
+        Flexible(
+          child: Text(
+            label,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontWeight: total ? FontWeight.w900 : FontWeight.w500,
+              fontSize: (total ? 17 : 14) * scale,
+            ),
           ),
         ),
         Text(
           '${value.toStringAsFixed(2)}€',
           style: TextStyle(
             fontWeight: total ? FontWeight.w900 : FontWeight.w600,
-            fontSize: total ? 26 : 16,
+            fontSize: ((total ? 26 : 16) * scale).clamp(
+              total ? 18.0 : 12.0,
+              total ? 30.0 : 18.0,
+            ),
           ),
         ),
       ],

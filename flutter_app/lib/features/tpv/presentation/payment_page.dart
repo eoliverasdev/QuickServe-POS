@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/tpv_theme.dart';
 import '../domain/tpv_models.dart';
+import 'tpv_responsive.dart';
 
 class PaymentPage extends StatefulWidget {
   const PaymentPage({
@@ -141,7 +142,11 @@ class _PaymentPageState extends State<PaymentPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bool wide = MediaQuery.of(context).size.width >= 1100;
+    final double w = MediaQuery.sizeOf(context).width;
+    final bool wide = w >= 900;
+    final double outerPad = TpvResponsive.screenEdgePadding(w);
+    final double shellPad = (w < 800 ? 12.0 : 18.0).clamp(12.0, 20.0);
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -153,9 +158,9 @@ class _PaymentPageState extends State<PaymentPage> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(outerPad),
             child: Container(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(shellPad),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.86),
                 borderRadius: BorderRadius.circular(24),
@@ -206,8 +211,10 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Widget _panelShell({required Widget child}) {
+    final double w = MediaQuery.sizeOf(context).width;
+    final double pad = w < 800 ? 12.0 : (w < 1100 ? 14.0 : 16.0);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(pad),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -225,11 +232,13 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Widget _buildWideLayout() {
+    final double gap = MediaQuery.sizeOf(context).width < 800 ? 8 : 14;
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Expanded(child: _buildSummaryPanel()),
-        const SizedBox(width: 14),
-        SizedBox(width: 430, child: _buildPaymentPanel()),
+        Expanded(flex: 12, child: _buildSummaryPanel()),
+        SizedBox(width: gap),
+        Expanded(flex: 11, child: _buildPaymentPanel()),
       ],
     );
   }
@@ -237,9 +246,15 @@ class _PaymentPageState extends State<PaymentPage> {
   Widget _buildNarrowLayout() {
     return Column(
       children: <Widget>[
-        Expanded(child: _buildSummaryPanel()),
+        Expanded(
+          flex: 13,
+          child: _buildSummaryPanel(),
+        ),
         const SizedBox(height: 10),
-        SizedBox(height: 330, child: _buildPaymentPanel()),
+        Expanded(
+          flex: 11,
+          child: _buildPaymentPanel(),
+        ),
       ],
     );
   }
@@ -689,20 +704,39 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onBack;
   @override
   Widget build(BuildContext context) {
+    final double w = MediaQuery.sizeOf(context).width;
+    final double titleSize = w < 800 ? 18.0 : 22.0;
+    final double subSize = w < 800 ? 13.0 : 14.0;
     return Row(
       children: <Widget>[
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: titleSize,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
-              Text(subtitle),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  subtitle,
+                  maxLines: 2,
+                  style: TextStyle(
+                    fontSize: subSize,
+                    color: TpvTheme.textSecondary,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -734,11 +768,14 @@ class _MethodCard extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
+    final double w = MediaQuery.sizeOf(context).width;
+    final double h = w < 800 ? 52.0 : 60.0;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        height: 60,
+        height: h,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
@@ -747,7 +784,16 @@ class _MethodCard extends StatelessWidget {
           ),
           color: selected ? const Color(0xFFF0F3FF) : Colors.white,
         ),
-        child: Center(child: Text(label)),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+            ),
+          ),
+        ),
       ),
     );
   }
