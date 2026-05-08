@@ -10,8 +10,15 @@ abstract final class TpvResponsive {
     return 1.0;
   }
 
-  /// Product grid columns from **available grid width** (middle panel), not full screen.
-  static int productGridCrossAxisCount(double gridInnerWidth) {
+  /// Product grid columns from **available grid width** (middle panel), with
+  /// an escape hatch for very wide devices (e.g. iPad 13") to keep 4 columns.
+  static int productGridCrossAxisCount(
+    double gridInnerWidth, {
+    double? screenWidth,
+  }) {
+    if (screenWidth != null && screenWidth >= 1300 && gridInnerWidth >= 860) {
+      return 4;
+    }
     if (gridInnerWidth >= 1400) return 5;
     if (gridInnerWidth >= 1080) return 4;
     if (gridInnerWidth >= 760) return 3;
