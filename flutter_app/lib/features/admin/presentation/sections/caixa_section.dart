@@ -201,71 +201,83 @@ class _CaixaSectionState extends State<CaixaSection> {
                     }),
                   ),
                   const SizedBox(height: 12),
-                  GridView.count(
-                    shrinkWrap: true,
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: <Widget>[
-                      for (final String d in <String>[
-                        '1',
-                        '2',
-                        '3',
-                        '4',
-                        '5',
-                        '6',
-                        '7',
-                        '8',
-                        '9',
-                      ])
-                        keypadButton(
-                          label: d,
-                          onTap: () {
-                            if (currentPin.length >= pinLength) return;
-                            setModalState(() {
+                  SizedBox(
+                    width: 240,
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: <Widget>[
+                        for (final String d in <String>[
+                          '1',
+                          '2',
+                          '3',
+                          '4',
+                          '5',
+                          '6',
+                          '7',
+                          '8',
+                          '9',
+                        ])
+                          SizedBox(
+                            width: (240 - 16) / 3,
+                            child: keypadButton(
+                              label: d,
+                              onTap: () {
+                                if (currentPin.length >= pinLength) return;
+                                setModalState(() {
+                                  errorText = null;
+                                  currentPin = '$currentPin$d';
+                                });
+                                if (currentPin.length == pinLength) {
+                                  submit();
+                                }
+                              },
+                            ),
+                          ),
+                        SizedBox(
+                          width: (240 - 16) / 3,
+                          child: keypadButton(
+                            label: 'C',
+                            onTap: () => setModalState(() {
+                              currentPin = '';
                               errorText = null;
-                              currentPin = '$currentPin$d';
-                            });
-                            if (currentPin.length == pinLength) {
-                              submit();
-                            }
-                          },
+                            }),
+                          ),
                         ),
-                      keypadButton(
-                        label: 'C',
-                        onTap: () => setModalState(() {
-                          currentPin = '';
-                          errorText = null;
-                        }),
-                      ),
-                      keypadButton(
-                        label: '0',
-                        onTap: () {
-                          if (currentPin.length >= pinLength) return;
-                          setModalState(() {
-                            errorText = null;
-                            currentPin = '${currentPin}0';
-                          });
-                          if (currentPin.length == pinLength) {
-                            submit();
-                          }
-                        },
-                      ),
-                      keypadButton(
-                        label: '⌫',
-                        onTap: () {
-                          if (currentPin.isEmpty) return;
-                          setModalState(() {
-                            currentPin = currentPin.substring(
-                              0,
-                              currentPin.length - 1,
-                            );
-                            errorText = null;
-                          });
-                        },
-                      ),
-                    ],
+                        SizedBox(
+                          width: (240 - 16) / 3,
+                          child: keypadButton(
+                            label: '0',
+                            onTap: () {
+                              if (currentPin.length >= pinLength) return;
+                              setModalState(() {
+                                errorText = null;
+                                currentPin = '${currentPin}0';
+                              });
+                              if (currentPin.length == pinLength) {
+                                submit();
+                              }
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          width: (240 - 16) / 3,
+                          child: keypadButton(
+                            label: '⌫',
+                            onTap: () {
+                              if (currentPin.isEmpty) return;
+                              setModalState(() {
+                                currentPin = currentPin.substring(
+                                  0,
+                                  currentPin.length - 1,
+                                );
+                                errorText = null;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   if (errorText != null) ...<Widget>[
                     const SizedBox(height: 8),
