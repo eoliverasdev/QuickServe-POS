@@ -2768,8 +2768,12 @@ class _TpvPageState extends State<TpvPage> {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final double w = constraints.maxWidth;
+        final double screenW = MediaQuery.sizeOf(context).width;
         final double scale = TpvResponsive.contentScale(w);
-        final int cols = TpvResponsive.productGridCrossAxisCount(w);
+        final int cols = TpvResponsive.productGridCrossAxisCount(
+          w,
+          screenWidth: screenW,
+        );
         final double aspect = TpvResponsive.productGridAspectRatio(w, cols);
         final double spacing = TpvResponsive.gridSpacing(w);
         final EdgeInsets cardPadding = EdgeInsets.all(12 * scale);
